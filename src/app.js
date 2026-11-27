@@ -751,18 +751,43 @@
     fitPaper();
   }
   // shrink the type on any page whose problems run past the bottom, so each page prints as one sheet
-  // one type size for every page: tighten the space between problems first, then step the type down
-  // until every page fits on its own sheet
+  // Each word and each piece of math becomes its own box, so the answer blank can take whatever is left of the
+  // last line (as on the real sheet) and only drops to a new line when less than an inch is left.
+  function atomize(up) {
+    const atoms = []; let last = null, glue = false;
+    // pieces with no space between them stay together, as in normal text ("(" + math, math + ".")
+    const push = (node, breakable) => { if (glue && last && !breakable) { last.appendChild(node); } else { const a = document.createElement('span'); a.className = 'ua'; a.appendChild(node); atoms.push(a); last = a; } glue = true; };
+    [...up.childNodes].forEach(n => {
+      if (n.nodeType === 3) { n.textContent.split(/(\s+)/).forEach(ch => { if (!ch) return; if (/^\s+$/.test(ch)) { if (last) last.classList.add('sp'); glue = false; } else push(document.createTextNode(ch)); }); return; }
+      if (n.classList && n.classList.contains('katex')) {
+        // long math can wrap between its pieces, as KaTeX allows
+        const bases = [...n.querySelectorAll(':scope > .katex-html > .base')];
+        if (bases.length > 1) { bases.forEach((b, i) => { const k = document.createElement('span'); k.className = 'katex'; const h = document.createElement('span'); h.className = 'katex-html'; h.setAttribute('aria-hidden', 'true'); h.appendChild(b); k.appendChild(h); push(k, i > 0); }); return; }
+      }
+      push(n);
+    });
+    up.replaceWith(...atoms);
+  }
+  // One type size for every page. Each page then spaces its problems out as much as it can (up to a roomy limit),
+  // the way the real front and back sheets do; the type steps down only when a page can't fit with decent spacing.
   function fitPaper() {
     const paper = $('#paper'); if (!paper) return;
+    $$('.up', paper).forEach(atomize);
     const fit = () => {
       paper.style.setProperty('--uk', 1);
-      const pgs = $$('.upage', paper); const GAPS = [0.48, 0.4, 0.33, 0.27, 0.22];
-      const tryAt = fs => pgs.every(pg => { pg.style.setProperty('--ufs', fs + 'pt'); for (const g of GAPS) { pg.style.setProperty('--ugap', g + 'em'); if (pageFits(pg)) return true; } return false; });
-      let fs = 11; while (fs > 8 && !tryAt(fs)) fs -= 0.25;
-      paper.dataset.fs = fs; scalePaper();
+      const pgs = $$('.upage', paper);
+      const gapFor = (pg, fs, gLo) => { pg.style.setProperty('--ufs', fs + 'pt'); for (let g = 0.8; g >= gLo - 1e-9; g -= 0.02) { pg.style.setProperty('--ugap', g.toFixed(2) + 'em'); if (pageFits(pg)) return g; } return null; };
+      let fs = 12, done = false;
+      for (const [lo, gLo] of [[10.5, 0.42], [8.5, 0.2]]) {
+        for (fs = lo === 10.5 ? 12 : 10.25; fs >= lo - 1e-9; fs -= 0.25) if (pgs.every(pg => gapFor(pg, fs, gLo) !== null)) { done = true; break; }
+        if (done) break;
+      }
+      if (!done) { fs = 8.5; pgs.forEach(pg => gapFor(pg, fs, 0)); }
+      paper.dataset.fit = fs; scalePaper();
     };
-    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fit);
+    const want = ['700 11pt "Times New Roman"', '700 11pt Tinos', '400 11pt Tinos'];
+    const ready = document.fonts ? Promise.all(want.map(f => document.fonts.load(f).catch(() => null))).then(() => document.fonts.ready) : Promise.resolve();
+    ready.then(fit, fit);
   }
   // the problems end above the bottom margin, with a few pixels to spare for print rounding
   function pageFits(pg) {

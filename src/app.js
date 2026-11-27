@@ -714,26 +714,63 @@
     const v = p.a.v.num(); const lo = Math.ceil(Math.min(v * 0.95, v * 1.05) - 1e-9), hi = Math.floor(Math.max(v * 0.95, v * 1.05) + 1e-9);
     return `${NS.fmtn(lo)} – ${NS.fmtn(hi)}`;
   }
+  // UIL layout on letter paper: problems 1–33 on the front, 34–80 on the back, two columns each; key on its own page
+  const SPLIT = { full: [[0, 17, 33], [33, 57, 80]], col: [[0, 10, 20]] };
+  function uilProb(p) {
+    const LB = '\u0001\\underline{\\phantom{0000}}\u0002'; let h = p.p.h; let tail = true;
+    if (h.includes(LB)) { const t = h.trimEnd(); if (t.endsWith(LB)) h = t.slice(0, -LB.length); else { tail = false; h = h.split(LB).join('\u0001\\underline{\\phantom{00000000}}\u0002'); } }
+    const blank = tail ? `<span class="ub">${p.pre ? `<span>${esc(p.pre)}</span>` : ''}<i></i>${p.suffix ? `<span class="sx">${esc(p.suffix)}</span>` : ''}${p.form ? `<span class="sx">${esc(p.form)}</span>` : ''}</span>` : '';
+    return `<div class="uq"><span class="un">${p.est ? '*' : ''}(${p.n})</span><div class="ut"><span class="up">${R(h)}</span>${blank}</div></div>`;
+  }
   function viewPrint(code) {
     const spec = NS.readTestCode(code || '');
     if (!spec || spec.lv !== lv()) { main.innerHTML = `<button class="back" data-go="test">${IC.left} Tests</button><div class="empty" style="margin-top:16px">${spec ? `That code is for ${LV[spec.lv].toLowerCase()}. Switch levels at the top, then try again.` : 'That test code didn’t work.'}</div>`; return; }
     const probs = NS.buildTest(spec.lv, spec.seed, spec.cols, spec.diff); const full = spec.cols.length === 4;
     const dn = NS.DIFFS[NS.diffIdx(spec.diff)].name; const tc = NS.testCode(spec.lv, spec.cols, spec.seed, spec.diff);
+    const lvShort = spec.lv === 'hs' ? 'HS' : 'MS';
     const what = `${LV[spec.lv]} Number Sense · ${full ? 'Full test' : `Problems ${COLR[spec.cols[0]]}`} · ${dn}`;
-    const head = (first, k) => `<div class="phead"><div><b>Eighty in Ten</b> <span>${what}</span></div><span class="mono">${tc}${k ? ' · key' : ''}</span></div>${first ? `<div class="pname"><span>Name <i></i></span><span>School <i></i></span><span>Score <i class="short"></i></span></div>
-      <p class="pinst">${full ? '10 minutes.' : '2 minutes 30 seconds.'} Work in order. No scratch work: write only the answer. Starred (*) problems accept anything within 5%. Right +5, wrong or skipped −4; stop scoring at the last problem attempted.</p>` : ''}`;
-    const pg = []; for (let k = 0; k < probs.length; k += 20) pg.push(probs.slice(k, k + 20));
+    const front = `<div class="uhead"><h2>Number Sense Practice Test</h2><p>${lvShort} • ${full ? '' : `Problems ${COLR[spec.cols[0]]} • `}${dn} • ${tc}</p></div>
+      <div class="ubox"><div class="ucn">Contestant’s Number <i></i></div>
+        <table class="uscore" aria-label="Score box"><tr><td>Final</td><td><i></i></td><td><i></i></td></tr><tr><td>2nd</td><td><i></i></td><td><i></i></td></tr><tr><td>1st</td><td><i></i></td><td><i></i></td></tr><tr class="ul"><td></td><td>Score</td><td>Initials</td></tr></table></div>
+      <div class="uwarn"><span>Read directions carefully<br>before beginning test</span><span>DO NOT UNFOLD THIS SHEET<br>UNTIL TOLD TO BEGIN</span><span></span></div>
+      <p class="udir"><b>Directions:</b> Do not turn this page until the person giving the test says to begin. This is a ${full ? 'ten-minute' : 'two-and-a-half-minute'} test with ${probs.length} problems. Solve as many as you can, accurately and quickly, in the order they appear. Work every problem mentally: no calculations on paper. Write only the answer in the space at the end of each problem. Problems marked with a ( * ) need an approximate whole-number answer, and any answer within five percent of the exact answer is scored correct; all other problems need exact answers.</p>
+      <p class="uconduct">The person giving this test should explain these directions to the contestants.</p>
+      <p class="ustop">STOP — WAIT FOR SIGNAL!</p>`;
+    const split = full ? SPLIT.full : SPLIT.col;
+    const pages = split.map(([a, b, c], i) => `<section class="upage">${i === 0 ? front : ''}<div class="ucols"><div>${probs.slice(a, b).map(uilProb).join('')}</div><div>${probs.slice(b, c).map(uilProb).join('')}</div></div><p class="ufoot">Eighty in Ten · ${tc} · page ${i + 1} of ${split.length}</p></section>`);
+    const kcols = full ? [[0, 17], [17, 33], [33, 57], [57, 80]] : [[0, 10], [10, 20]];
+    const key = `<section class="upage ukey"><p class="unot">DO NOT GIVE TO STUDENTS BEFORE OR DURING THE TEST</p><h2>Answer key · ${lvShort} · ${dn} · ${tc}</h2>
+      <p class="unote">*(n) a – b means any whole number from a to b. Fractions are fine in any equivalent lowest-terms form unless the problem names one.</p>
+      <div class="ukcols k${kcols.length}">${kcols.map(([a, b]) => `<div>${probs.slice(a, b).map(p => `<div class="uk"><span class="un">${p.est ? '*' : ''}(${p.n})</span><span>${keyRange(p)}</span></div>`).join('')}</div>`).join('')}</div></section>`;
     main.innerHTML = `<div class="noprint"><button class="back" data-go="test">${IC.left} Tests</button>
-      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
+      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}, laid out like a UIL test on letter paper: problems 1–33 on the front, the rest on the back. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
       <div class="row" style="margin-bottom:8px"><button class="btn" data-act="doPrint">Print</button><button class="btn ghost" data-act="printNew">A different test</button></div>
-      <p class="faint small" id="printmsg">The answer key prints on its own page at the end, so you can keep it back. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac).</p></div>
-      <div class="paper">
-        ${pg.map((ps, i) => `<section class="ppage">${head(i === 0)}<ol class="pq">${ps.map(p => `<li><span class="pn">${p.est ? '*' : ''}(${p.n})</span><span class="pp">${R(p.p.h)}</span><span class="pa">${p.pre ? esc(p.pre) : ''}<i></i>${p.suffix ? `<span class="sx">${esc(p.suffix)}</span>` : ''}${p.form ? `<em>${esc(p.form)}</em>` : ''}</span></li>`).join('')}</ol></section>`).join('')}
-        <section class="ppage pkey">${head(false, true)}<h2>Answer key</h2><ol class="pk4">${probs.map(p => `<li><span class="pn">${p.est ? '*' : ''}(${p.n})</span><span>${keyRange(p)}</span></li>`).join('')}</ol>
-          <p class="pinst">Starred problems: any answer in the range shown. Equivalent forms of a fraction are fine unless the problem asks for one.</p></section>
-      </div>`;
+      <p class="faint small" id="printmsg">Print double-sided for the real feel. The answer key is the last page, so you can keep it back. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac), with margins set to Default or None.</p></div>
+      <div class="paper" id="paper">${pages.join('')}${key}</div>`;
     state.printSpec = spec;
+    fitPaper();
   }
+  // shrink the type on any page whose problems run past the bottom, so each page prints as one sheet
+  function fitPaper() {
+    const paper = $('#paper'); if (!paper) return;
+    const fit = () => {
+      $$('.upage', paper).forEach(pg => { let fs = 11; pg.style.setProperty('--ufs', fs + 'pt'); while (!pageFits(pg) && fs > 8) { fs -= 0.25; pg.style.setProperty('--ufs', fs + 'pt'); } });
+      scalePaper();
+    };
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fit);
+  }
+  // the problems end above the bottom margin, with a few pixels to spare for print rounding
+  function pageFits(pg) {
+    const c = pg.querySelector('.ucols, .ukcols'); if (!c) return true; const r = pg.getBoundingClientRect(); const k = r.height / pg.offsetHeight;
+    return c.getBoundingClientRect().bottom <= r.bottom - (parseFloat(getComputedStyle(pg).paddingBottom) + 8) * k;
+  }
+  NS._pageFits = pageFits;
+  // on screen, letter-size pages scale down to fit narrow windows
+  function scalePaper() {
+    const paper = $('#paper'); if (!paper) return; const avail = paper.clientWidth; const k = Math.min(1, (avail - 2) / 818);
+    paper.style.setProperty('--uk', k);
+  }
+  window.addEventListener('resize', () => { if ($('#paper')) scalePaper(); });
 
   /* ---------- progress ---------- */
   function chartSvg(vals, max) {

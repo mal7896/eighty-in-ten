@@ -507,3 +507,22 @@ details.rules .grid2 { margin-top: 14px; }
 @media (max-width: 600px) { .seg button { padding: 6px 9px; font-size: .9rem; } .cfg-row { padding: 14px 0; } }
 .sheet-top .x { background: none; border: 1px solid var(--line-2); border-radius: var(--r-sm); width: 36px; height: 36px; display: grid; place-items: center; color: var(--ink-2); flex: none; }
 .sheet-top .x:hover { color: var(--ink); border-color: var(--ink-3); }
+
+/* ---------- polish pass ---------- */
+/* the answer line stays a line when focused: no grey block */
+.ans:focus { background: transparent; border-bottom: 2px solid var(--ink); }
+.q.cur .ans:focus { background: transparent; }
+/* a format note ("Arabic numeral", "decimal") sits small under a big answer line, not beside it */
+.stage .blank .formhint { flex-basis: 100%; font-size: .95rem; margin-top: 6px; }
+.stage .blank .suffix { font-size: .7em; }
+/* before a level is picked there is nowhere to go yet */
+body.nolevel .nav, body.nolevel .tabbar, body.nolevel .lvl { display: none; }
+body.nolevel main { padding-bottom: 48px; }
+/* lessons on narrow screens: a way to get to the five problems without scrolling past everything */
+.jump { display: none; margin-top: 14px; }
+@media (max-width: 920px) { .jump { display: inline-flex; } }
+#tryit { scroll-margin-top: 16px; }
+.kv { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+#tryit .blank { flex-wrap: wrap; justify-content: center; }
+#tryit .blank .formhint { flex-basis: 100%; text-align: center; font-size: .85rem; margin-top: 4px; }
+.stage .prob { margin-bottom: 12px; }

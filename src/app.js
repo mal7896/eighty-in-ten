@@ -125,6 +125,7 @@
     $$('[data-go]').forEach(b => { if (b.closest('.nav,.tabbar')) b.setAttribute('aria-current', b.dataset.go === v ? 'page' : 'false'); });
     $('#lvlname').textContent = lv() ? LV[lv()] : 'Choose level';
     document.body.classList.toggle('in-session', !!(state.session && !state.session.done) || !!(state.test && !state.test.done) || !!(state.memo && !state.memo.done));
+    document.body.classList.toggle('nolevel', !lv());
   }
   function route() {
     const h = location.hash.slice(1) || 'home';
@@ -226,7 +227,7 @@
     main.innerHTML = `<button class="back" data-go="tricks">${IC.left} All tricks</button>
       <div class="lesson" style="margin-top:12px">
         <article class="stack">
-          <div><div class="row" style="gap:14px"><p class="eyebrow">Problems ${COLR[c]}</p>${pillFor(st, true)}</div><h1 style="margin-top:6px">${NS.rich(t.title)}</h1><p class="spot"><b>Use it when:</b> ${NS.rich(t.s)}</p></div>
+          <div><div class="row" style="gap:14px"><p class="eyebrow">Problems ${COLR[c]}</p>${pillFor(st, true)}</div><h1 style="margin-top:6px">${NS.rich(t.title)}</h1><p class="spot"><b>Use it when:</b> ${NS.rich(t.s)}</p><button class="btn ghost small jump" data-act="jumpTry">Try five now ↓</button></div>
           <section class="lsec"><h3>How</h3><ol class="how">${t.how.map(s => `<li><span>${NS.rich(s)}</span></li>`).join('')}</ol></section>
           <div class="card example" id="example"></div>
           <div class="grid2" style="gap:24px"><div class="note why"><b>Why it works</b>${NS.rich(t.why)}</div><div class="note watch"><b>Watch out</b>${NS.rich(t.watch)}</div></div>
@@ -654,7 +655,7 @@
       <div class="stats4"><div><b>${total}</b><span>problems answered</span></div><div><b>${total ? Math.round(ok / total * 100) + '%' : '—'}</b><span>accuracy</span></div><div><b>${NS.streak(l)}</b><span>day streak</span></div><div><b>${L().tests.length}</b><span>tests taken</span></div></div>
       <div class="sect"><div class="sect-h"><h2>Full test scores</h2></div>${fulls.length ? `${chartSvg(fulls.slice(-20).map(t => t.score), 400)}<p class="faint small">Out of 400. Your last ${Math.min(20, fulls.length)} full test${fulls.length > 1 ? 's' : ''}.</p>` : '<div class="empty">Take a full test to start a score history.</div>'}</div>
       <div class="sect"><div class="sect-h"><h2>Tricks</h2></div><div>${statusBar(cnt, ids.length)}</div>
-        ${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<div><p class="eyebrow" style="margin:6px 0 8px">Problems ${COLR[c]}</p><div class="heat">${arr.map(id => { const s = NS.trickStatus(id, l); return `<button class="cell ${s.key}" data-go="t" data-arg="${id}" title="${esc(s.label)}">${NS.rich(trickName(id))}</button>`; }).join('')}</div></div>` : ''; }).join('')}</div>
+        ${cnt('new') === ids.length ? `<div class="empty">You haven’t started any tricks yet. <button class="btn link" data-go="t" data-arg="${NS.nextTrick(l)}">Start with the first one →</button></div>` : [1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<div><p class="eyebrow" style="margin:6px 0 8px">Problems ${COLR[c]}</p><div class="heat">${arr.map(id => { const s = NS.trickStatus(id, l); return `<button class="cell ${s.key}" data-go="t" data-arg="${id}" title="${esc(s.label)}">${NS.rich(trickName(id))}</button>`; }).join('')}</div></div>` : ''; }).join('')}</div>
       ${rows.length ? `<div class="sect"><div class="sect-h"><h2>Detail</h2><span class="faint small">Weakest first</span></div><div class="tablewrap"><table class="t"><thead><tr><th>Trick</th><th>Status</th><th style="text-align:right">Last 12</th><th style="text-align:right">Typical time</th><th style="text-align:right">Target</th></tr></thead><tbody>${rows.sort((a, b) => (a.st.acc ?? 0) - (b.st.acc ?? 0)).map(x => `<tr><td><button class="btn link" data-go="t" data-arg="${x.id}" style="padding:0">${NS.rich(trickName(x.id))}</button></td><td>${pillFor(x.st)}</td><td class="n">${x.st.acc !== null ? Math.round(x.st.acc * 100) + '%' : '—'}</td><td class="n">${x.st.med ? x.st.med.toFixed(1) + 's' : '—'}</td><td class="n">${x.st.target}s</td></tr>`).join('')}</tbody></table></div></div>` : ''}
       <div class="sect"><div class="sect-h"><h2>Facts</h2><button class="btn link" data-go="memorize">Memorize →</button></div><div class="mfacts">${NS.MEMO.map(s => `<button class="mf" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.short || s.title, true)}</b><span class="mprog">${memoBar(NS.memoCount(l, s.id))}</span></button>`).join('')}</div></div>
       <div class="sect"><div class="sect-h"><h2>Use another device</h2></div><div>
@@ -671,6 +672,7 @@
     level() { guard(() => { state.session = null; location.hash = 'level'; }); },
     theme() { const order = ['system', 'light', 'dark']; const cur = S.data.settings.theme || 'system'; const nx = order[(order.indexOf(cur) + 1) % 3]; S.data.settings.theme = nx; S.save(); applyTheme(); state.keepScroll = true; route(); },
     tfilter(d) { state.trickFilter = d.f; state.keepScroll = true; viewTricks(); },
+    jumpTry() { const b = $('#tryit'); if (b) { b.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); const i = $('#tryin'); if (i && !touch) setTimeout(() => i.focus({ preventScroll: true }), 300); } },
     exStep() { state.exShown++; renderExample(state.lessonId); },
     exAll() { state.exShown = 99; renderExample(state.lessonId); },
     exNew() { state.exSeed++; state.exShown = 0; renderExample(state.lessonId); },

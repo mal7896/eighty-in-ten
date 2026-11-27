@@ -2,7 +2,7 @@
 
 A study site for TMSCA and UIL Number Sense, middle school and high school: lessons for each shortcut, drills, sprints, full 80-problem tests with shareable test codes, a Memorize section, and progress tracking.
 
-**Use it:** open the site from GitHub Pages (see below). Everything runs in the browser; progress is saved in each student's own browser. To move progress to another device or browser, use **Progress → Use another device**.
+**Use it:** Open the website directly linked here: https://mal7896.github.io/eighty-in-ten/. Or, open the site from GitHub Pages (see below). Everything runs in the browser; progress is saved in each student's own browser. To move progress to another device or browser, use **Progress → Use another device**.
 
 ## Layout
 

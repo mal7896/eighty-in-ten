@@ -1,6 +1,6 @@
 import pathlib, re, base64
 root = pathlib.Path(__file__).parent
-order = ['core.js','gens_mult.js','gens_frac.js','gens_nt.js','gens_alg.js','gens_geo.js','gens_misc.js','gens_calc.js','gens_est.js','gens_more.js','gens_uil.js','gens_uil2.js', 'gens_ms.js','tricks.js','engine.js','memo.js','app.js']
+order = ['core.js','gens_mult.js','gens_frac.js','gens_nt.js','gens_alg.js','gens_geo.js','gens_misc.js','gens_calc.js','gens_est.js','gens_more.js','gens_uil.js','gens_uil2.js', 'gens_ms.js', 'gens_new.js','tricks.js','engine.js','memo.js','app.js']
 js = '\n'.join((root/'src'/f).read_text() for f in order)
 css = (root/'src'/'style.css').read_text()
 kdir = root/'vendor'/'node_modules'/'katex'/'dist'

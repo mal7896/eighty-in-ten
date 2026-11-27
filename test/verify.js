@@ -152,6 +152,7 @@ const F = {
 
 { const X = require('./verify_uil')(NS); Object.assign(V, X.V); Object.assign(F, X.F); }
 { const X = require('./verify_ms')(NS); Object.assign(V, X.V); Object.assign(F, X.F); }
+{ const X = require('./verify_new')(NS); Object.assign(V, X.V); Object.assign(F, X.F); }
 /* ---------- run ---------- */
 let fails = 0, total = 0; const counts = {}; const failedIds = new Set();
 const bad = (g, lv, seed, msg, out) => { fails++; failedIds.add(g.id); if (fails <= 60) console.log(`FAIL ${g.id}/${lv} seed=${seed}: ${msg}\n   prompt: ${out && out.p && out.p.h}\n   key: ${out && out.a && NS.keyText(out.a)}`); };

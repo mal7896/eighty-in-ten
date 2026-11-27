@@ -3,7 +3,7 @@ NS.GENS = [];
 NS.fixMinus = s => String(s).replace(/(^|[\s(=:,×+·\/≈\[|])-(?=[\d.(i]|x\b)/g, '$1−');
 NS.G = function (def) {
   const raw = def.gen;
-  def.gen = function (r, lv) { const o = raw.call(this, r, lv); o.steps = o.steps.map(NS.fixMinus); return o; };
+  def.gen = function (r, lv, x) { const o = raw.call(this, r, lv, x); o.steps = o.steps.map(NS.fixMinus); return o; };
   NS.GENS.push(def);
 };
 const { H: _H, M: _M, ans: _A, q: _q, Q: _Q } = NS;

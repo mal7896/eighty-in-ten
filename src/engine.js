@@ -29,7 +29,7 @@
     ms: [
       [[0, 1], [0, 2], [0, 2], [0, 2]],   // Warm-up
       [[0, 4], [1, 5], [2, 7], [3, 7]],   // Contest
-      [[1, 5], [3, 7], [4, 7], [6, 7]],   // Hard
+      [[1, 4], [3, 7], [4, 7], [6, 7]],   // Hard
       [[5, 7], [6, 7], [7, 7], [7, 7]],   // Super-hard
     ],
     hs: [
@@ -90,7 +90,7 @@
         const champ = lv === 'ms' && di >= 2 && c === 4 && g.series ? 2.8 : 1;
         // …and bring the problems-61–80 topics forward into 41–60 (Regional/State: first one near #48, not #60)
         const fwd = lv === 'ms' && di === 2 && c === 3 && d === -1 ? 10 : 1;
-        const w = (d === 2 && c < 3 ? 0 : W[d] || 0) * (g.w || 1) * champ * fwd;
+        const w = (d === 2 && c < 3 ? 0 : W[d] || 0) * ((g.w && typeof g.w === 'object' ? g.w[lv] : g.w) || 1) * champ * fwd;
         if (w) pool.push({ g, w });
       });
       // weighted sample without replacement
@@ -108,7 +108,7 @@
       let i = 0;
       for (let pos = 1; pos <= 20; pos++) {
         const s = r.int(1, 2 ** 31);
-        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s, diff, c));
+        if (pos % 10 === 0) { let t = r.f() * estG.reduce((a, g) => a + (g.w || 1), 0), k = 0; for (; k < estG.length - 1; k++) { t -= estG[k].w || 1; if (t <= 0) break; } probs.push(NS.makeProblem(estG[k].id, lv, s, diff, c)); }
         else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s, diff, c));
         else probs.push(NS.makeProblem(chosen[i++].id, lv, s, diff, c));
       }
@@ -149,9 +149,32 @@
     return { last: last + 1, correct, wrong, skipped, score: 5 * correct - 4 * (wrong + skipped), marks };
   };
 
+  /* ---------- answering behaviors for practice rounds and sprints ---------- */
+  NS.BEHAVIORS = ['normal', 'noenter', 'hardcore', 'test'];
+
+  /* ---------- arithmetic warm-up: plain + − × ÷ with ranges you set (subtraction and division run
+     the addition and multiplication facts backward, so every answer is a whole number) ---------- */
+  NS.ARITH_DEF = { ops: '+-x/', add: [2, 100, 2, 100], mul: [2, 12, 2, 100] };
+  NS.arithClean = function (a) {
+    if (!a || typeof a !== 'object') return null;
+    const ops = typeof a.ops === 'string' ? [...new Set(a.ops.split('').filter(c => '+-x/'.includes(c)))].sort((x, y) => '+-x/'.indexOf(x) - '+-x/'.indexOf(y)).join('') : '';
+    const rng = (v, lo0) => Array.isArray(v) && v.length === 4 && v.every(n => Number.isInteger(n) && n >= 0 && n <= 9999) && v[0] <= v[1] && v[2] <= v[3] && v[0] >= lo0 && v[2] >= lo0 ? v.slice() : null;
+    const add = rng(a.add, 0), mul = rng(a.mul, 1);
+    if (!ops || !add || !mul) return null;
+    return { ops, add, mul };
+  };
+  NS.arithKey = (a, dur) => `${a.ops}:${a.add.join(',')}-${a.mul.join(',')}:${dur}`;
+  NS.arithProblem = function (a, r) {
+    const op = r.pick(a.ops.split('')); let x, y, v, sym;
+    if (op === '+' || op === '-') { const m = r.int(a.add[0], a.add[1]), n = r.int(a.add[2], a.add[3]); if (op === '+') { x = m; y = n; v = m + n; sym = '+'; } else { x = m + n; y = m; v = n; sym = '−'; } }
+    else { const m = r.int(a.mul[0], a.mul[1]), n = r.int(a.mul[2], a.mul[3]); if (op === 'x') { x = m; y = n; v = m * n; sym = '×'; } else { x = m * n; y = m; v = n; sym = '÷'; } }
+    return { gid: 'arith', trick: null, lv: null, seed: 0, diff: 'contest', col: 1, est: false, p: NS.H.cat(NS.H.n(x), ` ${sym} `, NS.H.n(y), ' ='), a: NS.ans.num(v), steps: [`${NS.fmtn(x)} ${sym} ${NS.fmtn(y)} = ${NS.hl(NS.fmtn(v))}`] };
+  };
+
   /* ---------- progress store ---------- */
   const KEY = 'eighty-in-ten:v1';
   const blank = () => ({ tricks: {}, tests: [], days: {}, misses: [] });
+  NS.blankLevel = blank;
   NS.store = {
     data: null,
     load() {
@@ -200,6 +223,8 @@
     const out = { v: 1, level: d.level === 'ms' || d.level === 'hs' ? d.level : null, settings: {}, levels: {} };
     const st = obj(d.settings); if (['system', 'light', 'dark'].includes(st.theme)) out.settings.theme = st.theme; if (typeof st.names === 'boolean') out.settings.names = st.names;
     const dids = NS.DIFFS.map(x => x.id); if (st.pdiff === 'auto' || dids.includes(st.pdiff)) out.settings.pdiff = st.pdiff; if (dids.includes(st.tdiff)) out.settings.tdiff = st.tdiff;
+    if (NS.BEHAVIORS.includes(st.pbeh)) out.settings.pbeh = st.pbeh; if ([10, 20, 40, 80].includes(st.plen)) out.settings.plen = st.plen;
+    { const a = NS.arithClean(st.arith); if (a) out.settings.arith = a; }
     const pair = a => Array.isArray(a) && a.length === 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
     const att = a => Array.isArray(a) && a.length === 3 && [0, 2, 3].includes(a[2]) ? [a[0] ? 1 : 0, num(a[1]), a[2]] : Array.isArray(a) && a.length >= 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
     for (const lv of ['ms', 'hs']) {
@@ -209,7 +234,9 @@
       const days = {}; for (const [k, v] of Object.entries(obj(L.days))) if (/^\d{4}-\d\d-\d\d$/.test(k)) days[k] = num(v);
       const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t), ...(dids.includes(m.d) && m.d !== 'contest' ? { d: m.d } : {}), ...([1, 2, 3, 4].includes(m.at) ? { at: m.at } : {}) })).slice(-60);
       const memo = {}; for (const [k, v] of Object.entries(obj(L.memo))) if (Array.isArray(v) && /^[a-z]{2}[\w.]*$/.test(k)) memo[k] = v.map(pair).filter(Boolean).slice(-6);
-      out.levels[lv] = { tricks, tests, days, misses, memo };
+      const b = obj(L.best); const best = {}; if (num(b.hc) > 0) best.hc = Math.round(num(b.hc));
+      const ar = {}; for (const [k, v] of Object.entries(obj(b.ar))) if (/^[+\-x\/]{1,4}:[\d,-]{1,60}:\d{2,3}$/.test(k) && num(v) > 0) ar[k] = Math.round(num(v)); if (Object.keys(ar).length) best.ar = ar;
+      out.levels[lv] = { tricks, tests, days, misses, memo, ...(Object.keys(best).length ? { best } : {}) };
     }
     return out;
   };

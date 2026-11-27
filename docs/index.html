@@ -539,6 +539,68 @@ body.nolevel main { padding-bottom: 48px; }
 #tryit .blank .formhint { flex-basis: 100%; text-align: center; font-size: .85rem; margin-top: 4px; }
 .stage .prob { margin-bottom: 12px; }
 
+/* ---- live stats under the progress line ---- */
+.lstats { display: flex; justify-content: flex-end; gap: 18px; font-size: .82rem; color: var(--ink-3); margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+.lstats b { color: var(--ink-2); font-weight: 600; }
+
+/* ---- trick picker: name with a sample problem ---- */
+.picker label { align-items: flex-start; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.picker label:last-child { border-bottom: 0; }
+.picker input { margin-top: 3px; flex: none; }
+.pk { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 14px; flex: 1; min-width: 0; }
+.pkn { font-weight: 600; }
+.pke { color: var(--ink-3); font-size: .88rem; min-width: 0; max-width: 100%; overflow-x: auto; }
+.pke .katex { font-size: 1em; }
+
+/* ---- arithmetic warm-up ranges ---- */
+.arith { display: grid; gap: 10px; }
+.arow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.arow .chip { min-width: 132px; text-align: left; }
+.arow .rng { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--ink-3); font-size: .88rem; }
+.arow .rng .op { color: var(--ink); font-weight: 700; padding: 0 4px; }
+.field.rin { width: 5.2em; min-height: 36px; padding: 5px 8px; font-size: .95rem; letter-spacing: 0; text-align: right; }
+.arow .chip[aria-pressed="false"] + .rng { opacity: .55; }
+@media (max-width: 520px) { .arow .chip { min-width: 0; } .field.rin { width: 4.4em; } }
+.arow .chip[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+.arow .chip::before { content: ""; display: inline-block; width: 13px; height: 13px; border: 1.5px solid var(--line-2); border-radius: 3px; margin-right: 8px; vertical-align: -2px; }
+.arow .chip[aria-pressed="true"]::before { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--surface); }
+
+/* ---- printable test ---- */
+.paper { display: grid; gap: 24px; margin-top: 22px; }
+.ppage { background: #fff; color: #111; border: 1px solid var(--line); border-radius: 4px; padding: 36px 40px; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0; }
+.phead { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .82rem; border-bottom: 1.5px solid #111; padding-bottom: 6px; margin-bottom: 12px; }
+.phead b { font-family: var(--f-head); font-size: .95rem; }
+.phead span { color: #444; }
+.pname { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 4px 0 8px; font-size: .9rem; }
+.pname span { display: inline-flex; align-items: flex-end; gap: 6px; flex: 1 1 180px; }
+.pname i { flex: 1; border-bottom: 1px solid #111; height: 1.1em; min-width: 60px; }
+.pname .short { flex: 0 0 70px; }
+.pinst { font-size: .78rem; color: #444; margin: 0 0 10px; }
+.pq { list-style: none; margin: 0; padding: 0; }
+.pq li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) minmax(8em, 32%); gap: 10px; align-items: baseline; padding: 10px 0; font-size: 1rem; break-inside: avoid; }
+.pq .pn { font-variant-numeric: tabular-nums; color: #333; font-size: .9rem; }
+.pq .pp { min-width: 0; overflow-wrap: anywhere; }
+.pq .pa { display: flex; align-items: baseline; gap: 4px; font-size: .9rem; }
+.pq .pa i { flex: 1; border-bottom: 1px solid #111; height: 1.1em; min-width: 3em; }
+.pq .pa em { font-style: normal; font-size: .74rem; color: #555; white-space: nowrap; }
+.pkey h2 { font-size: 1.2rem; margin: 6px 0 12px; }
+.pk4 { list-style: none; margin: 0 0 12px; padding: 0; columns: 4 10em; column-gap: 24px; font-size: .88rem; }
+.pk4 li { display: flex; gap: 8px; padding: 3px 0; break-inside: avoid; border-bottom: 1px solid #eee; }
+.pk4 .pn { color: #555; min-width: 3em; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .ppage { padding: 20px 16px; } .pq li { grid-template-columns: 2.6em minmax(0, 1fr); } .pq .pa { grid-column: 2; } }
+@media print {
+  @page { margin: 14mm 14mm; }
+  html, body { background: #fff !important; }
+  header.top, nav.tabbar, .noprint, .foot, #confirmbar, .toast { display: none !important; }
+  main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+  .paper { display: block; margin: 0; }
+  .ppage { border: 0; box-shadow: none; padding: 0; border-radius: 0; break-after: page; page-break-after: always; }
+  .ppage:last-child { break-after: auto; page-break-after: auto; }
+  .pq li { padding: 8px 0; font-size: 11pt; }
+  .pq .pa i { min-width: 9em; }
+}
+.pq .pa .sx { white-space: nowrap; }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script>
@@ -913,7 +975,7 @@ NS.GENS = [];
 NS.fixMinus = s => String(s).replace(/(^|[\s(=:,×+·\/≈\[|])-(?=[\d.(i]|x\b)/g, '$1−');
 NS.G = function (def) {
   const raw = def.gen;
-  def.gen = function (r, lv) { const o = raw.call(this, r, lv); o.steps = o.steps.map(NS.fixMinus); return o; };
+  def.gen = function (r, lv, x) { const o = raw.call(this, r, lv, x); o.steps = o.steps.map(NS.fixMinus); return o; };
   NS.GENS.push(def);
 };
 const { H: _H, M: _M, ans: _A, q: _q, Q: _Q } = NS;
@@ -4033,6 +4095,211 @@ NS.G({
   });
 })();
 
+/* ===== types added after comparing with other drill sites and the real tests =====
+   Rounded square roots, modular equations with a range, f′ given f(a), the chain rule, perfect and
+   abundant numbers, area and volume after a scale change, three-digit same-front products, and
+   fourth-root estimates. Each sits in the column where real tests put it. */
+(function () {
+  const { H, M, ans: A, q, Q, G } = NS; const hl = NS.hl, fm = NS.fmtn, m = NS.m;
+  const Qs = x => H.Qf(x).h;
+  const lin = (a, b) => NS.poly([a, b]).l;
+  const pad2 = n => String(n).padStart(2, '0');
+  const isSq = n => Number.isInteger(Math.sqrt(n));
+  const sgn = (b, first) => (b < 0 ? (first ? '-' : ' - ') : (first ? '' : ' + ')) + Math.abs(b);
+
+  /* ---------- same front, three digits: 342 × 348 ---------- */
+  G({
+    id: 'sameFront3', trick: 'sameFront', col: { ms: 2, hs: 2 }, eval: true, w: { ms: 0.4, hs: 0.6 },
+    gen(r, lv, x = 1) {
+      const f = lv === 'ms' ? (x >= 2 ? r.int(10, 49) : x === 0 ? r.int(10, 15) : r.pick([10, 11, 12, 13, 14, 15, 20, 25, 30, 35, 40, 45])) : (x >= 2 ? r.int(15, 99) : r.int(10, 45));
+      const b = r.int(1, 9); const a1 = 10 * f + b, a2 = 10 * f + 10 - b;
+      const [u, v] = r.chance(0.5) ? [a1, a2] : [a2, a1];
+      const fr = f * (f + 1), bk = b * (10 - b);
+      return { p: H.cat(H.n(u), ' × ', H.n(v), ' ='), a: A.num(u * v), params: { u, v },
+        steps: [`Both start with ${f}, and the last digits add to 10 (${u % 10} + ${v % 10}).`, `Front: ${f} × ${f + 1} = ${fm(fr)}. Back, two digits: ${b} × ${10 - b} = ${pad2(bk)}.`, `Answer: ${hl(fm(u * v))}`] };
+    },
+  });
+
+  /* ---------- rounding square roots ---------- */
+  const ROOTS = { 2: '1.414', 3: '1.732', 5: '2.236', 6: '2.449', 7: '2.646', 8: '2.828', 10: '3.162' };
+  const PLACE = { 0: 'whole number', 1: 'tenth', 2: 'hundredth' };
+  // keep away from the rounding line so 3-place memorized values settle it
+  const clear = (y, d) => { const t = y * 10 ** d; const f = t - Math.floor(t); return Math.abs(f - 0.5) > 0.12; };
+  const rnd = (y, d) => Q.parseNum((Math.round(y * 10 ** d) / 10 ** d).toFixed(d));
+  const approx = n => { const s = Math.floor(Math.sqrt(n)); if (ROOTS[n]) return `√${n} ≈ ${ROOTS[n]}`; if (s * s === n) return `√${n} = ${s}`; const k = n - s * s; return `${s}² = ${s * s}, so √${n} ≈ ${s} + ${k}/${2 * s} ≈ ${(s + k / (2 * s)).toFixed(3)}, a touch high; it's ${Math.sqrt(n).toFixed(4)}`; };
+  NS.ROOTS = ROOTS;
+  G({
+    id: 'roundRoot', trick: 'roundRoots', col: { ms: 3, hs: 3 }, w: { ms: 0.3, hs: 0.6 },
+    gen(r, lv, x = 1) {
+      const msk = x >= 2 ? ['one', 'one', 'mult', 'sum'] : ['one', 'one', 'one', 'mult'];
+      const kd = r.pick(lv === 'ms' ? msk : ['one', 'sum', 'sum', 'diff', 'mult', 'three']);
+      const mem = [2, 3, 5, 6, 7, 10]; const nonSq = (lo, hi) => { let n; do { n = r.int(lo, hi); } while (isSq(n)); return n; };
+      for (let t = 0; t < 60; t++) {
+        let y, d, p, pr, why;
+        if (kd === 'one') {
+          const n = r.chance(0.5) ? r.pick(mem) : nonSq(11, lv === 'ms' ? 60 : 150); d = r.chance(0.5) ? 2 : 1; y = Math.sqrt(n); pr = { kd, n, d };
+          p = H.cat('Round ', H.sqrt(n), ` to the nearest ${PLACE[d]}.`); why = [approx(n) + '.'];
+        } else if (kd === 'mult') {
+          const n = r.pick([2, 3, 5]); const k = r.pick([2, 3, 4, 5, 10, 100]); d = k === 100 ? 0 : 1; y = k * Math.sqrt(n); pr = { kd, n, k, d };
+          p = H.cat('Round ', H.L(`${k}\\sqrt{${n}}`), ` to the nearest ${PLACE[d]}.`); why = [`√${n} ≈ ${ROOTS[n]}, so ${k}√${n} ≈ ${k} × ${ROOTS[n]} = ${(k * Number(ROOTS[n])).toFixed(3).replace(/\.?0+$/, '')}.`];
+        } else if (kd === 'three') {
+          const xs = r.pick([[2, 3, 5], [3, 5, 7], [2, 5, 7], [2, 3, 7], [5, 6, 7]]); const neg = r.int(0, 2); const sg = xs.map((_, i) => (i === neg && i > 0 && r.chance(0.5) ? -1 : 1));
+          d = 1; y = xs.reduce((s, n, i) => s + sg[i] * Math.sqrt(n), 0); pr = { kd, xs, sg, d };
+          p = H.cat('Round ', H.L(`(${xs.map((n, i) => (i ? (sg[i] < 0 ? ' - ' : ' + ') : '') + `\\sqrt{${n}}`).join('')})`), ' to the nearest tenth.');
+          why = [xs.map(n => `√${n} ≈ ${ROOTS[n]}`).join(', ') + '.', `Together: ${xs.map((n, i) => (i ? (sg[i] < 0 ? ' − ' : ' + ') : '') + ROOTS[n]).join('')} = ${y.toFixed(3)}.`];
+        } else {
+          let a, b; do { a = r.pick(mem.concat(lv === 'hs' ? [11, 12, 13, 15, 17, 20] : [])); b = r.pick(mem); } while (a === b);
+          const minus = kd === 'diff'; if (minus && a < b) [a, b] = [b, a];
+          d = 1; y = minus ? Math.sqrt(a) - Math.sqrt(b) : Math.sqrt(a) + Math.sqrt(b); pr = { kd, a, b, d };
+          p = H.cat('Round ', H.L(`(\\sqrt{${a}} ${minus ? '-' : '+'} \\sqrt{${b}})`), ' to the nearest tenth.');
+          why = [`${approx(a)}; ${approx(b)}.`, `${minus ? 'Difference' : 'Sum'} ≈ ${y.toFixed(3)}.`];
+        }
+        if (!clear(y, d) || (d > 0 && (Math.abs(y - Math.round(y)) < 0.05 || (Math.round(y * 10 ** d) % 10 === 0)))) continue;
+        const v = rnd(y, d);
+        return { p, a: A.num(v, d ? 'dec' : 'any'), params: pr, steps: [...why, `To the nearest ${PLACE[d]}: ${hl(v.toDecStr())}`] };
+      }
+      return { p: H.cat('Round ', H.sqrt(2), ' to the nearest hundredth.'), a: A.num(Q.parseNum('1.41'), 'dec'), params: { kd: 'one', n: 2, d: 2 }, steps: ['√2 ≈ 1.414.', `To the nearest hundredth: ${hl('1.41')}`] };
+    },
+  });
+
+  /* ---------- modular equations in a range, and big powers mod a prime ---------- */
+  const cong = (a, b, c, mod) => `${a === 1 ? '' : a}x${b ? sgn(b) : ''} \\equiv ${c} \\pmod{${mod}}`;
+  const modPow = (a, e, mod) => { let res = 1n, B = BigInt(a) % BigInt(mod), E = BigInt(e); const Mo = BigInt(mod); while (E > 0n) { if (E & 1n) res = res * B % Mo; B = B * B % Mo; E >>= 1n; } return Number(res); };
+  G({
+    id: 'modRange', trick: 'modular', col: { ms: 0, hs: 4 }, w: 1.2,
+    gen(r, lv, x = 1) {
+      const kd = r.pick(x >= 2 ? ['lin', 'lin', 'plus', 'pow', 'pow'] : ['lin', 'lin', 'lin', 'plus', 'pow']);
+      if (kd === 'pow') {
+        const p = r.pick([5, 7, 11, 13]); let a; do { a = r.int(2, x >= 2 ? 30 : 12); } while (a % p === 0);
+        const e = r.int(x >= 2 ? 50 : 20, x >= 2 ? 999 : 120); const v = modPow(a, e, p); const ar = a % p; const er = e % (p - 1);
+        return { p: H.cat(H.pow(a, e), ` ≡ k (mod ${p}), where 0 ≤ k < ${p}. k =`), a: A.num(v), params: { kd, a, e, p },
+          steps: [`${p} is prime, so ${m(`n^{${p - 1}} \\equiv 1 \\pmod{${p}}`)} for any n it doesn't divide (Fermat).${ar !== a ? ` First, ${a} ≡ ${ar}.` : ''} Only the exponent's remainder mod ${p - 1} matters: ${e} ÷ ${p - 1} leaves ${er}.`, `${m(`${ar}^{${er}}`)}${ar ** er <= 2000 ? ` = ${fm(ar ** er)}` : ''} ≡ ${hl(v)} (mod ${p})`] };
+      }
+      for (let t = 0; t < 200; t++) {
+        const mod = r.pick(x >= 2 ? [5, 6, 7, 8, 9, 10, 11, 12] : [5, 6, 7, 8, 9]);
+        const a = kd === 'plus' ? 1 : r.int(2, Math.min(5, mod - 1)); const b = kd === 'plus' ? r.int(mod + 1, 40) : r.int(-6, 6); const c = r.int(1, x >= 2 ? 40 : 15);
+        const L = r.chance(0.5) ? 0 : r.int(1, x >= 2 ? 15 : 8); const U = L + r.int(4, mod - 1);
+        const sols = []; for (let z = L; z <= U; z++) if ((((a * z + b - c) % mod) + mod) % mod === 0) sols.push(z);
+        if (sols.length !== 1) continue; const v = sols[0];
+        const rhs = (((c - b) % mod) + mod) % mod;
+        const pr = kd === 'plus' ? H.L(`${b} + x \\equiv ${c} \\pmod{${mod}}`) : H.L(cong(a, b, c, mod));
+        let first = rhs; while (first % a !== 0 || ((a * (first / a) + b - c) % mod + mod) % mod !== 0) first += mod; const base = first / a;
+        return { p: H.cat(`Find x, ${L} ≤ x ≤ ${U}, if `, pr, '. x ='), a: A.num(v), params: { kd, a, b, c, mod, L, U },
+          steps: [kd === 'plus' ? `Reduce: ${b} ≡ ${((b % mod) + mod) % mod} (mod ${mod}), so x ≡ ${c} − ${((b % mod) + mod) % mod} ≡ ${(((c - b) % mod) + mod) % mod}.` : `Move the constant: ${a}x ≡ ${c} ${b < 0 ? '+' : '−'} ${Math.abs(b)} ≡ ${rhs} (mod ${mod}). Add ${mod}s to ${rhs} until ${a} divides it: ${a}x = ${first}, x = ${base}.`,
+            `Solutions are ${base} plus multiples of ${mod / M.gcd(a, mod)}. The one from ${L} to ${U} is ${hl(v)}`] };
+      }
+      return this.gen(r, lv, 0);
+    },
+  });
+
+  /* ---------- more derivatives: f′ given with f(a), trig, chain rule ---------- */
+  const S = { 0: q(0), 30: q(1, 2), 90: q(1), 150: q(1, 2), 180: q(0), 210: q(-1, 2), 270: q(-1), 330: q(-1, 2) };
+  const C = { 0: q(1), 60: q(1, 2), 90: q(0), 120: q(-1, 2), 180: q(-1), 240: q(-1, 2), 270: q(0), 300: q(1, 2) };
+  NS.TRIG_S = S; NS.TRIG_C = C;
+  G({
+    id: 'derivMore', trick: 'derivatives', col: { ms: 0, hs: 4 }, w: 0.6,
+    gen(r, lv, x = 1) {
+      const kd = r.pick(['init', 'init', 'init', 'chain', 'chain', 'trig']);
+      if (kd === 'init') {
+        const form = r.pick(['k', 'k', 'kx', 'kx2']); const k = form === 'k' ? r.int(-6, 6) || 3 : form === 'kx' ? 2 * r.int(1, 4) * r.sign() : 3 * r.int(1, 2);
+        const a = r.int(-3, 3), b = r.int(-9, 9); let c; do { c = r.int(-4, 5); } while (c === a);
+        const e = form === 'k' ? 1 : form === 'kx' ? 2 : 3; // f = (k/e) x^e + C
+        const co = q(k, e); const C0 = q(b).sub(co.mul(q(a).pow(e))); const v = co.mul(q(c).pow(e)).add(C0);
+        const fp = form === 'k' ? `${k}` : form === 'kx' ? `${k}x` : `${k}x^2`; const F = form === 'k' ? `${k}x` : form === 'kx' ? `${k / 2}x^2` : `${k / 3}x^3`;
+        return { p: H.cat(H.L(`f'(x) = ${fp}`), `, f(${a}) = ${fm(b)}. Find f(${c}).`), a: A.num(v), params: { kd, form, k, a, b, c },
+          steps: [`Undo the derivative: f(x) = ${m(F.replace(/^1x/, 'x').replace(/^-1x/, '-x'))} + C.`, `f(${a}) = ${fm(b)} gives C = ${Qs(C0)}.`, `f(${c}) = ${hl(Qs(v))}`] };
+      }
+      if (kd === 'trig') {
+        const f = r.pick(['sin', 'cos']); const k = r.pick([1, 1, 2, 3, 4, 6]); const second = r.chance(0.5);
+        // f = k sin: f' = k cos, f'' = -k sin. f = k cos: f' = -k sin, f'' = -k cos
+        const tbl = f === 'sin' ? (second ? S : C) : (second ? C : S); const sign = f === 'sin' ? (second ? -1 : 1) : -1;
+        const ang = r.pick(Object.keys(tbl).map(Number).filter(z => z > 0)); const v = tbl[ang].mul(sign * k);
+        const dname = second ? "f''" : "f'"; const d1 = f === 'sin' ? (second ? `-${k === 1 ? '' : k}\\sin x` : `${k === 1 ? '' : k}\\cos x`) : (second ? `-${k === 1 ? '' : k}\\cos x` : `-${k === 1 ? '' : k}\\sin x`);
+        return { p: H.cat(H.L(`f(x) = ${k === 1 ? '' : k}\\${f} x`), ', ', H.L(`${dname}(${ang}^\\circ)`), ' ='), a: A.num(v), params: { kd, f, k, second, ang },
+          steps: [`(sin x)′ = cos x and (cos x)′ = −sin x, so ${m(`${dname}(x) = ${d1}`)}.`, `At ${ang}°: ${hl(Qs(v))}`] };
+      }
+      // chain rule
+      if (r.chance(0.55)) {
+        const a = r.int(1, x >= 2 ? 4 : 3) * (r.chance(0.2) ? -1 : 1), b = r.int(-4, 4) || 1, n = r.int(2, x >= 2 ? 5 : 4); let x0; let inner;
+        do { x0 = r.int(-2, 2); inner = a * x0 + b; } while (Math.abs(inner) > 4 || inner === 0);
+        const v = n * a * inner ** (n - 1);
+        return { p: H.cat('If ', H.L(`f(x) = (${lin(a, b)})^{${n}}`), ', then ', H.L(`f'(${x0})`), ' ='), a: A.num(v), params: { kd, form: 'lin', a, b, n, x0 },
+          steps: [`Chain rule: bring down the power, lower it by one, then multiply by the inside's derivative: ${m(`f'(x) = ${n}(${lin(a, b)})^{${n - 1}} \\cdot ${a < 0 ? `(${a})` : a}`)}.`, `Inside at x = ${x0}: ${inner}. ${m(`${n} \\cdot (${inner})^{${n - 1}} \\cdot (${a})`)} = ${hl(fm(v))}`] };
+      }
+      const c = r.int(-3, 3), n = r.int(2, 3); let x0; do { x0 = r.int(-2, 2); } while (!x0 || Math.abs(x0 * x0 + c) > 6 || x0 * x0 + c === 0);
+      const inner = x0 * x0 + c; const v = n * inner ** (n - 1) * 2 * x0;
+      return { p: H.cat('If ', H.L(`f(x) = (x^2${c ? sgn(c) : ''})^{${n}}`), ', then ', H.L(`f'(${x0})`), ' ='), a: A.num(v), params: { kd, form: 'sq', c, n, x0 },
+        steps: [`Chain rule: ${m(`f'(x) = ${n}(x^2${c ? sgn(c) : ''})^{${n - 1}} \\cdot 2x`)}.`, `At x = ${x0} the inside is ${inner}: ${m(`${n} \\cdot (${inner})^{${n - 1}} \\cdot (${2 * x0})`)} = ${hl(fm(v))}`] };
+    },
+  });
+
+  /* ---------- perfect, abundant and deficient numbers ---------- */
+  const sigma = n => M.divisors(n).reduce((s, d) => s + d, 0) - n; // proper divisors
+  const PERF = [6, 28, 496, 8128];
+  const kind = n => (sigma(n) > n ? 'abundant' : sigma(n) < n ? 'deficient' : 'perfect');
+  NS.properSum = sigma;
+  G({
+    id: 'perfectNum', trick: 'perfectNumbers', col: { ms: 0, hs: 4 }, w: 0.25,
+    gen(r, lv, x = 1) {
+      const kd = r.pick(['sum', 'nth', 'proper', 'proper', 'classify', 'classify', 'next']);
+      if (kd === 'sum') { const k = r.pick([2, 3, 4]); const v = PERF.slice(0, k).reduce((s, n) => s + n, 0);
+        return { p: H.cat(`The sum of the first ${['', '', 'two', 'three', 'four'][k]} perfect numbers is`), a: A.num(v), params: { kd, k }, steps: [`The perfect numbers start 6, 28, 496, 8128.`, `${PERF.slice(0, k).join(' + ')} = ${hl(fm(v))}`] }; }
+      if (kd === 'nth') { const k = r.int(2, 4); const v = PERF[k - 1];
+        return { p: H.cat(`The ${['', 'first', 'second', 'third', 'fourth'][k]} perfect number is`), a: A.num(v), params: { kd, k }, steps: [`Perfect numbers are ${m('2^{p-1}(2^p - 1)')} with ${m('2^p - 1')} prime: ${m('p')} = 2, 3, 5, 7 give 6, 28, 496, 8128.`, `Number ${k}: ${hl(fm(v))}`] }; }
+      if (kd === 'next') { const k = r.int(12, x >= 2 ? 90 : 50); let n = k + 1; while (sigma(n) <= n) n++;
+        return { p: H.cat(`The smallest abundant number greater than ${k} is`), a: A.num(n), params: { kd, k }, steps: [`Abundant: the proper divisors add to more than the number. Every multiple of 6 past 6 is abundant, and so are 20, 70, 88, …`, `${n}: its proper divisors add to ${sigma(n)}, more than ${n}. Answer: ${hl(n)}`] }; }
+      let n; do { n = r.int(10, x >= 2 ? 120 : 60); } while (kd === 'classify' && r.chance(kind(n) === 'deficient' ? 0.6 : 0));
+      if (kd === 'classify' && r.chance(0.12)) n = r.pick([6, 28]);
+      const f = M.factor(n); const fs = f.map(([p, e]) => (e > 1 ? `${p}^{${e}}` : `${p}`)).join(' \\cdot ');
+      const tot = sigma(n) + n; const how = `${n} = ${m(fs)}. All divisors: ${f.map(([p, e]) => `(${Array.from({ length: e + 1 }, (_, i) => p ** i).join(' + ')})`).join('')} = ${tot}; take away ${n} itself: ${sigma(n)}.`;
+      if (kd === 'proper') return { p: H.cat(`The sum of the proper divisors of ${n} is`), a: A.num(sigma(n)), params: { kd, n }, steps: [how, `Sum of proper divisors: ${hl(sigma(n))}`] };
+      const kk = kind(n);
+      return { p: H.cat(`Is ${n} abundant, deficient, or perfect?`), a: A.text(kk, 'word'), params: { kd, n }, steps: [how, `${sigma(n)} is ${sigma(n) > n ? 'more than' : sigma(n) < n ? 'less than' : 'equal to'} ${n}, so ${n} is ${hl(kk)}`] };
+    },
+  });
+
+  /* ---------- scale changes: perimeter → area, edge → volume ---------- */
+  G({
+    id: 'scaleArea', trick: 'scaleChange', col: { ms: 4, hs: 3 }, w: { ms: 0.25, hs: 0.35 },
+    gen(r, lv, x = 1) {
+      const kd = r.pick(['pct', 'pct', 'fromTo', 'fromTo', 'circle', 'cube']);
+      if (kd === 'pct' || kd === 'cube') {
+        const up = r.chance(0.7); const p = kd === 'cube' ? r.pick(up ? [10, 20, 50, 100] : [10, 20, 50]) : r.pick(up ? [10, 20, 25, 30, 40, 50, 60, 100] : [10, 20, 30, 40, 50]); const f = q(100 + (up ? p : -p), 100);
+        const e = kd === 'cube' ? 3 : 2; const v = f.pow(e).sub(1).mul(100).abs(); const fig = kd === 'cube' ? 'each edge of a cube' : r.pick(['the perimeter of a square', 'the side of a square', 'the radius of a circle', 'the circumference of a circle']);
+        const what = kd === 'cube' ? 'volume' : 'area'; const word = up ? 'increases' : 'decreases';
+        return { p: H.cat(`If ${fig} ${up ? 'increases' : 'decreases'} by ${p}%, the ${what} ${word} by`), suffix: '%', a: A.num(v, 'dec'), params: { kd, p, up, e },
+          steps: [`Lengths scale by ${Q.from(f).toDecStr()}, so the ${what} scales by ${Q.from(f).toDecStr()}${e === 3 ? '³' : '²'} = ${f.pow(e).toDecStr()}.`, `That's a ${hl(v.toDecStr())}% ${up ? 'increase' : 'decrease'}`] };
+      }
+      if (kd === 'circle') {
+        let c1, c2; do { c1 = 2 * r.int(2, 12); c2 = 2 * r.int(2, 12); } while (c1 === c2);
+        const up = c2 > c1; const v = Math.abs((c2 / 2) ** 2 - (c1 / 2) ** 2);
+        return { p: H.cat(`The circumference of a circle ${up ? 'increases' : 'decreases'} from ${c1}π to ${c2}π. The area ${up ? 'increases' : 'decreases'} by kπ. k =`), a: A.num(v), params: { kd, c1, c2 },
+          steps: [`Radii: ${c1 / 2} and ${c2 / 2}.`, `Change in area: (${Math.max(c1, c2) / 2}² − ${Math.min(c1, c2) / 2}²)π = (${Math.max(c1, c2) / 2} − ${Math.min(c1, c2) / 2})(${Math.max(c1, c2) / 2} + ${Math.min(c1, c2) / 2})π, so k = ${hl(v)}`] };
+      }
+      const half = r.chance(x >= 2 ? 0.4 : 0.15) ? 2 : 0; let p1, p2; do { p1 = 4 * r.int(2, x >= 2 ? 25 : 12) + half; p2 = 4 * r.int(2, x >= 2 ? 25 : 12) + half; } while (p1 === p2 || Math.abs(p1 - p2) > (x >= 2 ? 60 : 32));
+      const up = p2 > p1; const s1 = q(p1, 4), s2 = q(p2, 4); const v = s2.mul(s2).sub(s1.mul(s1)).abs();
+      const hi = up ? s2 : s1, lo = up ? s1 : s2;
+      return { p: H.cat(`When the perimeter of a square ${up ? 'increases' : 'decreases'} from ${p1} to ${p2}, the ${up ? 'increase' : 'decrease'} in area is`), a: A.num(v, 'any'), params: { kd, p1, p2 },
+        steps: [`Sides: ${p1} ÷ 4 = ${Q.from(s1).toDecStr()} and ${p2} ÷ 4 = ${Q.from(s2).toDecStr()}.`, `Difference of squares: (${hi.toDecStr()} − ${lo.toDecStr()})(${hi.toDecStr()} + ${lo.toDecStr()}) = ${hl(v.toDecStr())}`] };
+    },
+  });
+
+  /* ---------- fourth roots and other root estimates (starred) ---------- */
+  const ap = x => Q.parseNum(x.toFixed(6));
+  G({
+    id: 'estRoot', trick: 'estimate', est: true, col: { ms: 0, hs: 4 }, w: 0.4,
+    gen(r, lv, x = 1) {
+      const kd = r.pick(['fourth', 'fourth', 'sqrtsum', 'fifth']);
+      if (kd === 'fourth') { const n = r.int(x >= 2 ? 5000 : 200, x >= 2 ? 99999 : 9999); const k = r.int(11, 99); const v = ap(Math.pow(n, 0.25) * k); const s = Math.floor(Math.pow(n, 0.25) + 1e-9);
+        return { p: H.cat(H.L(`\\sqrt[4]{${n}}`), ' × ', H.n(k), ' ='), a: A.est(v), params: { kd, n, k }, steps: [`Fourth powers: ${s}⁴ = ${fm(s ** 4)} and ${s + 1}⁴ = ${fm((s + 1) ** 4)}, so the root is a bit over ${s}: about ${Math.pow(n, 0.25).toFixed(2)}.`, `× ${k} ≈ ${fm(Math.round(v.num()))}`] }; }
+      if (kd === 'fifth') { const n = r.int(1000, 99999); const k = r.int(11, 99); const v = ap(Math.pow(n, 0.2) * k); const s = Math.floor(Math.pow(n, 0.2) + 1e-9);
+        return { p: H.cat(H.L(`\\sqrt[5]{${n}}`), ' × ', H.n(k), ' ='), a: A.est(v), params: { kd, n, k }, steps: [`Fifth powers: ${s}⁵ = ${fm(s ** 5)} and ${s + 1}⁵ = ${fm((s + 1) ** 5)}, so the root is about ${Math.pow(n, 0.2).toFixed(2)}.`, `× ${k} ≈ ${fm(Math.round(v.num()))}`] }; }
+      let a, b; do { a = r.int(20, 999); b = r.int(20, 999); } while (isSq(a) || isSq(b)); const k = r.int(11, 49); const v = ap((Math.sqrt(a) + Math.sqrt(b)) * k);
+      return { p: H.cat('(', H.sqrt(a), ' + ', H.sqrt(b), ') × ', H.n(k), ' ='), a: A.est(v), params: { kd, a, b, k }, steps: [`√${a} ≈ ${Math.sqrt(a).toFixed(1)} and √${b} ≈ ${Math.sqrt(b).toFixed(1)}; sum ≈ ${(Math.sqrt(a) + Math.sqrt(b)).toFixed(1)}.`, `× ${k} ≈ ${fm(Math.round(v.num()))}`] };
+    },
+  });
+})();
+
 /* ===== the trick library =====
    Each lesson: s = when to reach for it, how = steps, why = the algebra, watch = the usual mistake.
    Math goes between $…$ and is typeset with KaTeX. */
@@ -4092,7 +4359,7 @@ NS.G({
       why: R`$(100 - a)(100 - b) = 100(100 - a - b) + ab$.`,
       watch: R`The back must be exactly two digits ($98 \times 97 = 95|06$). If one number is over 100 and one is under, subtract instead: $103 \times 94 = 9700 - 18 = 9682$.` },
     sameFront: { unit: 'squares', title: 'Same front, backs add to 10', s: R`Like $43 \times 47$ (same tens digit, ones add to 10), or the flip, $34 \times 74$ (same ones digit, tens add to 10).`,
-      how: [R`Same front: front × (front + 1), then the backs multiplied as two digits. $43 \times 47$ → $4 \times 5 = 20$, $3 \times 7 = 21$ → 2021.`, R`The flip: fronts multiplied plus the shared back, then the back squared as two digits. $34 \times 74$ → $3 \times 7 + 4 = 25$, $4^2 = 16$ → 2516.`],
+      how: [R`Same front: front × (front + 1), then the backs multiplied as two digits. $43 \times 47$ → $4 \times 5 = 20$, $3 \times 7 = 21$ → 2021.`, R`The flip: fronts multiplied plus the shared back, then the back squared as two digits. $34 \times 74$ → $3 \times 7 + 4 = 25$, $4^2 = 16$ → 2516.`, R`Three digits work the same way when the first two digits match: $342 \times 348$ → $34 \times 35 = 1190$, $2 \times 8 = 16$ → 119016.`],
       why: R`$(10a + b)(10a + 10 - b) = 100a(a + 1) + b(10 - b)$. It's the ending-in-5 trick in disguise.`,
       watch: R`Two digits for the back: $41 \times 49 = 20|09$.` },
     end5: { unit: 'squares', title: 'Two numbers ending in 5', s: R`Both numbers end in 5, like $35 \times 85$.`,
@@ -4212,8 +4479,8 @@ NS.G({
       why: R`Units digits of a product depend only on the units digits.`,
       watch: R`0, 1, 5 and 6 never change. 4 and 9 cycle every 2.` },
     modular: { unit: 'nt', title: 'Modular arithmetic', s: R`Solving $ax \equiv b \pmod m$, or finding a number with given remainders.`,
-      how: [R`For $ax \equiv b$: add copies of $m$ to $b$ until $a$ divides it.`, R`For two remainders: list numbers with one remainder, check the other.`],
-      why: R`Numbers that differ by a multiple of $m$ are the same mod $m$.`,
+      how: [R`For $ax \equiv b$: add copies of $m$ to $b$ until $a$ divides it.`, R`For two remainders: list numbers with one remainder, check the other.`, R`With a range, like $3x - 4 \equiv 5 \pmod 9$ for $4 \le x \le 8$: move the constant ($3x \equiv 9$), find one solution ($x = 3$), then keep adding $m \div \gcd(a, m)$ until you land in the range: $3, 6, 9$ → 6.`, R`Big powers when the modulus is a prime $p$: $a^{p-1} \equiv 1$ (Fermat), so divide the exponent by $p - 1$ and keep the remainder. For $3^{100}$ and 7: $100 = 6 \cdot 16 + 4$, so $3^4 = 81 \equiv 4$.`],
+      why: R`Numbers that differ by a multiple of $m$ leave the same remainder when divided by $m$.`,
       watch: R`The answer should be between 0 and $m - 1$ unless the problem says otherwise.` },
     bases: { unit: 'nt', title: 'Number bases', s: R`Converting to or from bases 2–9, or adding in another base.`,
       how: [R`To base 10: multiply each digit by its place value ($1, b, b^2, \ldots$) and add.`, R`From base 10: divide by $b$ repeatedly and read the remainders from bottom to top.`, R`Base 2 to 4, 8 or 16: group the binary digits in 2s, 3s or 4s from the right.`, R`$b^n - k$ in base $b$: $b^n$ is 1 followed by $n$ zeros, so subtracting turns the zeros into $(b - 1)$s. $6^4 - 1 = 5555_6$.`, R`A fraction over $b^2$ as a base-$b$ decimal: write the numerator in base $b$. $\tfrac{19}{36} = .31_6$ because $19 = 3 \cdot 6 + 1$.`],
@@ -4408,7 +4675,7 @@ NS.G({
       why: R`Far out, the highest powers drown out everything else.`,
       watch: R`If the top's degree is smaller, the limit at infinity is 0.` },
     derivatives: { unit: 'calc', title: 'Derivatives and tangent slopes', s: R`$f'(a)$, $f''(a)$, or the slope of a tangent line.`,
-      how: [R`Power rule: $\tfrac{d}{dx}x^n = nx^{n - 1}$.`, R`Differentiate, then plug in.`, R`The tangent slope at $x = a$ is $f'(a)$.`],
+      how: [R`Power rule: $\tfrac{d}{dx}x^n = nx^{n - 1}$.`, R`Differentiate, then plug in.`, R`The tangent slope at $x = a$ is $f'(a)$.`, R`Given $f'(x)$ and one value of $f$: undo the derivative, then use the value for the constant. $f'(x) = 6x$, $f(-1) = 3$ → $f = 3x^2 + C$, $C = 0$, so $f(-3) = 27$.`, R`Trig: $(\sin x)' = \cos x$, $(\cos x)' = -\sin x$. Two derivatives of $\cos x$ is $-\cos x$, so $f''(60^\circ) = -\tfrac12$ for $f = \cos x$.`, R`Chain rule: $\tfrac{d}{dx}(ax + b)^n = n(ax + b)^{n-1} \cdot a$. Plug in for the inside first, then multiply.`],
       why: R`The derivative is the slope.`,
       watch: R`Constants disappear.` },
     integrals: { unit: 'calc', title: 'Definite integrals', s: R`A polynomial integrated between two limits, or a double integral over a rectangle.`,
@@ -4426,7 +4693,7 @@ NS.G({
 
     /* ---- Estimation ---- */
     estimate: { unit: 'est', title: 'Starred estimation problems', s: R`Every 10th problem has a star. Anything within 5% of the exact answer counts.`,
-      how: [R`Round one number and keep the other exact, so the errors don't stack.`, R`Spot fractions of powers of 10: $8333 \approx \tfrac56 \cdot 10000$, $142.857 \approx \tfrac17 \cdot 1000$, $87.5\% = \tfrac78$.`, R`Get the size right. 249 for an answer near 249,000 is wrong.`, R`Geometry stars: $\pi \approx 3.1416$, $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$. Gallons to cubic inches: × 231. Square miles to acres: × 640. 60 mph = 88 ft/s.`],
+      how: [R`Round one number and keep the other exact, so the errors don't stack.`, R`Spot fractions of powers of 10: $8333 \approx \tfrac56 \cdot 10000$, $142.857 \approx \tfrac17 \cdot 1000$, $87.5\% = \tfrac78$.`, R`Get the size right. 249 for an answer near 249,000 is wrong.`, R`Geometry stars: $\pi \approx 3.1416$, $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$. Gallons to cubic inches: × 231. Square miles to acres: × 640. 60 mph = 88 ft/s.`, R`Fourth roots: find the fourth powers on either side. $7^4 = 2401$ and $8^4 = 4096$, so $\sqrt[4]{3000} \approx 7.4$.`],
       why: R`5% is a lot of room. Two good significant digits almost always land inside it.`,
       watch: R`Count the digits of your answer before you write it.` },
     /* ---- added from recent UIL and TMSCA tests ---- */
@@ -4514,15 +4781,27 @@ NS.G({
       how: [R`Sum of two squares: go down the squares below $N$ and check whether what's left is a square. $85 - 49 = 36$, so 7 and 6.`, R`$ax + by = N$: find the first $y$ that makes $N - by$ a multiple of $a$, then step $y$ up by $a$ until $by$ passes $N$.`, R`$3x + 5y = 90$: $y$ must be a multiple of 3 from 0 to 18, so 7 pairs.`],
       why: R`Once you have one solution, adding $a$ to $y$ and taking $b$ from $x$ keeps the total the same.`,
       watch: R`Read the conditions. "Positive" leaves out 0; "nonnegative" lets it in.` },
+    roundRoots: { unit: 'squares', title: 'Rounding square roots', s: R`"Round $(\sqrt5 + \sqrt3)$ to the nearest tenth", "Round $\sqrt7$ to the nearest hundredth", "Round $100\sqrt2$ to the nearest whole number".`,
+      how: [R`Know these to three places: $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$, $\sqrt5 \approx 2.236$, $\sqrt6 \approx 2.449$, $\sqrt7 \approx 2.646$, $\sqrt{10} \approx 3.162$.`, R`Add or subtract the decimals, then round once at the end: $\sqrt5 + \sqrt3 \approx 2.236 + 1.732 = 3.968$ → 4.0.`, R`For any other root, start from the square just below: $\sqrt{n} \approx s + \tfrac{n - s^2}{2s}$. $\sqrt{40} \approx 6 + \tfrac4{12} = 6.33$ (it's 6.325). This guess always runs a little high.`, R`A multiple of a root: multiply the decimal. $100\sqrt2 \approx 141.4$ → 141.`],
+      why: R`$(s + d)^2 = s^2 + 2sd + d^2$. When $d$ is small, $d^2$ hardly matters, so $d \approx \tfrac{n - s^2}{2s}$.`,
+      watch: R`Round only once. Rounding each root first can push the total over the line: $\sqrt2 + \sqrt7 \approx 4.06$, but $1.4 + 2.6 = 4.0$.` },
+    perfectNumbers: { unit: 'nt', title: 'Perfect, abundant and deficient numbers', s: R`"The sum of the first three perfect numbers", "Is 70 abundant, deficient or perfect?", "The sum of the proper divisors of 48".`,
+      how: [R`Proper divisors are all the divisors except the number itself. Add them up and compare with the number.`, R`More than the number: abundant. Less: deficient. Equal: perfect.`, R`Perfect numbers to know: 6, 28, 496, 8128.`, R`Quick sum: get the sum of all divisors from the prime factors, then take away the number. $48 = 2^4 \cdot 3$: $(1 + 2 + 4 + 8 + 16)(1 + 3) = 124$, and $124 - 48 = 76$, so 48 is abundant.`, R`Shortcuts: primes and powers of primes are deficient. Every multiple of 6 past 6 is abundant. The smallest abundant numbers are 12, 18, 20, 24, 30, 36, 40.`],
+      why: R`Every even perfect number is $2^{p-1}(2^p - 1)$ where $2^p - 1$ is prime: $p = 2, 3, 5, 7$ give 6, 28, 496, 8128.`,
+      watch: R`Leave the number itself out of the proper divisors, but keep 1 in.` },
+    scaleChange: { unit: 'geo', title: 'Scaling: perimeter to area, edge to volume', s: R`"The radius of a circle increases by 20%. The area increases by ___%." "The perimeter of a square goes from 16 to 28; the area increases by ___."`,
+      how: [R`Lengths (side, radius, perimeter, circumference) scale by $k$, areas by $k^2$, volumes by $k^3$.`, R`For a percent: $1.2^2 = 1.44$ → 44% more. $0.9^2 = 0.81$ → 19% less. $1.1^3 = 1.331$ → 33.1% more.`, R`For a change in area, find the two sides and use a difference of squares: perimeters 16 and 28 → sides 4 and 7 → $(7 - 4)(7 + 4) = 33$.`, R`Circles: circumference $c\pi$ means radius $\tfrac c2$. From $10\pi$ to $14\pi$: $(7^2 - 5^2)\pi = 24\pi$.`],
+      why: R`Area is length times length, so it picks up the scale factor twice. Volume picks it up three times.`,
+      watch: R`A 20% increase in side is not a 40% increase in area. Square the factor, then subtract 1.` },
   };
 
   NS.PATH = {
-    ms: ['addSub', 'foil', 'times11', 'friendly', 'divideFriendly', 'square5', 'doubleHalf', 'sameFront', 'squares50', 'near100', 'distrib', 'factorOut', 'ninePatterns', 'times101', 'subReverse', 'fdpTable', 'fracAdd', 'compare', 'percent', 'orderOps', 'meanMedian', 'means', 'consumer', 'remainders', 'gcdLcm', 'primes', 'roman', 'units', 'numberWords', 'estimate', 'powers', 'radicals', 'diffsq',
+    ms: ['addSub', 'foil', 'times11', 'friendly', 'divideFriendly', 'square5', 'doubleHalf', 'sameFront', 'squares50', 'near100', 'distrib', 'factorOut', 'ninePatterns', 'times101', 'subReverse', 'fdpTable', 'fracAdd', 'compare', 'percent', 'orderOps', 'meanMedian', 'means', 'consumer', 'remainders', 'gcdLcm', 'primes', 'roman', 'units', 'numberWords', 'estimate', 'powers', 'radicals', 'roundRoots', 'diffsq',
       'equidistant', 'end5', 'reverses', 'special', 'consq', 'squareMultiples', 'mixedMult', 'divideBy9', 'repeating', 'decimalDigits', 'ratio', 'remExpr', 'divisors', 'relPrime', 'divisibilityRules', 'countMultiples', 'sums', 'sequences', 'consecutive', 'bases', 'substitution', 'hiddenPowers', 'symmetricSums', 'integerPairs', 'equations', 'absInverse', 'absSolutions', 'sets', 'polygons', 'geoFacts', 'clockAngles', 'rightTri', 'area',
-      'equilateral', 'tempSpeed', 'aab', 'aOverB', 'sumsq101', 'twoAB', 'fourConsecutive', 'telescope', 'fractionChain', 'unitsDigit', 'polygonal', 'geoSeries', 'fibonacciSums', 'systems', 'inequalities', 'variation', 'exponents', 'logs', 'binomial', 'cubeBinomial', 'volume', 'platonic', 'coordinate', 'reflections', 'counting', 'probability', 'nearFrac', 'roots', 'vertex'],
-    hs: ['addSub', 'foil', 'times11', 'friendly', 'divideFriendly', 'square5', 'doubleHalf', 'sameFront', 'squares50', 'near100', 'equidistant', 'end5', 'reverses', 'diffsq', 'distrib', 'factorOut', 'ninePatterns', 'times101', 'subReverse', 'fdpTable', 'fracAdd', 'compare', 'percent', 'orderOps', 'meanMedian', 'consumer', 'remainders', 'divideBy9', 'gcdLcm', 'divisors', 'divisibilityRules', 'primes', 'roman', 'units', 'numberWords', 'powers', 'estimate',
-      'special', 'consq', 'squareMultiples', 'twoAB', 'mixedMult', 'aab', 'aOverB', 'sumsq101', 'telescope', 'fractionChain', 'repeating', 'ratio', 'remExpr', 'unitsDigit', 'sums', 'sequences', 'consecutive', 'bases', 'substitution', 'hiddenPowers', 'equations', 'absInverse', 'systems', 'symmetricSums', 'sets', 'polygons', 'geoFacts', 'rightTri', 'area', 'tempSpeed',
-      'nearFrac', 'fourConsecutive', 'relPrime', 'factorialTrick', 'exponents', 'radicals', 'logs', 'complex', 'roots', 'vertex', 'binomial', 'variation', 'inequalities', 'polygonal', 'geoSeries', 'fibonacciSums', 'counting', 'digitSumCount', 'probability', 'coordinate', 'reflections', 'conics', 'platonic',
+      'equilateral', 'tempSpeed', 'aab', 'aOverB', 'sumsq101', 'twoAB', 'fourConsecutive', 'telescope', 'fractionChain', 'unitsDigit', 'polygonal', 'geoSeries', 'fibonacciSums', 'systems', 'inequalities', 'variation', 'exponents', 'logs', 'binomial', 'cubeBinomial', 'volume', 'scaleChange', 'platonic', 'coordinate', 'reflections', 'counting', 'probability', 'nearFrac', 'roots', 'vertex', 'functions'],
+    hs: ['addSub', 'foil', 'times11', 'friendly', 'divideFriendly', 'square5', 'doubleHalf', 'sameFront', 'squares50', 'near100', 'equidistant', 'end5', 'reverses', 'diffsq', 'distrib', 'factorOut', 'ninePatterns', 'times101', 'subReverse', 'fdpTable', 'fracAdd', 'compare', 'percent', 'orderOps', 'meanMedian', 'consumer', 'remainders', 'divideBy9', 'gcdLcm', 'divisors', 'perfectNumbers', 'divisibilityRules', 'primes', 'roman', 'units', 'numberWords', 'powers', 'estimate',
+      'special', 'consq', 'squareMultiples', 'twoAB', 'mixedMult', 'aab', 'aOverB', 'sumsq101', 'telescope', 'fractionChain', 'repeating', 'ratio', 'remExpr', 'unitsDigit', 'sums', 'sequences', 'consecutive', 'bases', 'substitution', 'hiddenPowers', 'equations', 'absInverse', 'systems', 'symmetricSums', 'sets', 'polygons', 'geoFacts', 'rightTri', 'area', 'scaleChange', 'tempSpeed',
+      'nearFrac', 'fourConsecutive', 'relPrime', 'factorialTrick', 'exponents', 'radicals', 'roundRoots', 'logs', 'complex', 'roots', 'vertex', 'binomial', 'variation', 'inequalities', 'polygonal', 'geoSeries', 'fibonacciSums', 'counting', 'digitSumCount', 'probability', 'coordinate', 'reflections', 'conics', 'platonic',
       'volume', 'cubeBinomial', 'trig', 'matrices', 'vectors', 'greatestInt', 'remainderThm', 'functions', 'modular', 'limits', 'derivatives', 'integrals', 'critical', 'asymptotes', 'oddUnits'],
   };
 })();
@@ -4558,7 +4837,7 @@ NS.G({
     ms: [
       [[0, 1], [0, 2], [0, 2], [0, 2]],   // Warm-up
       [[0, 4], [1, 5], [2, 7], [3, 7]],   // Contest
-      [[1, 5], [3, 7], [4, 7], [6, 7]],   // Hard
+      [[1, 4], [3, 7], [4, 7], [6, 7]],   // Hard
       [[5, 7], [6, 7], [7, 7], [7, 7]],   // Super-hard
     ],
     hs: [
@@ -4619,7 +4898,7 @@ NS.G({
         const champ = lv === 'ms' && di >= 2 && c === 4 && g.series ? 2.8 : 1;
         // …and bring the problems-61–80 topics forward into 41–60 (Regional/State: first one near #48, not #60)
         const fwd = lv === 'ms' && di === 2 && c === 3 && d === -1 ? 10 : 1;
-        const w = (d === 2 && c < 3 ? 0 : W[d] || 0) * (g.w || 1) * champ * fwd;
+        const w = (d === 2 && c < 3 ? 0 : W[d] || 0) * ((g.w && typeof g.w === 'object' ? g.w[lv] : g.w) || 1) * champ * fwd;
         if (w) pool.push({ g, w });
       });
       // weighted sample without replacement
@@ -4637,7 +4916,7 @@ NS.G({
       let i = 0;
       for (let pos = 1; pos <= 20; pos++) {
         const s = r.int(1, 2 ** 31);
-        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s, diff, c));
+        if (pos % 10 === 0) { let t = r.f() * estG.reduce((a, g) => a + (g.w || 1), 0), k = 0; for (; k < estG.length - 1; k++) { t -= estG[k].w || 1; if (t <= 0) break; } probs.push(NS.makeProblem(estG[k].id, lv, s, diff, c)); }
         else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s, diff, c));
         else probs.push(NS.makeProblem(chosen[i++].id, lv, s, diff, c));
       }
@@ -4678,9 +4957,32 @@ NS.G({
     return { last: last + 1, correct, wrong, skipped, score: 5 * correct - 4 * (wrong + skipped), marks };
   };
 
+  /* ---------- answering behaviors for practice rounds and sprints ---------- */
+  NS.BEHAVIORS = ['normal', 'noenter', 'hardcore', 'test'];
+
+  /* ---------- arithmetic warm-up: plain + − × ÷ with ranges you set (subtraction and division run
+     the addition and multiplication facts backward, so every answer is a whole number) ---------- */
+  NS.ARITH_DEF = { ops: '+-x/', add: [2, 100, 2, 100], mul: [2, 12, 2, 100] };
+  NS.arithClean = function (a) {
+    if (!a || typeof a !== 'object') return null;
+    const ops = typeof a.ops === 'string' ? [...new Set(a.ops.split('').filter(c => '+-x/'.includes(c)))].sort((x, y) => '+-x/'.indexOf(x) - '+-x/'.indexOf(y)).join('') : '';
+    const rng = (v, lo0) => Array.isArray(v) && v.length === 4 && v.every(n => Number.isInteger(n) && n >= 0 && n <= 9999) && v[0] <= v[1] && v[2] <= v[3] && v[0] >= lo0 && v[2] >= lo0 ? v.slice() : null;
+    const add = rng(a.add, 0), mul = rng(a.mul, 1);
+    if (!ops || !add || !mul) return null;
+    return { ops, add, mul };
+  };
+  NS.arithKey = (a, dur) => `${a.ops}:${a.add.join(',')}-${a.mul.join(',')}:${dur}`;
+  NS.arithProblem = function (a, r) {
+    const op = r.pick(a.ops.split('')); let x, y, v, sym;
+    if (op === '+' || op === '-') { const m = r.int(a.add[0], a.add[1]), n = r.int(a.add[2], a.add[3]); if (op === '+') { x = m; y = n; v = m + n; sym = '+'; } else { x = m + n; y = m; v = n; sym = '−'; } }
+    else { const m = r.int(a.mul[0], a.mul[1]), n = r.int(a.mul[2], a.mul[3]); if (op === 'x') { x = m; y = n; v = m * n; sym = '×'; } else { x = m * n; y = m; v = n; sym = '÷'; } }
+    return { gid: 'arith', trick: null, lv: null, seed: 0, diff: 'contest', col: 1, est: false, p: NS.H.cat(NS.H.n(x), ` ${sym} `, NS.H.n(y), ' ='), a: NS.ans.num(v), steps: [`${NS.fmtn(x)} ${sym} ${NS.fmtn(y)} = ${NS.hl(NS.fmtn(v))}`] };
+  };
+
   /* ---------- progress store ---------- */
   const KEY = 'eighty-in-ten:v1';
   const blank = () => ({ tricks: {}, tests: [], days: {}, misses: [] });
+  NS.blankLevel = blank;
   NS.store = {
     data: null,
     load() {
@@ -4729,6 +5031,8 @@ NS.G({
     const out = { v: 1, level: d.level === 'ms' || d.level === 'hs' ? d.level : null, settings: {}, levels: {} };
     const st = obj(d.settings); if (['system', 'light', 'dark'].includes(st.theme)) out.settings.theme = st.theme; if (typeof st.names === 'boolean') out.settings.names = st.names;
     const dids = NS.DIFFS.map(x => x.id); if (st.pdiff === 'auto' || dids.includes(st.pdiff)) out.settings.pdiff = st.pdiff; if (dids.includes(st.tdiff)) out.settings.tdiff = st.tdiff;
+    if (NS.BEHAVIORS.includes(st.pbeh)) out.settings.pbeh = st.pbeh; if ([10, 20, 40, 80].includes(st.plen)) out.settings.plen = st.plen;
+    { const a = NS.arithClean(st.arith); if (a) out.settings.arith = a; }
     const pair = a => Array.isArray(a) && a.length === 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
     const att = a => Array.isArray(a) && a.length === 3 && [0, 2, 3].includes(a[2]) ? [a[0] ? 1 : 0, num(a[1]), a[2]] : Array.isArray(a) && a.length >= 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
     for (const lv of ['ms', 'hs']) {
@@ -4738,7 +5042,9 @@ NS.G({
       const days = {}; for (const [k, v] of Object.entries(obj(L.days))) if (/^\d{4}-\d\d-\d\d$/.test(k)) days[k] = num(v);
       const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t), ...(dids.includes(m.d) && m.d !== 'contest' ? { d: m.d } : {}), ...([1, 2, 3, 4].includes(m.at) ? { at: m.at } : {}) })).slice(-60);
       const memo = {}; for (const [k, v] of Object.entries(obj(L.memo))) if (Array.isArray(v) && /^[a-z]{2}[\w.]*$/.test(k)) memo[k] = v.map(pair).filter(Boolean).slice(-6);
-      out.levels[lv] = { tricks, tests, days, misses, memo };
+      const b = obj(L.best); const best = {}; if (num(b.hc) > 0) best.hc = Math.round(num(b.hc));
+      const ar = {}; for (const [k, v] of Object.entries(obj(b.ar))) if (/^[+\-x\/]{1,4}:[\d,-]{1,60}:\d{2,3}$/.test(k) && num(v) > 0) ar[k] = Math.round(num(v)); if (Object.keys(ar).length) best.ar = ar;
+      out.levels[lv] = { tricks, tests, days, misses, memo, ...(Object.keys(best).length ? { best } : {}) };
     }
     return out;
   };
@@ -5170,9 +5476,9 @@ NS.G({
     if (state.session && !state.session.done && v !== 'practice' && v !== 't') endSession(true);
     state.view = v;
     if (state.memo && v !== 'memorize') state.memo = null;
-    const views = { home: viewHome, tricks: viewTricks, t: () => viewLesson(arg), memorize: () => viewMemorize(arg), practice: viewPractice, test: viewTests, progress: viewProgress };
+    const views = { home: viewHome, tricks: viewTricks, t: () => viewLesson(arg), memorize: () => viewMemorize(arg), practice: viewPractice, test: viewTests, progress: viewProgress, print: () => viewPrint(arg) };
     (views[v] || viewHome)();
-    setNav(v === 't' ? 'tricks' : v);
+    setNav(v === 't' ? 'tricks' : v === 'print' ? 'test' : v);
     if (!state.keepScroll) window.scrollTo(0, 0); state.keepScroll = false;
   }
 
@@ -5214,6 +5520,8 @@ NS.G({
       <div class="sect"><div class="sect-h" style="border-bottom:0;padding-bottom:0"><h2>Other ways to practice</h2></div>
         <div class="list">
           <button class="li" data-act="quickSprint"><span><b>Two-minute sprint</b><span class="muted">Problems 1–20 against the clock. Right answers move on by themselves.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickArith"><span><b>Arithmetic warm-up</b><span class="muted">Two minutes of plain + − × ÷. A good start to team practice.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickEst"><span><b>Estimation drill</b><span class="muted">Ten starred problems. Anything within 5% counts.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickWeak"><span><b>${weak.length ? 'Weak spots' : misses ? 'Problems you missed' : 'Weak spots'}</b><span class="muted">${weak.length ? `${weak.length} trick${weak.length > 1 ? 's' : ''} under 85%, starting with ${NS.rich(trickName(weak[0]))}.` : misses ? `${misses} problem${misses > 1 ? 's' : ''} waiting to be redone.` : 'Nothing here yet. Tricks you miss will collect here.'}</span></span><span class="arr">→</span></button>
           <button class="li" data-act="memoMix"><span><b>Facts drill</b><span class="muted">Twenty quick cards: squares, cubes, fractions, triples and more.</span></span><span class="arr">→</span></button>
           <button class="li" data-go="test"><span><b>Full practice test</b><span class="muted">80 problems, 10 minutes, scored like a contest.</span></span><span class="arr">→</span></button>
@@ -5319,93 +5627,158 @@ NS.G({
     if (L().misses.length) sets.push({ k: 'misses', name: `Redo my misses (${L().misses.length})`, d: 'The exact problems you got wrong, then more like them.', tricks: [...new Set(L().misses.map(m => NS.GBY[m.g] && NS.GBY[m.g].trick).filter(Boolean))], misses: true });
     if (learned.length >= 2) sets.push({ k: 'learned', name: 'Everything I’ve started', d: `${learned.length} tricks, mixed.`, tricks: learned });
     [1, 2, 3, 4].forEach(c => { let arr = ids.filter(id => NS.trickCol(id, l) === c); if (arr.length < 4) arr = ids.filter(id => NS.trickCol(id, l) >= c - 1 && NS.trickCol(id, l) <= c); if (arr.length) sets.push({ k: 'c' + c, name: `Problems ${COLR[c]}`, d: `${arr.length} tricks from this part of the test.`, tricks: arr }); });
+    sets.push({ k: 'est', name: 'Starred estimation', d: 'Only the * problems. Anything within 5% counts.', tricks: ['estimate'] });
     sets.push({ k: 'custom', name: 'Choose tricks…', d: state.custom.size ? `${state.custom.size} selected.` : 'Pick exactly what to drill.', tricks: [...state.custom] });
     return sets;
+  }
+  const BEH = {
+    normal: ['Normal', 'Press Enter to check each answer.'],
+    noenter: ['No Enter', 'Right answers move on by themselves. Press Enter only to give up on one.'],
+    hardcore: ['Hardcore', 'One miss ends the run. See how long a streak you can build.'],
+    test: ['Test', 'No right or wrong until the end, like a real test. Press Enter to move on.'],
+  };
+  const exCache = new Map();
+  function sampleHtml(id, l) {
+    const k = l + ':' + id; if (!exCache.has(k)) { const p = NS.problemForTrick(id, l, 4243); exCache.set(k, `${R(p.p.h)}${p.suffix ? ' ' + esc(p.suffix) : ''}`); }
+    return exCache.get(k);
+  }
+  function arithCfg() { return NS.arithClean(S.data.settings.arith) || JSON.parse(JSON.stringify(NS.ARITH_DEF)); }
+  function arithBest(a, dur) { const b = L().best; return (b && b.ar && b.ar[NS.arithKey(a, dur)]) || 0; }
+  function arithSetup() {
+    const a = arithCfg(); const best = arithBest(a, state.sprintLen);
+    const on = c => a.ops.includes(c);
+    const rngIn = (key, i, lbl) => `<input class="field rin" type="number" inputmode="numeric" min="${key === 'mul' ? 1 : 0}" max="9999" value="${a[key][i]}" data-ar="${key}" data-i="${i}" aria-label="${lbl}">`;
+    return `<div class="cfg-row"><span class="cfg-l">Length</span><div class="cfg-v"><div class="seg" role="group" aria-label="Length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([sec, nm]) => `<button data-act="plen" data-s="${sec}" aria-pressed="${state.sprintLen === sec}">${nm}</button>`).join('')}</div>
+        <p class="note-s" id="arbest">${best ? `Your best with these settings: <b>${best}</b>.` : 'Your best score for these settings shows here.'}</p></div></div>
+      <div class="cfg-row"><span class="cfg-l">Problems</span><div class="cfg-v arith">
+        <div class="arow"><button class="chip" data-act="arop" data-op="+" aria-pressed="${on('+')}">Addition</button><span class="rng">${rngIn('add', 0, 'Addition: first number from')}<span>to</span>${rngIn('add', 1, 'Addition: first number to')}<span class="op">+</span>${rngIn('add', 2, 'Addition: second number from')}<span>to</span>${rngIn('add', 3, 'Addition: second number to')}</span></div>
+        <div class="arow"><button class="chip" data-act="arop" data-op="-" aria-pressed="${on('-')}">Subtraction</button><span class="muted small">Addition problems in reverse</span></div>
+        <div class="arow"><button class="chip" data-act="arop" data-op="x" aria-pressed="${on('x')}">Multiplication</button><span class="rng">${rngIn('mul', 0, 'Multiplication: first number from')}<span>to</span>${rngIn('mul', 1, 'Multiplication: first number to')}<span class="op">×</span>${rngIn('mul', 2, 'Multiplication: second number from')}<span>to</span>${rngIn('mul', 3, 'Multiplication: second number to')}</span></div>
+        <div class="arow"><button class="chip" data-act="arop" data-op="/" aria-pressed="${on('/')}">Division</button><span class="muted small">Multiplication problems in reverse</span></div>
+        <p class="note-s" id="armsg">${a.ops === NS.ARITH_DEF.ops && a.add.join() === NS.ARITH_DEF.add.join() && a.mul.join() === NS.ARITH_DEF.mul.join() ? 'The usual warm-up ranges.' : '<button class="btn link small" data-act="arreset">Back to the usual ranges</button>'}</p></div></div>`;
   }
   function viewPractice() {
     if (state.session && !state.session.done) return renderSession();
     if (state.session && state.session.done && state.session.showSummary) return renderSummary();
     const l = lv(); const sets = practiceSets(l); if (!state.pickDiff) state.pickDiff = S.data.settings.pdiff || 'auto';
+    if (!state.pickBeh) state.pickBeh = S.data.settings.pbeh || 'normal'; if (!state.pickLen) state.pickLen = S.data.settings.plen || 20;
     if (!state.pickSet || !sets.find(s => s.k === state.pickSet)) state.pickSet = sets[0].k;
-    const cur = sets.find(s => s.k === state.pickSet);
+    const cur = sets.find(s => s.k === state.pickSet); const mode = state.pickMode; const arith = mode === 'arith';
     const ids = NS.tricksFor(l);
-    const modeHint = state.pickMode === 'sprint' ? 'As many as you can before time runs out. Right answers move on by themselves.' : '20 problems, no clock. Miss one and you see how to do that exact problem fast.';
+    const behKeys = mode === 'sprint' ? ['normal', 'hardcore', 'test'] : ['normal', 'noenter', 'hardcore', 'test'];
+    const beh = behKeys.includes(state.pickBeh) ? state.pickBeh : 'normal';
+    const best = (L().best || {}).hc || 0;
+    const modeHint = mode === 'sprint' ? 'As many as you can before time runs out. Right answers move on by themselves.' : arith ? 'Plain arithmetic against the clock, for warming up. Right answers move on by themselves.' : `${beh === 'hardcore' ? 'No set length' : `${state.pickLen} problems`}, no clock. Miss one and you see how to do that exact problem fast.`;
+    const behNote = mode === 'sprint' && beh === 'normal' ? 'Right answers move on by themselves.' : BEH[beh][1] + (beh === 'hardcore' && best ? ` Your best streak: <b>${best}</b>.` : '');
     main.innerHTML = `<div class="setup"><header class="pagehead"><p class="eyebrow">${LV[l]}</p><h1>Practice</h1></header>
       <div class="cfg">
-        <div class="cfg-row"><span class="cfg-l">Mode</span><div class="cfg-v"><div class="row" style="gap:8px"><div class="seg" role="group" aria-label="Mode"><button data-act="pmode" data-m="practice" aria-pressed="${state.pickMode === 'practice'}">Practice round</button><button data-act="pmode" data-m="sprint" aria-pressed="${state.pickMode === 'sprint'}">Sprint</button></div>
-          ${state.pickMode === 'sprint' ? `<div class="seg" role="group" aria-label="Sprint length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([sec, nm]) => `<button data-act="plen" data-s="${sec}" aria-pressed="${state.sprintLen === sec}">${nm}</button>`).join('')}</div>` : ''}</div>
+        <div class="cfg-row"><span class="cfg-l">Mode</span><div class="cfg-v"><div class="row" style="gap:8px"><div class="seg" role="group" aria-label="Mode"><button data-act="pmode" data-m="practice" aria-pressed="${mode === 'practice'}">Practice round</button><button data-act="pmode" data-m="sprint" aria-pressed="${mode === 'sprint'}">Sprint</button><button data-act="pmode" data-m="arith" aria-pressed="${arith}">Arithmetic</button></div>
+          ${mode === 'sprint' ? `<div class="seg" role="group" aria-label="Sprint length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([sec, nm]) => `<button data-act="plen" data-s="${sec}" aria-pressed="${state.sprintLen === sec}">${nm}</button>`).join('')}</div>` : ''}
+          ${mode === 'practice' && beh !== 'hardcore' ? `<div class="seg" role="group" aria-label="Round length">${[10, 20, 40, 80].map(n => `<button data-act="prlen" data-n="${n}" aria-pressed="${state.pickLen === n}">${n}</button>`).join('')}</div>` : ''}</div>
           <p class="note-s">${modeHint}</p></div></div>
+        ${arith ? arithSetup() : `
+        <div class="cfg-row"><span class="cfg-l">Answering</span><div class="cfg-v"><div class="seg" role="group" aria-label="Answering">${behKeys.map(k => `<button data-act="pbeh" data-b="${k}" aria-pressed="${beh === k}">${BEH[k][0]}</button>`).join('')}</div><p class="note-s">${behNote}</p></div></div>
         <div class="cfg-row"><span class="cfg-l">Difficulty</span><div class="cfg-v">${diffSeg('pdiff', state.pickDiff, true)}</div></div>
-        ${cur.tricks.length > 1 ? `<div class="cfg-row"><span class="cfg-l">Trick names</span><div class="cfg-v"><button class="switch" role="switch" aria-checked="${!!S.data.settings.names}" data-act="names"><span class="sw" aria-hidden="true"></span><span class="swt"><span>${S.data.settings.names ? 'Shown on each problem.' : 'Hidden, like a real test. You spot the trick; the name shows after you answer.'}</span></span></button></div></div>` : ''}
+        ${cur.tricks.length > 1 ? `<div class="cfg-row"><span class="cfg-l">Trick names</span><div class="cfg-v"><button class="switch" role="switch" aria-checked="${!!S.data.settings.names}" data-act="names"><span class="sw" aria-hidden="true"></span><span class="swt"><span>${S.data.settings.names ? 'Shown on each problem.' : 'Hidden, like a real test. You spot the trick; the name shows after you answer.'}</span></span></button></div></div>` : ''}`}
       </div>
-      <h2 class="label">Problems from</h2>
+      ${arith ? '' : `<h2 class="label">Problems from</h2>
       <div class="opts" role="group" aria-label="Problems from">${sets.map(st => `<button class="opt" data-act="pset" data-k="${st.k}" aria-pressed="${st.k === state.pickSet}"><b>${NS.rich(st.name)}</b><span>${NS.rich(st.d)}</span></button>`).join('')}</div>
-      ${state.pickSet === 'custom' ? `<div class="picker" id="picker">${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<h4>Problems ${COLR[c]}</h4>${arr.map(id => `<label><input type="checkbox" data-trick="${id}" ${state.custom.has(id) ? 'checked' : ''}>${NS.rich(trickName(id))}</label>`).join('')}` : ''; }).join('')}</div>` : ''}
-      <div class="row startbar"><button class="btn" data-act="startPractice" ${cur.tricks.length ? '' : 'disabled'}>Start ${state.pickMode === 'sprint' ? 'sprint' : 'round'} <span class="kbd">Enter</span></button>${cur.tricks.length ? '' : '<span class="faint small">Pick at least one trick.</span>'}</div>
+      ${state.pickSet === 'custom' ? `<div class="picker" id="picker">${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<h4>Problems ${COLR[c]}</h4>${arr.map(id => `<label><input type="checkbox" data-trick="${id}" ${state.custom.has(id) ? 'checked' : ''}><span class="pk"><span class="pkn">${NS.rich(trickName(id))}</span><span class="pke" aria-hidden="true">${sampleHtml(id, l)}</span></span></label>`).join('')}` : ''; }).join('')}</div>` : ''}`}
+      <div class="row startbar"><button class="btn" data-act="startPractice" ${arith || cur.tricks.length ? '' : 'disabled'}>Start ${arith ? 'warm-up' : mode === 'sprint' ? 'sprint' : 'round'} <span class="kbd">Enter</span></button>${arith || cur.tricks.length ? '' : '<span class="faint small">Pick at least one trick.</span>'}</div>
       </div>${footer()}`;
     const pk = $('#picker'); if (pk) pk.addEventListener('change', e => { const id = e.target.dataset.trick; if (!id) return; if (e.target.checked) state.custom.add(id); else state.custom.delete(id); const keep = pk.scrollTop; state.keepScroll = true; viewPractice(); const p2 = $('#picker'); if (p2) p2.scrollTop = keep; });
+    $$('input[data-ar]').forEach(inp => inp.addEventListener('change', () => {
+      const a = arithCfg(); const v = Math.max(+inp.min, Math.min(9999, Math.round(+inp.value || 0))); a[inp.dataset.ar][+inp.dataset.i] = v;
+      const r = a[inp.dataset.ar]; if (r[0] > r[1]) [r[0], r[1]] = [r[1], r[0]]; if (r[2] > r[3]) [r[2], r[3]] = [r[3], r[2]];
+      S.data.settings.arith = a; S.save(); $$('input[data-ar]').forEach(x => { x.value = a[x.dataset.ar][+x.dataset.i]; });
+      const b = arithBest(a, state.sprintLen); $('#arbest').innerHTML = b ? `Your best with these settings: <b>${b}</b>.` : 'Your best score for these settings shows here.';
+      $('#armsg').innerHTML = '<button class="btn link small" data-act="arreset">Back to the usual ranges</button>';
+    }));
   }
 
   /* ---------- practice session ---------- */
   function startSession(opts) {
-    const l = lv();
-    const dsel = opts.diff || state.pickDiff || 'auto'; const auto = dsel === 'auto';
+    const l = lv(); const arith = opts.mode === 'arith';
+    const dsel = opts.diff || state.pickDiff || 'auto'; const beh = arith ? 'normal' : opts.beh || 'normal';
+    const auto = dsel === 'auto' && !arith && beh !== 'test';
     // Auto starts at Contest, or at Warm-up when every trick in the round is still new
-    const startDi = auto ? (opts.tricks.length && opts.tricks.every(id => NS.trickStatus(id, l).key === 'new') ? 0 : 1) : NS.diffIdx(dsel);
-    state.session = { mode: opts.mode, tricks: opts.tricks, label: opts.label, lv: l, total: opts.mode === 'practice' ? 20 : null, dur: opts.dur || 120, results: [], r: new NS.Rng(newSeed()), queue: opts.queue || [], startAt: performance.now(), done: false, state: 'ask', last: null, auto, di: startDi, di0: startDi, diMax: startDi, hist: [], moved: 0 };
+    const startDi = dsel === 'auto' ? (opts.tricks.length && opts.tricks.every(id => NS.trickStatus(id, l).key === 'new') ? 0 : 1) : NS.diffIdx(dsel);
+    const total = opts.mode === 'practice' ? (beh === 'hardcore' ? null : opts.len || 20) : null;
+    state.session = { mode: opts.mode, beh, tricks: opts.tricks, label: opts.label, lv: l, total, len: opts.len || 20, dur: opts.dur || 120, arith: opts.arith || null, results: [], r: new NS.Rng(newSeed()), queue: opts.queue || [], startAt: performance.now(), done: false, state: 'ask', last: null, auto, autoSel: dsel === 'auto', di: startDi, di0: startDi, diMax: startDi, hist: [], moved: 0, streak: 0 };
     if (location.hash.slice(1) !== 'practice') { state.silent = true; location.hash = 'practice'; }
     setNav('practice'); nextProblem();
   }
+  const timed = s => s.mode === 'sprint' || s.mode === 'arith';
   function nextProblem() {
     const s = state.session; if (!s) return;
-    if (s.mode === 'practice' && s.results.length >= s.total) return finishSession();
+    if (s.over || (s.total && s.results.length >= s.total)) return finishSession();
     let p;
-    while (s.queue.length && !NS.GBY[s.queue[0].g]) s.queue.shift();
-    const due = (s.retry || []).findIndex(x => s.results.length >= x.due);
-    const dname = NS.DIFFS[s.di].id;
-    if (!s.queue.length && due >= 0) { const tr = s.retry.splice(due, 1)[0].trick; p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
-    else if (s.queue.length) { const m = s.queue.shift(); p = NS.makeProblem(m.g, s.lv, m.s, m.d || 'contest', m.at); }
-    else { const tr = NS.pickTrick(s.tricks, s.lv, s.r, s.last && s.last.trick); p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
+    if (s.mode === 'arith') p = NS.arithProblem(s.arith, s.r);
+    else {
+      while (s.queue.length && !NS.GBY[s.queue[0].g]) s.queue.shift();
+      const due = (s.retry || []).findIndex(x => s.results.length >= x.due);
+      const dname = NS.DIFFS[s.di].id;
+      if (!s.queue.length && due >= 0) { const tr = s.retry.splice(due, 1)[0].trick; p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
+      else if (s.queue.length) { const m = s.queue.shift(); p = NS.makeProblem(m.g, s.lv, m.s, m.d || 'contest', m.at); }
+      else { const tr = NS.pickTrick(s.tricks, s.lv, s.r, s.last && s.last.trick); p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
+    }
     s.cur = p; s.state = 'ask'; s.t0 = performance.now(); s.last = p;
     renderSession();
   }
+  const avgTime = s => (s.results.length ? (s.results.reduce((t, x) => t + x.ms, 0) / s.results.length / 1000).toFixed(1) + 's' : '—');
+  function tallyHtml(s) {
+    const right = s.results.filter(x => x.ok).length, wrong = s.results.length - right;
+    if (s.beh === 'test') return s.total ? '' : `<span class="tally"><span class="num">${s.results.length} answered</span></span>`;
+    if (s.beh === 'hardcore') return `<span class="tally"><span class="g">Streak ${right}</span></span>`;
+    return `<span class="tally"><span class="g">✓ ${right}</span>${s.mode === 'arith' ? '' : `<span class="r">✗ ${wrong}</span>`}</span>`;
+  }
   function renderSession() {
     const s = state.session; const p = s.cur; setNav('practice');
-    const right = s.results.filter(x => x.ok).length, wrong = s.results.length - right;
-    const pct = s.mode === 'practice' ? s.results.length / s.total * 100 : 0;
+    const pct = s.total ? s.results.length / s.total * 100 : 0;
+    const showName = s.mode !== 'arith' && s.tricks.length > 1;
+    const autoNext = timed(s) || s.beh === 'noenter';
+    const under = s.beh === 'test' ? '<button class="btn" data-act="sSubmit">Next <span class="kbd">Enter</span></button><button class="btn ghost" data-act="sGiveUp">Skip</button>'
+      : timed(s) ? '<button class="btn ghost small" data-act="sGiveUp">Skip</button>'
+      : `<button class="btn" data-act="sSubmit">Check <span class="kbd">Enter</span></button><button class="btn ghost" data-act="sGiveUp">Show the shortcut</button>`;
+    const hcBest = (L().best || {}).hc || 0;
     main.innerHTML = `<div class="session">
-      <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>${diffChip(p.diff || 'contest', s.auto ? '<span class="dauto"> · auto</span>' : '')}
-        <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span>${s.mode === 'sprint' ? `<span class="clock" id="clock">${fmtTime(s.dur)}</span>` : `<span class="faint num small">${s.results.length + 1}/${s.total}</span>`}</div>
+      <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>${s.mode === 'arith' ? '' : diffChip(p.diff || 'contest', s.auto ? '<span class="dauto"> · auto</span>' : '')}
+        ${tallyHtml(s)}${timed(s) ? `<span class="clock" id="clock">${fmtTime(s.dur)}</span>` : s.total ? `<span class="faint num small">${s.results.length + 1}/${s.total}</span>` : ''}</div>
       <div class="prog"><span id="progbar" style="width:${pct}%"></span></div>
+      <div class="lstats" aria-label="Live stats"><span>Average <b id="lavg">${avgTime(s)}</b></span>${timed(s) ? `<span>Pace <b id="lpace">—</b></span>` : `<span>Time <b id="ltime">${fmtTime((performance.now() - s.startAt) / 1000)}</b></span>`}${s.beh === 'hardcore' && hcBest ? `<span>Best streak <b>${hcBest}</b></span>` : ''}</div>
       <div class="stage" id="stage">
-        <span class="tk" id="stk">${s.tricks.length === 1 ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : s.mode === 'sprint' ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* within 5%</span>' : ''}
+        <span class="tk" id="stk">${!showName ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : timed(s) ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* within 5%</span>' : ''}
         <div class="prob ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</div>
         <div>${blankHtml(p, 'id="sin"')}</div>
         <div class="preview" id="spv"></div>
         <div class="feedback" id="sfb" aria-live="polite"></div>
         <div id="sshort"></div>
         ${keypadHtml(p)}
-        <div class="under" id="sunder">${s.mode === 'practice' ? '<button class="btn" data-act="sSubmit">Check <span class="kbd">Enter</span></button><button class="btn ghost" data-act="sGiveUp">Show the shortcut</button>' : '<button class="btn ghost small" data-act="sGiveUp">Skip</button>'}</div>
+        <div class="under" id="sunder">${under}</div>
       </div>
-      <p class="faint small" style="text-align:center;margin-top:14px">${touch ? 'Use space for mixed numbers: 3 1/4.' : 'Type mixed numbers with a space: 3 1/4. Fractions with a slash: 7/8.'}</p></div>`;
+      <p class="faint small" style="text-align:center;margin-top:14px">${s.mode === 'arith' ? 'Whole numbers only. Right answers move on by themselves.' : touch ? 'Use space for mixed numbers: 3 1/4.' : 'Type mixed numbers with a space: 3 1/4. Fractions with a slash: 7/8.'}${autoNext && s.mode !== 'arith' && s.beh !== 'test' ? ' Right answers move on by themselves.' : ''}</p></div>`;
     const inp = $('#sin');
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (s.state === 'ask') ACT.sSubmit(); else if (s.state === 'shown') nextProblem(); } });
-    inp.addEventListener('input', () => { $('#spv').innerHTML = previewOf(inp.value); if (s.mode === 'sprint' && s.state === 'ask' && NS.check(p.a, inp.value).ok) ACT.sSubmit(); });
+    inp.addEventListener('input', () => { $('#spv').innerHTML = previewOf(inp.value); if (autoNext && s.beh !== 'test' && s.state === 'ask' && NS.check(p.a, inp.value).ok) ACT.sSubmit(); });
     if (!touch) inp.focus({ preventScroll: true }); else activeInput = inp;
     if (s.moved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = s.moved > 0 ? `Nice run. Moving up to ${NS.DIFFS[s.di].name}.` : `Stepping back to ${NS.DIFFS[s.di].name} for a few.`; s.moved = 0; }
-    else if (s.mode === 'sprint' && s.flash != null) {
+    else if (s.flash != null) {
       // the last answer was right: say so on the new problem, where it stays readable, then fade
       const fb = $('#sfb'); fb.className = 'feedback ok fadeout'; fb.textContent = `✓ Right · ${(s.flash / 1000).toFixed(1)}s`;
-      $('#stage').classList.add('pulse'); $('.tally .g').classList.add('bump'); s.flash = null;
-    }
-    if (s.mode === 'sprint') tickSprint();
+      $('#stage').classList.add('pulse'); const g = $('.tally .g'); if (g) g.classList.add('bump'); s.flash = null;
+    } else if (s.saved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = 'Saved. Next one.'; s.saved = false; }
+    tickLive();
   }
-  function tickSprint() {
+  // one timer for the clock, the elapsed time and the pace
+  function tickLive() {
     const s = state.session; clearInterval(state.sprintTimer);
     const upd = () => { if (!state.session || s !== state.session || s.done) return clearInterval(state.sprintTimer);
-      const left = Math.max(0, s.dur - (performance.now() - s.startAt) / 1000); const c = $('#clock'); if (c) { c.textContent = fmtTime(Math.ceil(left)); c.classList.toggle('low', left <= 10); }
-      if (left <= 0) { clearInterval(state.sprintTimer); finishSession(); } };
-    upd(); state.sprintTimer = setInterval(upd, 200);
+      const el = (performance.now() - s.startAt) / 1000;
+      if (timed(s)) { const left = Math.max(0, s.dur - el); const c = $('#clock'); if (c) { c.textContent = fmtTime(Math.ceil(left)); c.classList.toggle('low', left <= 10); }
+        const pc = $('#lpace'); if (pc && el > 5) { const r = s.results.filter(x => x.ok).length / el * 60; pc.textContent = `${r >= 10 ? Math.round(r) : r.toFixed(1)} a minute`; }
+        if (left <= 0) { clearInterval(state.sprintTimer); finishSession(); } }
+      else { const t = $('#ltime'); if (t) t.textContent = fmtTime(el); } };
+    upd(); state.sprintTimer = setInterval(upd, 250);
   }
   function showShortcut(p, container, given, note) {
     container.innerHTML = `<div class="shortcut"><p class="eyebrow">The answer</p><div class="key">${R(NS.keyHtml(p.a), true)}${p.suffix ? ` <span class="suffix">${esc(p.suffix)}</span>` : ''}</div>${note ? `<p class="small" style="color:var(--bad);margin-bottom:8px">${esc(note)}</p>` : ''}<p class="eyebrow" style="margin-bottom:8px">How to get it fast</p><ol class="steps">${p.steps.map(x => `<li>${R(x, true)}</li>`).join('')}</ol></div>`;
@@ -5423,6 +5796,10 @@ NS.G({
   function finishSession() {
     const s = state.session; if (!s || s.done) return; s.done = true; s.showSummary = true; clearInterval(state.sprintTimer);
     if (!s.results.length) { state.session = null; return viewPractice(); }
+    const right = s.results.filter(x => x.ok).length; const B = L().best || (L().best = {});
+    if (s.beh === 'hardcore') { s.prevBest = B.hc || 0; if (right > s.prevBest) B.hc = right; }
+    if (s.mode === 'arith') { const k = NS.arithKey(s.arith, s.dur); B.ar = B.ar || {}; s.prevBest = B.ar[k] || 0; if (right > s.prevBest && s.results.length && (performance.now() - s.startAt) / 1000 >= s.dur - 1) B.ar[k] = right; }
+    S.save();
     renderSummary();
   }
   function endSession(silent) { const s = state.session; if (!s) return; clearInterval(state.sprintTimer); s.done = true; s.showSummary = !silent && s.results.length > 0; if (silent) state.session = null; }
@@ -5430,17 +5807,20 @@ NS.G({
     const s = state.session; setNav('practice'); document.body.classList.remove('in-session');
     const n = s.results.length, right = s.results.filter(x => x.ok).length; const acc = n ? right / n : 0;
     const times = s.results.filter(x => x.ok).map(x => x.ms).sort((a, b) => a - b); const med = times.length ? times[Math.floor(times.length / 2)] / 1000 : null;
-    const by = {}; s.results.forEach(x => { const k = x.p.trick; by[k] = by[k] || { n: 0, ok: 0 }; by[k].n++; if (x.ok) by[k].ok++; });
-    const misses = s.results.filter(x => !x.ok);
-    const headline = s.mode === 'sprint' ? `${right} right in ${fmtTime(s.dur)}` : `${right} of ${n} right`;
-    const dline = s.auto ? (s.diMax > s.di0 ? `Auto difficulty: started at ${NS.DIFFS[s.di0].name}, reached ${NS.DIFFS[s.diMax].name}.` : `Auto difficulty: stayed at ${NS.DIFFS[s.di0].name}${s.di < s.di0 ? ` and stepped back to ${NS.DIFFS[s.di].name}` : ''}.`) : `Difficulty: ${NS.DIFFS[s.di].name}.`;
-    const msg = acc === 1 ? 'Every one right.' : acc >= 0.85 ? 'Accurate. Next round, push the pace a little.' : acc >= 0.6 ? 'Read through the misses below, then run it again.' : 'Go back over the lesson, then try another round.';
+    const by = {}; s.results.forEach(x => { const k = x.p.trick; if (!k) return; by[k] = by[k] || { n: 0, ok: 0 }; by[k].n++; if (x.ok) by[k].ok++; });
+    const misses = s.results.filter(x => !x.ok); const arith = s.mode === 'arith'; const hc = s.beh === 'hardcore';
+    const total = (s.results.reduce((t, x) => t + x.ms, 0) / 1000);
+    const headline = hc ? `A streak of ${right}` : timed(s) ? `${right} right in ${fmtTime(s.dur)}` : `${right} of ${n} right`;
+    const best = hc || arith ? (right > (s.prevBest || 0) && right > 0 ? (s.prevBest ? `A new best (your old one was ${s.prevBest}).` : 'Your first score here; now beat it.') : s.prevBest ? `Your best is ${s.prevBest}.` : '') : '';
+    const opn = arith ? s.arith.ops.split('').map(c => ({ '+': 'addition', '-': 'subtraction', x: 'multiplication', '/': 'division' })[c]).join(', ') : '';
+    const dline = arith ? `${opn[0].toUpperCase()}${opn.slice(1)}.` : s.auto ? (s.diMax > s.di0 ? `Auto difficulty: started at ${NS.DIFFS[s.di0].name}, reached ${NS.DIFFS[s.diMax].name}.` : `Auto difficulty: stayed at ${NS.DIFFS[s.di0].name}${s.di < s.di0 ? ` and stepped back to ${NS.DIFFS[s.di].name}` : ''}.`) : `Difficulty: ${NS.DIFFS[s.di].name}.`;
+    const msg = hc ? (best || 'One miss ends a run. Read the shortcut for the one that got you, then go again.') : arith ? (best || 'Steady beats fast and sloppy.') : acc === 1 ? 'Every one right.' : acc >= 0.85 ? 'Accurate. Next round, push the pace a little.' : acc >= 0.6 ? 'Read through the misses below, then run it again.' : 'Go back over the lesson, then try another round.';
     main.innerHTML = `<div class="session stack">
-      <div class="card"><p class="eyebrow">${NS.rich(s.label)}</p><div class="res-top" style="margin-top:8px"><div class="big">${Math.round(acc * 100)}%</div>
-        <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><p class="small faint">${dline}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div></div></div></div>
-        <div class="row" style="margin-top:20px"><button class="btn hi" data-act="again">Go again <span class="kbd">Enter</span></button>${misses.length ? '<button class="btn ghost" data-act="redoMissed">Redo the misses</button>' : ''}<button class="btn ghost" data-act="newSetup">Change settings</button></div></div>
+      <div class="card"><p class="eyebrow">${NS.rich(s.label)}</p><div class="res-top" style="margin-top:8px"><div class="big">${hc || arith ? right : Math.round(acc * 100) + '%'}</div>
+        <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><p class="small faint">${dline}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div><div><b>${(total / n).toFixed(1)}s</b><span>average</span></div>${timed(s) ? '' : `<div><b>${fmtTime(total)}</b><span>total time</span></div>`}</div></div></div>
+        <div class="row" style="margin-top:20px"><button class="btn hi" data-act="again">Go again <span class="kbd">Enter</span></button>${misses.length && !arith ? '<button class="btn ghost" data-act="redoMissed">Redo the misses</button>' : ''}<button class="btn ghost" data-act="newSetup">Change settings</button></div></div>
       ${Object.keys(by).length > 1 ? `<div class="card"><h3 style="margin-bottom:6px">By trick</h3><div class="tablewrap"><table class="t"><thead><tr><th>Trick</th><th style="text-align:right">Right</th><th></th></tr></thead><tbody>${Object.entries(by).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n).map(([k, v]) => `<tr><td>${NS.rich(trickName(k))}</td><td class="n">${v.ok}/${v.n}</td><td style="text-align:right"><button class="btn link small" data-go="t" data-arg="${k}">Lesson</button></td></tr>`).join('')}</tbody></table></div></div>` : ''}
-      ${misses.length ? `<div class="card"><h3>Misses, with the shortcut</h3><div class="stack" style="margin-top:10px;gap:0">${misses.map((x, i) => `<details style="border-top:1px solid var(--line);padding:10px 0" ${i === 0 ? 'open' : ''}><summary style="cursor:pointer"><span class="m">${R(x.p.p.h)}</span> <span class="faint small">you wrote</span> <span class="m" style="color:var(--bad)">${x.given ? esc(x.given) : '—'}</span> <span class="faint small">· answer</span> <span class="m">${R(NS.keyHtml(x.p.a), true)}</span></summary><ol class="steps" style="margin-top:10px">${x.p.steps.map(t => `<li>${R(t, true)}</li>`).join('')}</ol></details>`).join('')}</div></div>` : ''}
+      ${misses.length ? `<div class="card"><h3>${arith ? 'Misses' : 'Misses, with the shortcut'}</h3><div class="stack" style="margin-top:10px;gap:0">${misses.map((x, i) => `<details style="border-top:1px solid var(--line);padding:10px 0" ${i === 0 ? 'open' : ''}><summary style="cursor:pointer"><span class="m">${R(x.p.p.h)}</span> <span class="faint small">you wrote</span> <span class="m" style="color:var(--bad)">${x.given ? esc(x.given) : '—'}</span> <span class="faint small">· answer</span> <span class="m">${R(NS.keyHtml(x.p.a), true)}</span></summary><ol class="steps" style="margin-top:10px">${x.p.steps.map(t => `<li>${R(t, true)}</li>`).join('')}</ol></details>`).join('')}</div></div>` : ''}
     </div>`;
     $('[data-act="again"]').focus();
   }
@@ -5568,7 +5948,7 @@ NS.G({
           <p class="note-s">${state.testKind === 'full' ? '80 problems in 10 minutes.' : `Problems ${COLR[state.testCol]}: 20 problems in 2 minutes 30 seconds.`}</p></div></div>
         <div class="cfg-row"><span class="cfg-l">Difficulty</span><div class="cfg-v">${diffSeg('tdiff', state.testDiff, false)}</div></div>
       </div>
-      <div class="row startbar"><button class="btn" data-act="startTest">Start the clock</button><span class="faint small">Enter moves to the next blank. Don’t sit on a hard one; a skip costs the same as a miss.</span></div>
+      <div class="row startbar"><button class="btn" data-act="startTest">Start the clock</button><button class="btn ghost" data-act="printTest">Print a paper copy</button><span class="faint small">Enter moves to the next blank. Don’t sit on a hard one; a skip costs the same as a miss.</span></div>
       <div class="codes">
         <div class="codebox"><label for="tcode"><b>Got a test code?</b> <span class="muted">Everyone who enters the same code gets the same test, so a team can take one together and compare.</span></label>
           <div class="row" style="margin-top:10px"><input id="tcode" class="field" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ${l === 'ms' ? 'MF' : 'HF'}-7K2M" maxlength="10" aria-describedby="tcodemsg"><button class="btn ghost" data-act="codeStart">Start this test</button></div>
@@ -5593,7 +5973,7 @@ NS.G({
     return `<b>Your team code</b> <span class="muted">${LV[l]}, ${tc.what}.</span>
       <div class="teamcode"><span class="mono" id="teamcode">${tc.code}</span><button class="btn small" data-act="copyCode" data-code="${tc.code}">Copy</button></div>
       <p class="small muted">Students open Tests, enter the code under <i>Got a test code?</i>, and start when you say go. Each code always gives the same problems.</p>
-      <div class="row" style="margin-top:10px"><button class="btn ghost small" data-act="teamStart">Take it myself</button><button class="btn link small" data-act="teamCode">Make a different code</button></div>`;
+      <div class="row" style="margin-top:10px"><button class="btn ghost small" data-act="teamStart">Take it myself</button><button class="btn ghost small" data-act="printCode" data-code="${tc.code}">Print it</button><button class="btn link small" data-act="teamCode">Make a different code</button></div>`;
   }
   function startTest(spec) {
     const l = lv(); const cols = spec ? spec.cols : state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol];
@@ -5659,7 +6039,7 @@ NS.G({
           ${full ? `<div class="cols4">${byCol.map(b => `<div><span class="faint small">${COLR[b.c]}</span><br><b>${b.ok}</b><span class="faint small">/${b.tried || 0} tried</span></div>`).join('')}</div>` : ''}</div></div>
         ${nextUp ? `<p class="small" style="margin-top:14px"><b>${nextUp}</b></p>` : ''}
         ${r.skipped ? `<p class="small" style="margin-top:14px">Skips cost as much as wrong answers. ${r.skipped} skip${r.skipped > 1 ? 's' : ''} took ${4 * r.skipped} points. If you can’t do one, an honest guess beats a blank.</p>` : ''}
-        <p class="small muted" style="margin-top:14px">Test code <b class="mono" style="color:var(--ink)">${T.code}</b>. Share it and teammates get this same test. <button class="btn link small" data-act="copyCode">Copy</button></p>
+        <p class="small muted" style="margin-top:14px">Test code <b class="mono" style="color:var(--ink)">${T.code}</b>. Share it and teammates get this same test. <button class="btn link small" data-act="copyCode">Copy</button> · <button class="btn link small" data-act="printCode">Print it</button></p>
         <div class="row" style="margin-top:12px"><button class="btn hi" data-act="testAgain">New test</button><button class="btn ghost" data-act="testMenu">Test options</button>${missTricks.length ? `<button class="btn ghost" data-act="drillMissed">Drill what I missed</button>` : ''}</div></div>
       ${missTricks.length ? `<div class="card"><h3 style="margin-bottom:10px">Review these tricks</h3><div class="row">${missTricks.map(id => `<button class="btn small ghost" data-go="t" data-arg="${id}">${NS.rich(trickName(id))}</button>`).join('')}</div></div>` : ''}
       <div><h2 style="margin-bottom:10px">Your sheet</h2><p class="muted small" style="margin-bottom:12px">Tap any problem you missed to see the shortcut.</p>
@@ -5668,6 +6048,33 @@ NS.G({
           <div class="keyline">${m === 'ok' ? `<span class="m" style="color:var(--ok)">${esc(given)}</span>` : `${given && given.trim() ? `<span class="m" style="color:var(--bad);text-decoration:line-through">${esc(given)}</span>` : m === 'skip' ? '<span style="color:var(--bad)">skipped</span>' : ''}<span>key:</span><span class="m">${R(NS.keyHtml(p.a), true)}</span>`}
           ${m !== 'ok' ? `<button class="btn link small" data-act="showWhy" data-i="${i}">Shortcut</button>` : ''}</div><div class="why" id="why${i}"></div></div>`; })}</div></div>
     </div>`;
+  }
+
+  /* ---------- printable test: a contest-style sheet, answer key on its own page ---------- */
+  function keyRange(p) {
+    if (!p.est) return R(NS.keyHtml(p.a));
+    const v = p.a.v.num(); const lo = Math.ceil(Math.min(v * 0.95, v * 1.05) - 1e-9), hi = Math.floor(Math.max(v * 0.95, v * 1.05) + 1e-9);
+    return `${NS.fmtn(lo)} – ${NS.fmtn(hi)}`;
+  }
+  function viewPrint(code) {
+    const spec = NS.readTestCode(code || '');
+    if (!spec || spec.lv !== lv()) { main.innerHTML = `<button class="back" data-go="test">${IC.left} Tests</button><div class="empty" style="margin-top:16px">${spec ? `That code is for ${LV[spec.lv].toLowerCase()}. Switch levels at the top, then try again.` : 'That test code didn’t work.'}</div>`; return; }
+    const probs = NS.buildTest(spec.lv, spec.seed, spec.cols, spec.diff); const full = spec.cols.length === 4;
+    const dn = NS.DIFFS[NS.diffIdx(spec.diff)].name; const tc = NS.testCode(spec.lv, spec.cols, spec.seed, spec.diff);
+    const what = `${LV[spec.lv]} Number Sense · ${full ? 'Full test' : `Problems ${COLR[spec.cols[0]]}`} · ${dn}`;
+    const head = (first, k) => `<div class="phead"><div><b>Eighty in Ten</b> <span>${what}</span></div><span class="mono">${tc}${k ? ' · key' : ''}</span></div>${first ? `<div class="pname"><span>Name <i></i></span><span>School <i></i></span><span>Score <i class="short"></i></span></div>
+      <p class="pinst">${full ? '10 minutes.' : '2 minutes 30 seconds.'} Work in order. No scratch work: write only the answer. Starred (*) problems accept anything within 5%. Right +5, wrong or skipped −4; stop scoring at the last problem attempted.</p>` : ''}`;
+    const pg = []; for (let k = 0; k < probs.length; k += 20) pg.push(probs.slice(k, k + 20));
+    main.innerHTML = `<div class="noprint"><button class="back" data-go="test">${IC.left} Tests</button>
+      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
+      <div class="row" style="margin-bottom:8px"><button class="btn" data-act="doPrint">Print</button><button class="btn ghost" data-act="printNew">A different test</button></div>
+      <p class="faint small" id="printmsg">The answer key prints on its own page at the end, so you can keep it back. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac).</p></div>
+      <div class="paper">
+        ${pg.map((ps, i) => `<section class="ppage">${head(i === 0)}<ol class="pq">${ps.map(p => `<li><span class="pn">${p.est ? '*' : ''}(${p.n})</span><span class="pp">${R(p.p.h)}</span><span class="pa">${p.pre ? esc(p.pre) : ''}<i></i>${p.suffix ? `<span class="sx">${esc(p.suffix)}</span>` : ''}${p.form ? `<em>${esc(p.form)}</em>` : ''}</span></li>`).join('')}</ol></section>`).join('')}
+        <section class="ppage pkey">${head(false, true)}<h2>Answer key</h2><ol class="pk4">${probs.map(p => `<li><span class="pn">${p.est ? '*' : ''}(${p.n})</span><span>${keyRange(p)}</span></li>`).join('')}</ol>
+          <p class="pinst">Starred problems: any answer in the range shown. Equivalent forms of a fraction are fine unless the problem asks for one.</p></section>
+      </div>`;
+    state.printSpec = spec;
   }
 
   /* ---------- progress ---------- */
@@ -5702,6 +6109,20 @@ NS.G({
       ${footer()}`;
   }
 
+  // a miss in a round: show the shortcut (or just the answer in a timed round), queue a retry, end a Hardcore run
+  function missShown(s, p, given, note, gaveUp) {
+    s.state = 'shown'; if (s.beh === 'hardcore') s.over = true;
+    if (s.mode === 'practice' && s.beh !== 'hardcore') (s.retry = s.retry || []).push({ trick: p.trick, due: s.results.length + 3 });
+    if (timed(s) && !gaveUp) $('#sshort').innerHTML = `<p class="muted" style="margin-top:6px">Answer: <b class="m" style="color:var(--ink)">${R(NS.keyHtml(p.a), true)}</b>.${s.mode === 'arith' ? '' : ' The shortcut is in your summary.'}</p>`;
+    else showShortcut(p, $('#sshort'), given, null);
+    const kp = $('#stage .keypad'); if (kp) kp.remove();
+    const r = $('.tally .r'); if (r) r.textContent = `✗ ${s.results.filter(x => !x.ok).length}`;
+    $('#sunder').innerHTML = s.over ? `<button class="btn" data-act="sNext">See how you did <span class="kbd">Enter</span></button>` : `<button class="btn" data-act="sNext">Next <span class="kbd">Enter</span></button>`;
+    void note;
+  }
+  // tricks keep their own record; arithmetic warm-ups only count toward the day
+  function logAttempt(p, ok, ms) { if (p.trick) return S.record(p, ok, ms); const l = L(); const day = NS.today(); l.days[day] = (l.days[day] || 0) + 1; S.save(); }
+
   /* ---------- actions ---------- */
   const ACT = {
     setLevel(d) { S.data.level = d.lv; S.save(); state.session = null; state.test = null; state.teamCode = null; state.lessonTry = null; state.pickSet = null; state.custom = new Set(); location.hash = 'home'; route(); },
@@ -5732,37 +6153,45 @@ NS.G({
     pmode(d) { state.pickMode = d.m; state.keepScroll = true; viewPractice(); },
     plen(d) { state.sprintLen = +d.s; state.keepScroll = true; viewPractice(); },
     pset(d) { state.pickSet = d.k; state.keepScroll = true; viewPractice(); },
-    startPractice() { const sets = practiceSets(lv()); const cur = sets.find(s => s.k === state.pickSet); if (!cur || !cur.tricks.length) return;
-      startSession({ mode: state.pickMode, dur: state.sprintLen, tricks: cur.tricks, label: (state.pickMode === 'sprint' ? 'Sprint · ' : '') + cur.name.replace(/\s*\(\d+\)$/, '').replace(/^Up next: /, ''), queue: cur.misses ? L().misses.slice(-20) : [] }); },
+    startPractice() {
+      if (state.pickMode === 'arith') return startSession({ mode: 'arith', dur: state.sprintLen, tricks: [], arith: arithCfg(), label: 'Arithmetic warm-up' });
+      const sets = practiceSets(lv()); const cur = sets.find(s => s.k === state.pickSet); if (!cur || !cur.tricks.length) return;
+      const beh = state.pickMode === 'sprint' && state.pickBeh === 'noenter' ? 'normal' : state.pickBeh || 'normal';
+      startSession({ mode: state.pickMode, beh, len: state.pickLen || 20, dur: state.sprintLen, tricks: cur.tricks, label: (state.pickMode === 'sprint' ? 'Sprint · ' : '') + cur.name.replace(/\s*\(\d+\)$/, '').replace(/^Up next: /, ''), queue: cur.misses ? L().misses.slice(-20) : [] }); },
+    pbeh(d) { state.pickBeh = d.b; S.data.settings.pbeh = d.b; S.save(); state.keepScroll = true; viewPractice(); },
+    prlen(d) { state.pickLen = +d.n; S.data.settings.plen = +d.n; S.save(); state.keepScroll = true; viewPractice(); },
+    arop(d) { const a = arithCfg(); const has = a.ops.includes(d.op); if (has && a.ops.length === 1) { toast('Keep at least one kind of problem'); return; } a.ops = has ? a.ops.replace(d.op, '') : a.ops + d.op; S.data.settings.arith = NS.arithClean(a); S.save(); state.keepScroll = true; viewPractice(); },
+    arreset() { delete S.data.settings.arith; S.save(); state.keepScroll = true; viewPractice(); },
+    quickArith() { guard(() => { state.pickMode = 'arith'; startSession({ mode: 'arith', dur: 120, tricks: [], arith: arithCfg(), label: 'Arithmetic warm-up' }); }); },
+    quickEst() { guard(() => startSession({ mode: 'practice', beh: state.pickBeh === 'test' ? 'test' : 'normal', len: 10, tricks: ['estimate'], label: 'Starred estimation' })); },
     pdiff(d) { state.pickDiff = d.d; S.data.settings.pdiff = d.d; S.save(); state.keepScroll = true; viewPractice(); },
     tdiff(d) { state.testDiff = d.d; S.data.settings.tdiff = d.d; S.save(); state.teamCode = null; state.keepScroll = true; viewTests(); },
     sSubmit() {
       const s = state.session; if (!s || s.state !== 'ask') return; const inp = $('#sin'); const p = s.cur;
       if (!inp.value.trim()) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); return; }
       const res = NS.check(p.a, inp.value); const ms = performance.now() - s.t0;
-      s.results.push({ p, ok: res.ok, ms, given: inp.value }); S.record(p, res.ok, ms); autoAdjust(s, res.ok, ms, p);
-      const fb = $('#sfb'); inp.disabled = true; const stk = $('#stk'); if (stk) stk.innerHTML = NS.rich(trickName(p.trick), true);
-      if (res.ok && s.mode === 'sprint') { s.flash = ms; return nextProblem(); }
+      s.results.push({ p, ok: res.ok, ms, given: inp.value }); logAttempt(p, res.ok, ms); if (s.beh !== 'test') autoAdjust(s, res.ok, ms, p);
+      if (s.beh === 'test') { s.saved = true; return nextProblem(); }
+      const fb = $('#sfb'); inp.disabled = true; const stk = $('#stk'); if (stk && p.trick && s.tricks.length > 1) stk.innerHTML = NS.rich(trickName(p.trick), true);
+      if (res.ok && (timed(s) || s.beh === 'noenter')) { s.flash = ms; return nextProblem(); }
       if (res.ok) {
         inp.classList.add('ok'); fb.className = 'feedback ok'; const tgt = NS.TARGET[p.col] + (p.est ? 6 : 0); fb.textContent = `Right · ${(ms / 1000).toFixed(1)}s${s.mode === 'practice' && ms / 1000 > tgt ? ` · test pace is about ${tgt}s` : ''}`; s.state = 'flash';
-        $('.tally .g').textContent = `✓ ${s.results.filter(x => x.ok).length}`;
-        setTimeout(() => { if (state.session === s && !s.done) nextProblem(); }, s.mode === 'sprint' ? 60 : (ms / 1000 > NS.TARGET[p.col] + (p.est ? 6 : 0) ? 1100 : 480));
+        const g = $('.tally .g'); if (g) g.textContent = s.beh === 'hardcore' ? `Streak ${s.results.filter(x => x.ok).length}` : `✓ ${s.results.filter(x => x.ok).length}`;
+        setTimeout(() => { if (state.session === s && !s.done) nextProblem(); }, ms / 1000 > NS.TARGET[p.col] + (p.est ? 6 : 0) ? 1100 : 480);
       } else {
-        inp.classList.add('bad', 'shake'); fb.className = 'feedback bad'; fb.textContent = res.note || 'Not quite.';
-        $('.tally .r').textContent = `✗ ${s.results.filter(x => !x.ok).length}`;
-        s.state = 'shown'; if (s.mode === 'practice') (s.retry = s.retry || []).push({ trick: p.trick, due: s.results.length + 3 }); if (s.mode === 'sprint') $('#sshort').innerHTML = `<p class="muted" style="margin-top:6px">Answer: <b class="m" style="color:var(--ink)">${R(NS.keyHtml(p.a), true)}</b>. The shortcut is in your summary.</p>`; else showShortcut(p, $('#sshort'), inp.value, null); const kp = $('#stage .keypad'); if (kp) kp.remove();
-        $('#sunder').innerHTML = `<button class="btn" data-act="sNext">Next <span class="kbd">Enter</span></button>`;
+        inp.classList.add('bad', 'shake'); fb.className = 'feedback bad'; fb.textContent = res.note || (s.beh === 'hardcore' ? 'That ends the run.' : 'Not quite.');
+        missShown(s, p, inp.value, res.note);
         inp.disabled = false; inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true });
       }
     },
-    sGiveUp() { const s = state.session; if (!s || s.state !== 'ask') return; const p = s.cur; const ms = performance.now() - s.t0; s.results.push({ p, ok: false, ms, given: '' }); S.record(p, false, ms); autoAdjust(s, false, ms, p);
-      s.state = 'shown'; if (s.mode === 'practice') (s.retry = s.retry || []).push({ trick: p.trick, due: s.results.length + 3 }); { const stk = $('#stk'); if (stk) stk.innerHTML = NS.rich(trickName(p.trick), true); } $('#sfb').className = 'feedback'; $('#sfb').textContent = ''; showShortcut(p, $('#sshort')); const kp = $('#stage .keypad'); if (kp) kp.remove();
-      $('.tally .r').textContent = `✗ ${s.results.filter(x => !x.ok).length}`;
-      $('#sunder').innerHTML = `<button class="btn" data-act="sNext">Next <span class="kbd">Enter</span></button>`; const inp = $('#sin'); inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true }); },
+    sGiveUp() { const s = state.session; if (!s || s.state !== 'ask') return; const p = s.cur; const ms = performance.now() - s.t0; s.results.push({ p, ok: false, ms, given: '' }); logAttempt(p, false, ms); if (s.beh !== 'test') autoAdjust(s, false, ms, p);
+      if (s.beh === 'test') { s.saved = true; return nextProblem(); }
+      { const stk = $('#stk'); if (stk && p.trick && s.tricks.length > 1) stk.innerHTML = NS.rich(trickName(p.trick), true); } $('#sfb').className = s.beh === 'hardcore' ? 'feedback bad' : 'feedback'; $('#sfb').textContent = s.beh === 'hardcore' ? 'That ends the run.' : '';
+      missShown(s, p, '', null, true); const inp = $('#sin'); inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true }); },
     sNext() { nextProblem(); },
     quitSession() { const s = state.session; if (!s) return; if (s.results.length) finishSession(); else { endSession(true); viewPractice(); setNav('practice'); } },
-    again() { const s = state.session; state.session = null; startSession({ mode: s.mode, dur: s.dur, tricks: s.tricks, label: s.label, diff: s.auto ? 'auto' : NS.DIFFS[s.di].id }); },
-    redoMissed() { const s = state.session; const q = s.results.filter(x => !x.ok).map(x => ({ g: x.p.gid, s: x.p.seed, d: x.p.diff, at: x.p.at })); state.session = null; startSession({ mode: 'practice', tricks: s.tricks, label: s.label.replace(/^Sprint · /, ''), queue: q, diff: s.auto ? 'auto' : NS.DIFFS[s.di].id }); },
+    again() { const s = state.session; state.session = null; startSession({ mode: s.mode, beh: s.beh, len: s.len, dur: s.dur, arith: s.arith, tricks: s.tricks, label: s.label, diff: s.autoSel ? 'auto' : NS.DIFFS[s.di0].id }); },
+    redoMissed() { const s = state.session; const q = s.results.filter(x => !x.ok).map(x => ({ g: x.p.gid, s: x.p.seed, d: x.p.diff, at: x.p.at })); state.session = null; startSession({ mode: 'practice', beh: 'normal', len: q.length + Math.min(10, q.length), tricks: s.tricks, label: s.label.replace(/^Sprint · /, ''), queue: q, diff: s.autoSel ? 'auto' : NS.DIFFS[s.di0].id }); },
     newSetup() { state.session = null; viewPractice(); },
     tkind(d) { state.testKind = d.k; state.teamCode = null; state.keepScroll = true; viewTests(); },
     tcol(d) { state.testCol = +d.c; state.teamCode = null; state.keepScroll = true; viewTests(); },
@@ -5775,6 +6204,10 @@ NS.G({
     },
     teamStart() { const tc = state.teamCode; const spec = tc && NS.readTestCode(tc.code); if (spec && spec.lv === lv()) startTest(spec); },
     startTest() { startTest(); },
+    printTest() { const l = lv(); const cols = state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol]; go('print', NS.testCode(l, cols, NS.testSeed(), state.testDiff || 'contest')); },
+    printCode(d) { const code = d.code || (state.test && state.test.code) || (state.teamCode && state.teamCode.code); if (code) guard(() => go('print', code)); },
+    printNew() { const sp = state.printSpec; if (sp) go('print', NS.testCode(sp.lv, sp.cols, NS.testSeed(), sp.diff)); },
+    doPrint() { try { window.print(); } catch (e) { /* blocked: the note below the button covers it */ } },
     finishTest() { const T = state.test; if (!T) return; const blank = T.answers.filter(a => !a.trim()).length; confirmBar(`Grade now? ${fmtTime(Math.max(0, T.dur - (Date.now() - T.start) / 1000))} is left on the clock.`, 'Grade it', () => gradeTest(false)); void blank; },
     leaveTest() { guard(() => go('test')); },
     testAgain() { state.test = null; startTest(); },

@@ -8,7 +8,7 @@
 const load = require('./load');
 const NS = load({});
 const PROF = require('./real_profile.json');
-const NT = +(process.argv[2] || 60);
+const NT = +(process.argv[2] || 150); // fewer makes the median first-position checks noisy
 let fails = 0; const bad = (...m) => { fails++; if (fails < 60) console.log('FAIL', ...m); };
 const LV = ['warmup', 'contest', 'hard', 'super'];
 const mean = a => a.reduce((s, x) => s + x, 0) / Math.max(1, a.length);

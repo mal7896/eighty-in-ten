@@ -1,6 +1,6 @@
 # Eighty in Ten
 
-A study site for TMSCA and UIL Number Sense, middle school and high school: lessons for each shortcut, drills, sprints, full 80-problem tests with shareable test codes, a Memorize section, and progress tracking.
+A study site for TMSCA and UIL Number Sense, middle school and high school: lessons for each shortcut, practice rounds (Normal, No Enter, Hardcore or Test answering; 10 to 80 problems), sprints, an arithmetic warm-up, an estimation drill, full 80-problem tests with shareable test codes, printable tests with an answer key, a Memorize section, and progress tracking.
 
 **Use it:** Open the website directly linked here: https://mal7896.github.io/eighty-in-ten/. Or, open the site from GitHub Pages (see below). Everything runs in the browser; progress is saved in each student's own browser. To move progress to another device or browser, use **Progress → Use another device**.
 
@@ -8,7 +8,7 @@ A study site for TMSCA and UIL Number Sense, middle school and high school: less
 
 | Path | What it is |
 | --- | --- |
-| `src/` | Source: `core.js` (exact fractions, rendering), `gens_*.js` (problem generators), `tricks.js` (lessons), `engine.js` (tests, codes, progress), `memo.js` (Memorize), `app.js` (interface), `style.css` |
+| `src/` | Source: `core.js` (exact fractions, rendering), `gens_*.js` (problem generators; `gens_new.js` has the newest types), `tricks.js` (lessons), `engine.js` (tests, codes, progress), `memo.js` (Memorize), `app.js` (interface), `style.css` |
 | `build.py` | Bundles `src/` into one HTML page |
 | `docs/index.html` | The built site that GitHub Pages serves |
 | `dist/` | Other build outputs (artifact page and a local preview) |
@@ -33,6 +33,7 @@ node test/transfer.js
 node test/difficulty.js   # difficulty levels: ordering, variety, and match to real tests (test/real_profile.json)
 python3 test/e2e.py       # browser run-through (needs Playwright + Chrome)
 python3 test/e2e_difficulty.py
+python3 test/e2e_features.py   # answering modes, round length, warm-up, estimation, picker, printing
 ```
 
 ## Publishing

@@ -526,3 +526,65 @@ body.nolevel main { padding-bottom: 48px; }
 #tryit .blank { flex-wrap: wrap; justify-content: center; }
 #tryit .blank .formhint { flex-basis: 100%; text-align: center; font-size: .85rem; margin-top: 4px; }
 .stage .prob { margin-bottom: 12px; }
+
+/* ---- live stats under the progress line ---- */
+.lstats { display: flex; justify-content: flex-end; gap: 18px; font-size: .82rem; color: var(--ink-3); margin: 2px 0 6px; font-variant-numeric: tabular-nums; }
+.lstats b { color: var(--ink-2); font-weight: 600; }
+
+/* ---- trick picker: name with a sample problem ---- */
+.picker label { align-items: flex-start; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.picker label:last-child { border-bottom: 0; }
+.picker input { margin-top: 3px; flex: none; }
+.pk { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 14px; flex: 1; min-width: 0; }
+.pkn { font-weight: 600; }
+.pke { color: var(--ink-3); font-size: .88rem; min-width: 0; max-width: 100%; overflow-x: auto; }
+.pke .katex { font-size: 1em; }
+
+/* ---- arithmetic warm-up ranges ---- */
+.arith { display: grid; gap: 10px; }
+.arow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.arow .chip { min-width: 132px; text-align: left; }
+.arow .rng { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--ink-3); font-size: .88rem; }
+.arow .rng .op { color: var(--ink); font-weight: 700; padding: 0 4px; }
+.field.rin { width: 5.2em; min-height: 36px; padding: 5px 8px; font-size: .95rem; letter-spacing: 0; text-align: right; }
+.arow .chip[aria-pressed="false"] + .rng { opacity: .55; }
+@media (max-width: 520px) { .arow .chip { min-width: 0; } .field.rin { width: 4.4em; } }
+.arow .chip[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--ink); }
+.arow .chip::before { content: ""; display: inline-block; width: 13px; height: 13px; border: 1.5px solid var(--line-2); border-radius: 3px; margin-right: 8px; vertical-align: -2px; }
+.arow .chip[aria-pressed="true"]::before { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--surface); }
+
+/* ---- printable test ---- */
+.paper { display: grid; gap: 24px; margin-top: 22px; }
+.ppage { background: #fff; color: #111; border: 1px solid var(--line); border-radius: 4px; padding: 36px 40px; box-shadow: 0 1px 2px rgba(0,0,0,.04); min-width: 0; }
+.phead { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .82rem; border-bottom: 1.5px solid #111; padding-bottom: 6px; margin-bottom: 12px; }
+.phead b { font-family: var(--f-head); font-size: .95rem; }
+.phead span { color: #444; }
+.pname { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 4px 0 8px; font-size: .9rem; }
+.pname span { display: inline-flex; align-items: flex-end; gap: 6px; flex: 1 1 180px; }
+.pname i { flex: 1; border-bottom: 1px solid #111; height: 1.1em; min-width: 60px; }
+.pname .short { flex: 0 0 70px; }
+.pinst { font-size: .78rem; color: #444; margin: 0 0 10px; }
+.pq { list-style: none; margin: 0; padding: 0; }
+.pq li { display: grid; grid-template-columns: 3.2em minmax(0, 1fr) minmax(8em, 32%); gap: 10px; align-items: baseline; padding: 10px 0; font-size: 1rem; break-inside: avoid; }
+.pq .pn { font-variant-numeric: tabular-nums; color: #333; font-size: .9rem; }
+.pq .pp { min-width: 0; overflow-wrap: anywhere; }
+.pq .pa { display: flex; align-items: baseline; gap: 4px; font-size: .9rem; }
+.pq .pa i { flex: 1; border-bottom: 1px solid #111; height: 1.1em; min-width: 3em; }
+.pq .pa em { font-style: normal; font-size: .74rem; color: #555; white-space: nowrap; }
+.pkey h2 { font-size: 1.2rem; margin: 6px 0 12px; }
+.pk4 { list-style: none; margin: 0 0 12px; padding: 0; columns: 4 10em; column-gap: 24px; font-size: .88rem; }
+.pk4 li { display: flex; gap: 8px; padding: 3px 0; break-inside: avoid; border-bottom: 1px solid #eee; }
+.pk4 .pn { color: #555; min-width: 3em; font-variant-numeric: tabular-nums; }
+@media (max-width: 600px) { .ppage { padding: 20px 16px; } .pq li { grid-template-columns: 2.6em minmax(0, 1fr); } .pq .pa { grid-column: 2; } }
+@media print {
+  @page { margin: 14mm 14mm; }
+  html, body { background: #fff !important; }
+  header.top, nav.tabbar, .noprint, .foot, #confirmbar, .toast { display: none !important; }
+  main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
+  .paper { display: block; margin: 0; }
+  .ppage { border: 0; box-shadow: none; padding: 0; border-radius: 0; break-after: page; page-break-after: always; }
+  .ppage:last-child { break-after: auto; page-break-after: auto; }
+  .pq li { padding: 8px 0; font-size: 11pt; }
+  .pq .pa i { min-width: 9em; }
+}
+.pq .pa .sx { white-space: nowrap; }

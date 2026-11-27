@@ -43,7 +43,9 @@ ICONS = ('<link rel="icon" href="favicon.ico" sizes="48x48"><link rel="icon" hre
 skel = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>' + ICONS + '</head><body>'
 (root/'docs').mkdir(exist_ok=True)
 # the site icon: a highlighter-yellow tile with 80 on it; sources in src/icons
-for f in (root/'src'/'icons').iterdir(): (root/'docs'/f.name).write_bytes(f.read_bytes())
+# plus files that must sit at the site root, such as the Google Search Console verification file (src/public)
+for d in ('icons', 'public'):
+    for f in (root/'src'/d).iterdir(): (root/'docs'/f.name).write_bytes(f.read_bytes())
 (root/'docs'/'index.html').write_text(skel + html + '</body></html>')
 (root/'docs'/'.nojekyll').write_text('')
 print(len(html)//1024, 'KB')

@@ -629,12 +629,17 @@
     const tc = $('#tcode'); if (tc) { tc.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ACT.codeStart(); } }); tc.addEventListener('input', () => { tc.removeAttribute('aria-invalid'); $('#tcodemsg').textContent = ''; }); }
   }
   // a fresh code for whatever test is selected above, without starting it
+  // "a high school full test at Contest level", "a middle school test of problems 41–60 at Hard level"
+  function testPhrase(l, cols, diff, withLevel = true) {
+    const kind = cols.length === 4 ? 'full test' : `test of problems ${COLR[cols[0]]}`;
+    return `a ${withLevel ? LV[l].toLowerCase() + ' ' : ''}${kind} at ${NS.DIFFS[NS.diffIdx(diff)].name} level`;
+  }
   function teamBox() {
-    const l = lv(); const dn = NS.DIFFS[NS.diffIdx(state.testDiff)].name; const what = (state.testKind === 'full' ? 'the full test (80 problems)' : `problems ${COLR[state.testCol]}`) + `, ${dn}`;
+    const l = lv(); const what = testPhrase(l, state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol], state.testDiff || 'contest', false);
     const tc = state.teamCode;
     if (!tc) return `<b>Giving your team a test?</b> <span class="muted">Make a code for ${what} without starting it. Share the code, and everyone enters it in the box ${matchMedia('(max-width: 720px)').matches ? 'above' : 'beside this one'}.</span>
       <div class="row" style="margin-top:10px"><button class="btn" data-act="teamCode">Make a team code</button></div>`;
-    return `<b>Your team code</b> <span class="muted">${LV[l]}, ${tc.what}.</span>
+    return `<b>Your team code</b> <span class="muted">for ${tc.what}.</span>
       <div class="teamcode"><span class="mono" id="teamcode">${tc.code}</span><button class="btn small" data-act="copyCode" data-code="${tc.code}">Copy</button></div>
       <p class="small muted">Students open Tests, enter the code under <i>Got a test code?</i>, and start when you say go. Each code always gives the same problems.</p>
       <div class="row" style="margin-top:10px"><button class="btn ghost small" data-act="teamStart">Take it myself</button><button class="btn ghost small" data-act="printCode" data-code="${tc.code}">Print it</button><button class="btn link small" data-act="teamCode">Make a different code</button></div>`;
@@ -740,7 +745,7 @@
     const probs = NS.buildTest(spec.lv, spec.seed, spec.cols, spec.diff); const full = spec.cols.length === 4;
     const dn = NS.DIFFS[NS.diffIdx(spec.diff)].name; const tc = NS.testCode(spec.lv, spec.cols, spec.seed, spec.diff);
     const lvShort = spec.lv === 'hs' ? 'HS' : 'MS';
-    const what = `${LV[spec.lv]} Number Sense · ${full ? 'Full test' : `Problems ${COLR[spec.cols[0]]}`} · ${dn}`;
+    const what = testPhrase(spec.lv, spec.cols, spec.diff);
     const us = n => '_'.repeat(n);
     const head = `<div class="uhd">
       ${at(70.5, 39.8, 't14 ctr', 'Number Sense Practice Test', 'width:516pt')}
@@ -765,7 +770,7 @@
       ${at(36, 87.2, 't10b', `NOTE: If an answer is of the type like ${R('\u0001\\tfrac23\u0002')} it cannot be written as a repeating decimal`)}
     </div><div class="ukcols"></div></section>`;
     main.innerHTML = `<div class="noprint"><button class="back" data-go="test">${IC.left} Tests</button>
-      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}, laid out like a UIL test on letter paper: the first problems on the front, the rest on the back, and the answer key on its own page. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
+      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what[0].toUpperCase() + what.slice(1)}, laid out like a UIL test sheet on letter paper, with the answer key on the last page. Students can also take this test on the site with code <b class="mono">${tc}</b>.</p></header>
       <div class="row" style="margin-bottom:8px"><button class="btn" data-act="doPrint">Print</button><button class="btn ghost" data-act="printNew">A different test</button></div>
       <p class="faint small" id="printmsg">Print double-sided so it matches a real test sheet. The answer key is the last page, so you can keep it back. In the print window, open <b>More settings</b> and check that Margins is <b>Default</b>, Scale is <b>Default</b>, and <b>Headers and footers</b> is off. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac).</p></div>
       <div class="paper" id="paper">${pages.join('')}${key}</div>`;
@@ -1000,7 +1005,7 @@
       const l = lv(); const cols = state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol];
       const diff = state.testDiff || 'contest'; const dn = NS.DIFFS[NS.diffIdx(diff)].name;
       let code; do { code = NS.testCode(l, cols, NS.testSeed(), diff); } while (state.teamCode && code === state.teamCode.code);
-      state.teamCode = { code, lv: l, what: (cols.length === 4 ? 'full test, 80 problems' : `problems ${COLR[cols[0]]}`) + `, ${dn}` };
+      state.teamCode = { code, lv: l, what: testPhrase(l, cols, diff) };
       $('#teambox').innerHTML = teamBox(); $('#teambox [data-act="copyCode"]').focus({ preventScroll: true });
     },
     teamStart() { const tc = state.teamCode; const spec = tc && NS.readTestCode(tc.code); if (spec && spec.lv === lv()) startTest(spec); },

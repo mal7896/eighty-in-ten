@@ -90,9 +90,9 @@ T.forEach((x, i) => {
 <h2>Try these</h2>
 <ol class="try">${tries.map(p => `<li>${probHtml(p, false)}${answerDetails(p)}</li>`).join('')}</ol>
 <h2>Practice it with a timer</h2>
-<p class="muted">The app gives you new problems of this kind as long as you like, checks each answer and shows the shortcut when you miss.</p>
+<p class="muted">The app keeps giving you new problems like these, checks each answer, and shows the shortcut when you miss one.</p>
 <div class="row">${lvs.map(l => `<a class="btn${lvs.length > 1 && l === 'hs' ? ' ghost' : ''}" href="../../?level=${l}#t-${id}">Practice this trick${lvs.length > 1 ? ` (${LV[l].toLowerCase()})` : ''}</a>`).join('')}</div>
-${sameUnit.length ? `<h2>More ${esc((unit ? unit.name : 'tricks').toLowerCase())}</h2><p>${sameUnit.map(y => `<a href="../${y.slug}/">${NS.rich(y.t.title, true)}</a>`).join(' · ')}</p>` : ''}
+${sameUnit.length ? `<h2>More ${esc((unit ? unit.name : 'tricks').toLowerCase())}</h2><ul class="links">${sameUnit.map(y => `<li><a href="../${y.slug}/">${NS.rich(y.t.title, true)}</a></li>`).join('')}</ul>` : ''}
 <p class="small faint" style="margin-top:28px">${prev ? `← <a href="../${prev.slug}/">${NS.rich(prev.t.title, true)}</a>` : ''}${prev && next ? ' &nbsp;·&nbsp; ' : ''}${next ? `<a href="../${next.slug}/">${NS.rich(next.t.title, true)}</a> →` : ''}</p>
 </div>`;
   const ld = [
@@ -109,7 +109,7 @@ ${sameUnit.length ? `<h2>More ${esc((unit ? unit.name : 'tricks').toLowerCase())
   const body = `<p class="eyebrow">${T.length} lessons</p>
 <h1>Number Sense tricks</h1>
 <p class="lede">Every shortcut on the UIL and TMSCA Number Sense tests, for middle school and high school. Each lesson shows when to use the trick, the steps, a worked example and problems to try, with answers.</p>
-<p class="small muted">Jump to: ${units.map(([u]) => `<a href="#${u.id}">${esc(u.name)}</a>`).join(' · ')}</p>
+<nav class="jump" aria-label="Topics"><ul>${units.map(([u]) => `<li><a href="#${u.id}">${esc(u.name)}</a></li>`).join('')}</ul></nav>
 ${units.map(([u, arr]) => `<h2 id="${u.id}">${esc(u.name)}</h2>
 <ul class="tlist">${arr.map(x => `<li><a class="t" href="${x.slug}/">${NS.rich(x.t.title, true)}</a><p>${NS.rich(x.t.s, true)}</p><ul class="tags">${where(x).map(w => `<li>${w}</li>`).join('')}</ul></li>`).join('')}</ul>`).join('\n')}`;
   const ld = { '@context': 'https://schema.org', '@type': 'ItemList', name: 'Number Sense tricks', itemListElement: T.map((x, i) => ({ '@type': 'ListItem', position: i + 1, url: `${BASE}tricks/${x.slug}/`, name: plain(x.t.title) })) };
@@ -125,9 +125,8 @@ ${units.map(([u, arr]) => `<h2 id="${u.id}">${esc(u.name)}</h2>
   const sample = lv => { const t = specs.find(s => s.spec.lv === lv); const probs = NS.buildTest(t.spec.lv, t.spec.seed, t.spec.cols, t.spec.diff).slice(0, 20);
     return `<ol class="sample">${probs.map(p => `<li${p.est ? ' class="star"' : ''}>${probHtml({ ...p, est: false }, false)}${answerDetails(p)}</li>`).join('')}</ol>
 <p class="small muted">These are problems 1–20 of the ${LV[lv].toLowerCase()} test with code <code>${t.code}</code>. The full test and its answer key are in the PDF above.</p>`; };
-  const colList = lv => `<ul class="cols">${[1, 2, 3, 4].map(c => `<li><b>Problems ${COLR[c]}</b>${T.filter(x => x.cols[lv] === c).map(x => `<a href="../tricks/${x.slug}/">${NS.rich(x.t.title, true)}</a>`).join(' · ')}</li>`).join('')}</ul>`;
+  const colList = lv => `<ul class="cols">${[1, 2, 3, 4].map(c => `<li><h4>Problems ${COLR[c]}</h4><ul class="links">${T.filter(x => x.cols[lv] === c).map(x => `<li><a href="../tricks/${x.slug}/">${NS.rich(x.t.title, true)}</a></li>`).join('')}</ul></li>`).join('')}</ul>`;
   const body = `<div class="narrow">
-<p class="eyebrow">Free · online or printed</p>
 <h1>UIL Number Sense practice tests</h1>
 <p class="lede">Full 80-problem, 10-minute practice tests for UIL and TMSCA Number Sense, for middle school and high school. Take one online with a timer and instant scoring, or print one on letter paper in the UIL layout, with an answer key.</p>
 <div class="row" style="margin-bottom:8px"><a class="btn" href="../?level=hs#test">High school test online</a><a class="btn ghost" href="../?level=ms#test">Middle school test online</a></div>
@@ -148,8 +147,8 @@ ${sample('hs')}
 ${sample('ms')}
 
 <h2>What’s on the test</h2>
-<p>Problems get harder as the test goes on, and each part of the test has its own kinds of problems. Every link below is a lesson with practice problems.</p>
-<div class="grid2"><div><h3>High school</h3>${colList('hs')}</div><div><h3>Middle school</h3>${colList('ms')}</div></div>
+<p>Each block of 20 problems draws on its own set of topics, and the problems get harder as the test goes on. Each topic below links to its lesson.</p>
+<h3>High school</h3>${colList('hs')}<h3 style="margin-top:28px">Middle school</h3>${colList('ms')}
 </div>`;
   const ld = { '@context': 'https://schema.org', '@type': 'LearningResource', name: 'UIL Number Sense practice tests', description: 'Free 80-problem UIL and TMSCA Number Sense practice tests for middle school and high school, online or as printable PDFs with answer keys.', learningResourceType: 'Practice test', educationalLevel: ['Middle school', 'High school'], isAccessibleForFree: true, inLanguage: 'en', url: `${BASE}practice-tests/`,
     hasPart: specs.map(t => ({ '@type': 'DigitalDocument', name: `${LV[t.spec.lv]} Number Sense practice test (${dname(t.spec.diff)}), code ${t.code}`, encodingFormat: 'application/pdf', url: `${BASE}practice-tests/${t.file}` })) };

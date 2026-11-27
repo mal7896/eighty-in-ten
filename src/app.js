@@ -5,6 +5,7 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = NS.esc;
   const LV = { ms: 'Middle school', hs: 'High school' };
+  const SITE = !!window.EIT_SITE; // the GitHub Pages copy, which also has trick and practice-test pages
   const COLR = { 1: '1–20', 2: '21–40', 3: '41–60', 4: '61–80' };
   const touch = window.matchMedia && matchMedia('(pointer: coarse)').matches;
   if (touch) document.body.classList.add('touch');
@@ -131,7 +132,7 @@
   }
   function route() {
     const h = location.hash.slice(1) || 'home';
-    if ((!lv() && h !== 'display' && !h.startsWith('print-')) || h === 'level') return viewLevel();
+    if ((!lv() && h !== 'display' && !h.startsWith('print-')) || h === 'level') { if (h !== 'level' && h !== 'home') state.afterLevel = h; return viewLevel(); }
     const [v, ...rest] = h.split('-'); const arg = rest.join('-');
     if (state.session && !state.session.done && v !== 'practice' && v !== 't') endSession(true);
     state.view = v;
@@ -149,12 +150,13 @@
     const ms = NS.makeProblem('sameFront', 'ms', 31), hs = NS.makeProblem('logs', 'hs', 12);
     main.innerHTML = `<section class="welcome">
       <h1>Which test are you practicing for?</h1>
-      <p class="lede">Lessons, drills and full practice tests for Number Sense, built from real contest tests.</p>
+      <p class="lede">Free lessons, drills and full practice tests for UIL and TMSCA Number Sense, built from real contest tests.</p>
       <div class="grid2" style="margin-top:22px">
         <button class="pick" data-act="setLevel" data-lv="ms"><span class="lvtag">Grades 6–8</span><h2>Middle school</h2><span class="muted">TMSCA middle school and UIL A+ junior high.</span><span class="sample">${R(ms.p.h, true)} <span class="sample-a">${R(NS.keyHtml(ms.a), true)}</span></span></button>
         <button class="pick" data-act="setLevel" data-lv="hs"><span class="lvtag">Grades 9–12</span><h2>High school</h2><span class="muted">UIL and TMSCA high school, through calculus.</span><span class="sample">${R(hs.p.h, true)} <span class="sample-a">${R(NS.keyHtml(hs.a), true)}</span></span></button>
       </div>
       <p class="faint small" style="margin-top:16px">You can switch later from the top bar. Progress is saved in this browser, and the Progress page can move it to another device.</p>
+      ${SITE ? '<p class="small" style="margin-top:10px"><a href="tricks/">Browse every trick</a> · <a href="practice-tests/">Printable practice tests</a></p>' : ''}
     </section>`;
   }
 
@@ -203,7 +205,7 @@
   }
   function footer() {
     return `<footer class="foot"><span>Tricks drawn from <a href="https://bryantheath.com/files/2018/04/Heath_NSTricks_revA.pdf" target="_blank" rel="noopener">Bryant Heath’s Number Sense Tricks</a> and <a href="https://www.math-magic.org" target="_blank" rel="noopener">Math Magic</a>. Problem order follows the <a href="https://www.uiltexas.org/academics/stem/number-sense" target="_blank" rel="noopener">UIL sequence chart</a>. Problems here are generated fresh; for real past tests, see <a href="https://www.uiltexas.org/academics/page/high-school-academic-study-materials" target="_blank" rel="noopener">UIL’s study materials</a>.</span>
-      <span class="row" style="gap:14px"><button data-go="display">Display and reading</button><button data-act="level">Switch level</button></span></footer>`;
+      <span class="row" style="gap:14px">${SITE ? '<a href="tricks/">Trick library</a><a href="practice-tests/">Printable tests</a>' : ''}<button data-go="display">Display and reading</button><button data-act="level">Switch level</button></span></footer>`;
   }
 
   /* ---------- tricks list ---------- */
@@ -933,7 +935,7 @@
 
   /* ---------- actions ---------- */
   const ACT = {
-    setLevel(d) { S.data.level = d.lv; S.save(); state.session = null; state.test = null; state.teamCode = null; state.lessonTry = null; state.pickSet = null; state.custom = new Set(); location.hash = 'home'; route(); },
+    setLevel(d) { S.data.level = d.lv; S.save(); state.session = null; state.test = null; state.teamCode = null; state.lessonTry = null; state.pickSet = null; state.custom = new Set(); const to = state.afterLevel || 'home'; state.afterLevel = null; location.hash = to; route(); },
     level() { guard(() => { state.session = null; location.hash = 'level'; }); },
     dset(d) { S.data.settings[d.k] = d.v; if (d.v === DISPLAY_DEF[d.k]) delete S.data.settings[d.k]; S.save(); applyTheme(); state.keepScroll = true; viewDisplay(); const b = $(`[data-act="dset"][data-k="${d.k}"][data-v="${d.v}"]`); if (b) b.focus({ preventScroll: true }); },
     dreset() { Object.keys(DISPLAY_DEF).forEach(k => delete S.data.settings[k]); S.save(); applyTheme(); state.keepScroll = true; viewDisplay(); toast('Standard settings restored'); },
@@ -1112,5 +1114,7 @@
   window.removeEventListener('hashchange', route);
   window.addEventListener('hashchange', () => { if (state.silent) { state.silent = false; renderSession(); setNav('practice'); state.view = 'practice'; return; } if (location.hash === '#test' && state.test && !state.test.done) { state.view = 'test'; renderTest(); setNav('test'); window.scrollTo(0, 0); return; } _route(); });
   NS._state = state;
+  // links from the trick and test pages pick the level: ?level=ms or ?level=hs
+  try { const q = new URLSearchParams(location.search).get('level'); if (q === 'ms' || q === 'hs') { if (S.data.level !== q) { S.data.level = q; S.save(); } history.replaceState(null, '', location.pathname + location.hash); } } catch (e) { /* the page still works without it */ }
   route();
 })();

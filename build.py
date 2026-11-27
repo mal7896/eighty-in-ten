@@ -46,6 +46,20 @@ skel = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="v
 # plus files that must sit at the site root, such as the Google Search Console verification file (src/public)
 for d in ('icons', 'public'):
     for f in (root/'src'/d).iterdir(): (root/'docs'/f.name).write_bytes(f.read_bytes())
-(root/'docs'/'index.html').write_text(skel + html + '</body></html>')
+SITE_URL = 'https://mal7896.github.io/eighty-in-ten/'
+seo = f'''<title>Free UIL &amp; TMSCA Number Sense Practice Tests and Tricks | Eighty in Ten</title>
+<meta name="description" content="Free UIL and TMSCA Number Sense practice: full 80-problem practice tests to take online or print, a lesson on every trick, and timed drills for middle school and high school.">
+<link rel="canonical" href="{SITE_URL}">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Eighty in Ten"><meta property="og:title" content="Free UIL &amp; TMSCA Number Sense Practice Tests and Tricks">
+<meta property="og:description" content="Full practice tests to take online or print, a lesson on every trick, and timed drills."><meta property="og:url" content="{SITE_URL}"><meta property="og:image" content="{SITE_URL}icon-512.png">
+<script type="application/ld+json">{{"@context":"https://schema.org","@type":"WebApplication","name":"Eighty in Ten","url":"{SITE_URL}","applicationCategory":"EducationalApplication","operatingSystem":"Any","description":"Free practice for UIL and TMSCA Number Sense: full practice tests, lessons on every trick, and timed drills.","educationalLevel":["Middle school","High school"],"offers":{{"@type":"Offer","price":"0","priceCurrency":"USD"}}}}</script>
+<script>window.EIT_SITE = 1</script>'''
+noscript = '''<noscript><h1>Free UIL and TMSCA Number Sense practice</h1><p>Eighty in Ten has full 80-problem practice tests, a lesson on every Number Sense trick, and timed drills for middle school and high school. The practice app needs JavaScript; the lessons and printable tests work without it.</p><p><a href="tricks/">Every Number Sense trick</a> · <a href="practice-tests/">Printable practice tests</a></p></noscript>'''
+docs_html = html.replace('<title>Eighty in Ten</title>\n', '', 1)
+docs_html = re.sub(r'<meta name="description"[^>]*>\n', '', docs_html, count=1)
+(root/'docs'/'index.html').write_text(skel.replace('</head>', seo + '</head>') + noscript + docs_html + '</body></html>')
+# the trick, practice-test and sitemap pages
+import subprocess
+subprocess.run(['node', str(root/'tools'/'site.js'), SITE_URL], check=True)
 (root/'docs'/'.nojekyll').write_text('')
 print(len(html)//1024, 'KB')

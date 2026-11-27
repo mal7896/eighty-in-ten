@@ -1,0 +1,199 @@
+/* ===== engine: problems, tests, progress (no DOM) ===== */
+(function () {
+  const GBY = {}; NS.GENS.forEach(g => { GBY[g.id] = g; }); NS.GBY = GBY;
+
+  NS.gensFor = (trick, lv) => NS.GENS.filter(g => g.trick === trick && g.col[lv]);
+  NS.tricksFor = lv => NS.PATH[lv].filter(t => NS.TRICKS[t] && NS.gensFor(t, lv).length);
+  NS.trickCol = (trick, lv) => Math.min(...NS.gensFor(trick, lv).map(g => g.col[lv]));
+  NS.TARGET = { 1: 8, 2: 12, 3: 16, 4: 20 };
+
+  NS.makeProblem = function (genId, lv, seed) {
+    const g = GBY[genId]; const r = new NS.Rng(seed);
+    const out = g.gen(r, lv);
+    return { gid: genId, trick: g.trick, lv, seed, est: !!g.est, col: g.col[lv], ...out };
+  };
+  NS.problemForTrick = function (trick, lv, seed, avoidGid) {
+    const gs = NS.gensFor(trick, lv); const r = new NS.Rng(seed ^ 0x9e3779b9);
+    let g = r.pick(gs); if (gs.length > 1 && avoidGid && g.id === avoidGid) g = r.pick(gs.filter(x => x.id !== avoidGid));
+    return NS.makeProblem(g.id, lv, seed);
+  };
+
+  /* ---------- contest test: 80 problems, every 10th an estimate ---------- */
+  NS.buildTest = function (lv, seed, cols = [1, 2, 3, 4]) {
+    const r = new NS.Rng(seed); const probs = [];
+    for (const c of cols) {
+      const estG = NS.GENS.filter(g => g.est && g.col[lv] === c);
+      const pool = [];
+      NS.GENS.forEach(g => {
+        if (g.est || !g.col[lv]) return; const d = c - g.col[lv];
+        const w = (d === 0 ? 3 : d === 1 ? 1.4 : d === 2 && c >= 3 ? 0.5 : 0) * (g.w || 1);
+        if (w) pool.push({ g, w });
+      });
+      // weighted sample without replacement
+      const chosen = []; const avail = pool.slice();
+      while (chosen.length < 18 && avail.length) {
+        const tot = avail.reduce((s, x) => s + x.w, 0); let t = r.f() * tot; let k = 0;
+        for (; k < avail.length - 1; k++) { t -= avail[k].w; if (t <= 0) break; }
+        chosen.push(avail[k].g); avail.splice(k, 1);
+      }
+      while (chosen.length < 18) chosen.push(r.pick(pool).g);
+      // easier (earlier-column) material first within the column
+      chosen.sort((a, b) => a.col[lv] - b.col[lv] || (r.f() - 0.5));
+      // real tests open with a plain sum or difference, then often a decimal one
+      const leads = c === 1 ? NS.GENS.filter(g => g.lead && g.col[lv] === 1) : [];
+      let i = 0;
+      for (let pos = 1; pos <= 20; pos++) {
+        const s = r.int(1, 2 ** 31);
+        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s));
+        else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s));
+        else probs.push(NS.makeProblem(chosen[i++].id, lv, s));
+      }
+    }
+    probs.forEach((p, i) => { p.n = (cols[0] - 1) * 20 + i + 1; });
+    return probs;
+  };
+
+  /* ---------- test codes: same code, same test, so a team can all take one test ----------
+     format: level letter (M/H), F for full or the column number, dash, 4 characters of seed */
+  const ALPH = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  NS.testSeed = () => NS.newSeed() & 0xFFFFF;
+  NS.testCode = function (lv, cols, seed) {
+    let s = ''; for (let i = 0; i < 4; i++) s = ALPH[(seed >> (5 * i)) & 31] + s;
+    return (lv === 'ms' ? 'M' : 'H') + (cols.length === 4 ? 'F' : String(cols[0])) + '-' + s;
+  };
+  NS.readTestCode = function (str) {
+    const c = String(str || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (c.length !== 6) return null;
+    const lv = c[0] === 'M' ? 'ms' : c[0] === 'H' ? 'hs' : null; if (!lv) return null;
+    const cols = c[1] === 'F' ? [1, 2, 3, 4] : /[1-4]/.test(c[1]) ? [+c[1]] : null; if (!cols) return null;
+    let seed = 0; for (const ch of c.slice(2)) { const k = ALPH.indexOf(ch); if (k < 0) return null; seed = seed * 32 + k; }
+    return { lv, cols, seed };
+  };
+
+  /* official-style scoring: through the last attempted problem, +5 right, −4 wrong or skipped */
+  NS.scoreTest = function (probs, answers) {
+    let last = -1; answers.forEach((a, i) => { if (a && String(a).trim() !== '') last = i; });
+    let correct = 0, wrong = 0, skipped = 0; const marks = [];
+    probs.forEach((p, i) => {
+      const a = answers[i];
+      if (i > last) { marks.push('after'); return; }
+      if (!a || String(a).trim() === '') { skipped++; marks.push('skip'); return; }
+      const res = NS.check(p.a, a); if (res.ok) { correct++; marks.push('ok'); } else { wrong++; marks.push('bad'); }
+    });
+    return { last: last + 1, correct, wrong, skipped, score: 5 * correct - 4 * (wrong + skipped), marks };
+  };
+
+  /* ---------- progress store ---------- */
+  const KEY = 'eighty-in-ten:v1';
+  const blank = () => ({ tricks: {}, tests: [], days: {}, misses: [] });
+  NS.store = {
+    data: null,
+    load() {
+      let d = null; try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { d = null; }
+      if (!d || d.v !== 1) d = { v: 1, level: null, settings: {}, levels: { ms: blank(), hs: blank() } };
+      this.data = d; return d;
+    },
+    save() { try { localStorage.setItem(KEY, JSON.stringify(this.data)); } catch (e) { /* storage blocked: progress lasts for this visit */ } },
+    lv() { return this.data.levels[this.data.level]; },
+    trick(id) { const L = this.lv(); return L.tricks[id] || (L.tricks[id] = { att: [], n: 0, ok: 0, lesson: false }); },
+    record(p, ok, ms) {
+      const t = this.trick(p.trick); t.att.push([ok ? 1 : 0, Math.round(ms)]); if (t.att.length > 30) t.att.shift(); t.n++; if (ok) t.ok++;
+      const L = this.lv(); const day = NS.today(); L.days[day] = (L.days[day] || 0) + 1;
+      if (!ok) { L.misses.push({ g: p.gid, s: p.seed, t: Date.now() }); if (L.misses.length > 60) L.misses.shift(); }
+      else { const k = L.misses.findIndex(m => m.g === p.gid && m.s === p.seed); if (k >= 0) L.misses.splice(k, 1); }
+      this.save();
+    },
+    reset(level) { this.data.levels[level] = blank(); this.save(); },
+  };
+  /* ---------- moving progress to another device: a copy-and-paste code ----------
+     EIT1z.<base64url of deflate(JSON)>  (or EIT1j.<base64url of JSON> where compression is missing) */
+  const b64 = bytes => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+  const unb64 = str => { const s = atob(str.replace(/-/g, '+').replace(/_/g, '/')); const out = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) out[i] = s.charCodeAt(i); return out; };
+  const pipe = async (bytes, stream) => new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+  // only what the app reads: trick status uses the last 12 tries, a fact's status its last 2, the streak recent days
+  NS.trimProgress = function (data) {
+    const d = JSON.parse(JSON.stringify(data)); const cut = Date.now() - 400 * 864e5;
+    for (const lv of ['ms', 'hs']) { const L = d.levels[lv]; if (!L) continue;
+      Object.values(L.tricks || {}).forEach(t => { t.att = (t.att || []).slice(-12).map(([ok, ms]) => [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms]); });
+      Object.keys(L.memo || {}).forEach(k => { L.memo[k] = L.memo[k].slice(-3).map(([ok, ms]) => [ok, Math.ceil(ms / 100) * 100]); });
+      const days = {}; Object.keys(L.days || {}).sort().slice(-120).forEach(k => { days[k] = L.days[k]; }); L.days = days;
+      L.tests = (L.tests || []).filter(t => t.t > cut || t.kind === 'full').slice(-100);
+    }
+    return d;
+  };
+  NS.exportProgress = async function (data) {
+    const json = new TextEncoder().encode(JSON.stringify(NS.trimProgress(data)));
+    if (typeof CompressionStream !== 'undefined') { try { return 'EIT1z.' + b64(await pipe(json, new CompressionStream('deflate'))); } catch (e) { /* fall through */ } }
+    return 'EIT1j.' + b64(json);
+  };
+  // keeps only well-formed pieces, so a damaged or hand-edited code can't break the app
+  NS.cleanProgress = function (d) {
+    if (!d || typeof d !== 'object' || d.v !== 1 || !d.levels || typeof d.levels !== 'object') return null;
+    const num = x => (typeof x === 'number' && isFinite(x) ? x : 0); const obj = x => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
+    const out = { v: 1, level: d.level === 'ms' || d.level === 'hs' ? d.level : null, settings: {}, levels: {} };
+    const st = obj(d.settings); if (['system', 'light', 'dark'].includes(st.theme)) out.settings.theme = st.theme; if (typeof st.names === 'boolean') out.settings.names = st.names;
+    const pair = a => Array.isArray(a) && a.length === 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
+    for (const lv of ['ms', 'hs']) {
+      const L = obj(d.levels[lv]); const tricks = {};
+      for (const [id, t] of Object.entries(obj(L.tricks))) { if (!NS.TRICKS[id]) continue; const tt = obj(t); tricks[id] = { att: (Array.isArray(tt.att) ? tt.att : []).map(pair).filter(Boolean).slice(-30), n: num(tt.n), ok: num(tt.ok), lesson: !!tt.lesson }; }
+      const tests = (Array.isArray(L.tests) ? L.tests : []).filter(t => t && typeof t === 'object').map(t => ({ t: num(t.t), kind: t.kind === 'col' ? 'col' : 'full', col: num(t.col) || 1, score: num(t.score), correct: num(t.correct), wrong: num(t.wrong), skipped: num(t.skipped), last: num(t.last), ...(typeof t.code === 'string' && NS.readTestCode(t.code) ? { code: t.code } : {}) })).slice(-200);
+      const days = {}; for (const [k, v] of Object.entries(obj(L.days))) if (/^\d{4}-\d\d-\d\d$/.test(k)) days[k] = num(v);
+      const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t) })).slice(-60);
+      const memo = {}; for (const [k, v] of Object.entries(obj(L.memo))) if (Array.isArray(v) && /^[a-z]{2}[\w.]*$/.test(k)) memo[k] = v.map(pair).filter(Boolean).slice(-6);
+      out.levels[lv] = { tricks, tests, days, misses, memo };
+    }
+    return out;
+  };
+  NS.readProgress = async function (code) {
+    const m = /^EIT1([zj])\.([A-Za-z0-9_-]+)$/.exec(String(code || '').replace(/\s+/g, ''));
+    if (!m) return { error: 'bad' };
+    try {
+      let bytes = unb64(m[2]);
+      if (m[1] === 'z') { if (typeof DecompressionStream === 'undefined') return { error: 'old' }; bytes = await pipe(bytes, new DecompressionStream('deflate')); }
+      const data = NS.cleanProgress(JSON.parse(new TextDecoder().decode(bytes)));
+      return data ? { data } : { error: 'bad' };
+    } catch (e) { return { error: 'bad' }; }
+  };
+  NS.progressSummary = function (d, lv) { const L = d.levels[lv]; return { answered: Object.values(L.tricks).reduce((s, t) => s + t.n, 0), tests: L.tests.length, facts: Object.keys(L.memo || {}).length }; };
+
+  NS.today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+
+  NS.trickStatus = function (id, lv) {
+    const t = NS.store.data.levels[lv].tricks[id]; if (!t || (!t.att.length && !t.lesson)) return { key: 'new', label: 'Not started', acc: null, med: null };
+    const recent = t.att.slice(-12); const acc = recent.length ? recent.reduce((s, a) => s + a[0], 0) / recent.length : null;
+    const times = recent.filter(a => a[0] && a[1] > 0).map(a => a[1]).sort((a, b) => a - b); const med = times.length ? times[Math.floor(times.length / 2)] / 1000 : null;
+    const target = NS.TARGET[Math.min(4, NS.trickCol(id, lv))] + (id === 'estimate' ? 6 : 0);
+    if (recent.length >= 8 && acc >= 0.85) {
+      if (med !== null && med <= target) return { key: 'fast', label: 'Fast', acc, med, target };
+      return { key: 'solid', label: 'Accurate', acc, med, target };
+    }
+    return { key: 'learning', label: 'Learning', acc, med, target };
+  };
+
+  NS.streak = function (lv) {
+    const days = NS.store.data.levels[lv].days; let n = 0; const d = new Date();
+    const key = x => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    if (!days[key(d)]) d.setDate(d.getDate() - 1);
+    while (days[key(d)]) { n++; d.setDate(d.getDate() - 1); }
+    return n;
+  };
+
+  NS.nextTrick = function (lv) {
+    const list = NS.tricksFor(lv);
+    return list.find(id => { const t = NS.store.data.levels[lv].tricks[id]; return !t || !t.lesson; }) || list.find(id => NS.trickStatus(id, lv).key === 'learning') || list[0];
+  };
+
+  NS.weakTricks = function (lv) {
+    return NS.tricksFor(lv).map(id => ({ id, st: NS.trickStatus(id, lv) }))
+      .filter(x => x.st.key === 'learning' && NS.store.data.levels[lv].tricks[x.id] && NS.store.data.levels[lv].tricks[x.id].att.length >= 3)
+      .sort((a, b) => (a.st.acc ?? 1) - (b.st.acc ?? 1)).map(x => x.id);
+  };
+
+  /* pick the next trick for a practice session; weak and slow tricks come up more often */
+  NS.pickTrick = function (tricks, lv, r, last) {
+    const w = tricks.map(id => { const s = NS.trickStatus(id, lv); let x = s.key === 'new' ? 1.2 : s.key === 'learning' ? 1.6 : s.key === 'solid' ? 1 : 0.6; if (s.acc !== null && s.acc < 0.7) x += 0.8; if (id === last && tricks.length > 1) x *= 0.15; return x; });
+    const tot = w.reduce((a, b) => a + b, 0); let t = r.f() * tot;
+    for (let i = 0; i < tricks.length; i++) { t -= w[i]; if (t <= 0) return tricks[i]; }
+    return tricks[tricks.length - 1];
+  };
+})();

@@ -58,10 +58,13 @@ async def main():
         # leaving a test asks first
         await pg.click('.nav [data-go="test"]'); await pg.click('[data-act="testMenu"]') if await pg.query_selector('[data-act="testMenu"]') else None
         await pg.click('[data-act="tkind"][data-k="full"]'); await pg.click('[data-act="startTest"]'); await pg.wait_for_timeout(200)
-        await pg.click('.nav [data-go="home"]'); await pg.wait_for_timeout(150)
+        assert not await pg.is_visible('.nav'), 'navigation hides while a test runs'
+        await pg.click('[data-act="leaveTest"]'); await pg.wait_for_timeout(150)
         assert await pg.query_selector('#confirmbar'), 'guard'
         await pg.click('[data-c="n"]'); assert await pg.query_selector('#sheet')
-        await pg.click('.nav [data-go="home"]'); await pg.click('[data-c="y"]'); await pg.wait_for_timeout(150)
+        await pg.click('[data-act="leaveTest"]'); await pg.click('[data-c="y"]'); await pg.wait_for_timeout(150)
+        assert 'Practice tests' in await pg.inner_text('main') and await pg.is_visible('.nav')
+        await pg.click('.nav [data-go="home"]'); await pg.wait_for_timeout(150)
         assert 'Today' in await pg.inner_text('main')
         # reload persists progress
         await pg.reload(); await pg.wait_for_timeout(300)

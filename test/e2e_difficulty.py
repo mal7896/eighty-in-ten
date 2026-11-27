@@ -60,7 +60,7 @@ async def m():
         btn = await pg.query_selector('.confirm button')
         if btn: await btn.click()
         await pg.wait_for_timeout(300)
-        res = await pg.inner_text('main'); check('Hard' in res, 'results show the level')
+        res = await pg.inner_text('main'); check('hard' in res.lower(), 'results show the level')
         hist = await pg.evaluate("NS.store.data.levels.ms.tests.slice(-1)[0].code"); check(hist.endswith('-H'), 'history keeps the Hard code')
         await pg.evaluate("NS._state.test=null; location.hash='home'"); await pg.wait_for_timeout(100)
         await pg.evaluate("location.hash='test'"); await pg.wait_for_timeout(200)
@@ -75,7 +75,7 @@ async def m():
         for i in range(5):
             labels.append(await pg.inner_text('#tryit .eyebrow'))
             a = await pg.evaluate(f"{ANS}(NS._state.lessonTry.p)"); await pg.fill('#tryin', a); await pg.keyboard.press('Enter'); await pg.wait_for_timeout(700)
-        check('Warm-up' in labels[0] and 'Warm-up' in labels[1] and 'Contest' in labels[2], f'lesson ramp labels {labels}')
+        labels = [x.lower() for x in labels]; check('warm-up' in labels[0] and 'warm-up' in labels[1] and 'contest' in labels[2], f'lesson ramp labels {labels}')
         # phone width: no sideways scroll on practice setup, a session, and tests setup
         await pg.evaluate("NS._state.session=null")
         await pg.set_viewport_size({'width': 360, 'height': 780})

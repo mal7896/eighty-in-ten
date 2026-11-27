@@ -28,7 +28,7 @@
     <header class="top"><div class="top-in">
       <button class="brand" data-go="home" aria-label="Eighty in Ten, home"><b>eighty<i>in</i>ten</b></button>
       <nav class="nav" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}${l}</button>`).join('')}</nav>
-      <button class="lvl" data-act="level" id="lvlbtn"><span class="dot"></span><span id="lvlname"></span></button>
+      <button class="lvl" data-act="level" id="lvlbtn" title="Switch level"><span id="lvlname"></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     </div></header>
     <main id="main" tabindex="-1"></main>
     <nav class="tabbar" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}<span>${l}</span></button>`).join('')}</nav>`);
@@ -145,6 +145,7 @@
     const ms = NS.makeProblem('sameFront', 'ms', 31), hs = NS.makeProblem('logs', 'hs', 12);
     main.innerHTML = `<section class="welcome">
       <h1>Which test are you practicing for?</h1>
+      <p class="lede">Lessons, drills and full practice tests for Number Sense, built from real contest tests.</p>
       <div class="grid2" style="margin-top:22px">
         <button class="pick" data-act="setLevel" data-lv="ms"><span class="lvtag">Grades 6–8</span><h2>Middle school</h2><span class="muted">TMSCA middle school and UIL A+ junior high.</span><span class="sample">${R(ms.p.h, true)} <span class="sample-a">${R(NS.keyHtml(ms.a), true)}</span></span></button>
         <button class="pick" data-act="setLevel" data-lv="hs"><span class="lvtag">Grades 9–12</span><h2>High school</h2><span class="muted">UIL and TMSCA high school, through calculus.</span><span class="sample">${R(hs.p.h, true)} <span class="sample-a">${R(NS.keyHtml(hs.a), true)}</span></span></button>
@@ -173,23 +174,26 @@
           <div class="row" style="margin-top:6px"><button class="btn" data-go="t" data-arg="${next}">${nextDone ? 'Review the lesson' : 'Learn it'}</button><button class="btn ghost" data-act="drillTrick" data-id="${next}">Practice it</button></div></div>
         <div class="r"><p class="faint small">Looks like this</p><div class="ex${isLong(ex) ? ' long' : ''}">${R(ex.p.h, true)}</div></div>
       </div>
-      <div class="sect"><h2>Or jump in</h2>
+      <div class="sect"><div class="sect-h" style="border-bottom:0;padding-bottom:0"><h2>Other ways to practice</h2></div>
         <div class="list">
-          <button class="li" data-act="quickSprint"><span><b>Two-minute sprint</b><span class="muted">Problems 1–20 material. Right answers move on by themselves.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickSprint"><span><b>Two-minute sprint</b><span class="muted">Problems 1–20 against the clock. Right answers move on by themselves.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickWeak"><span><b>${weak.length ? 'Weak spots' : misses ? 'Problems you missed' : 'Weak spots'}</b><span class="muted">${weak.length ? `${weak.length} trick${weak.length > 1 ? 's' : ''} under 85%, starting with ${NS.rich(trickName(weak[0]))}.` : misses ? `${misses} problem${misses > 1 ? 's' : ''} waiting to be redone.` : 'Nothing here yet. Tricks you miss will collect here.'}</span></span><span class="arr">→</span></button>
-          <button class="li" data-act="memoMix"><span><b>Facts drill</b><span class="muted">Squares, cubes, fractions, triples and more. Twenty quick cards.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="memoMix"><span><b>Facts drill</b><span class="muted">Twenty quick cards: squares, cubes, fractions, triples and more.</span></span><span class="arr">→</span></button>
           <button class="li" data-go="test"><span><b>Full practice test</b><span class="muted">80 problems, 10 minutes, scored like a contest.</span></span><span class="arr">→</span></button>
         </div></div>
-      <div class="sect"><div class="sect-h"><h2>Your tricks</h2><button class="btn link" data-go="tricks">All ${ids.length} →</button></div>
-        <div class="card">${statusBar(cnt, ids.length)}</div></div>
-      ${fulls.length >= 2 ? `<div class="sect"><div class="sect-h"><h2>Full tests</h2><button class="btn link" data-go="progress">Progress →</button></div><div class="card">${chartSvg(fulls.slice(-12).map(t => t.score), 400)}</div></div>` : ''}
+      <div class="duo">
+        <div class="sect"><div class="sect-h"><h2>Your tricks</h2><button class="btn link" data-go="tricks">All ${ids.length} →</button></div>
+          <div>${statusBar(cnt, ids.length)}</div></div>
+        <div class="sect"><div class="sect-h"><h2>Full tests</h2><button class="btn link" data-go="${fulls.length >= 2 ? 'progress' : 'test'}">${fulls.length >= 2 ? 'Progress' : 'Take one'} →</button></div>
+          ${fulls.length >= 2 ? chartSvg(fulls.slice(-12).map(t => t.score), 400) : `<p class="muted">${fulls.length ? `One so far: ${fulls[0].score} out of 400. Your scores show up here as a chart after the second.` : 'No full tests yet. One a week is a good rhythm, with single columns in between.'}</p>`}</div>
+      </div>
       ${footer()}`;
   }
   function statusBar(cnt, n) {
-    const segs = [['fast', 'var(--ok)', 'Fast'], ['solid', 'var(--blue)', 'Accurate'], ['learning', 'var(--hi)', 'Learning'], ['new', 'var(--line-2)', 'Not started']];
+    const segs = [['fast', 'var(--ok)', 'Fast'], ['solid', 'var(--blue)', 'Accurate'], ['learning', 'var(--warn)', 'Learning'], ['new', 'var(--line-2)', 'Not started']];
     return `<div class="bar">${segs.map(([k, c]) => cnt(k) ? `<span style="width:${cnt(k) / n * 100}%;background:${c}"></span>` : '').join('')}</div>
-      <div class="legend">${segs.map(([k, c, l]) => `<span><i style="background:${c}"></i>${l}: <b class="mono">${cnt(k)}</b></span>`).join('')}</div>
-      <p class="faint small" style="margin-top:10px">Accurate: 85% or better on your last 12 tries. Fast: accurate, and quick enough for a real test.</p>`;
+      <div class="legend">${segs.map(([k, c, l]) => `<span><i style="background:${c}"></i>${l}: <b class="num">${cnt(k)}</b></span>`).join('')}</div>
+      <p class="faint small" style="margin-top:10px">Accurate means 85% or better on your last 12 tries at Contest level. Fast means accurate and quick enough for a real test.</p>`;
   }
   function footer() {
     const theme = S.data.settings.theme || 'system';
@@ -202,13 +206,13 @@
     const l = lv(); const ids = NS.tricksFor(l); const next = NS.nextTrick(l);
     const f = state.trickFilter || 'all';
     const groups = [1, 2, 3, 4].map(c => [c, ids.filter(id => NS.trickCol(id, l) === c)]).filter(([, a]) => a.length);
-    main.innerHTML = `<p class="eyebrow">${LV[l]}</p><h1>Tricks</h1>
-      <p class="muted" style="margin-top:8px;max-width:62ch">Grouped by where they show up on the test. Each lesson is a few minutes: the idea, one worked example, five to try.</p>
+    main.innerHTML = `<header class="pagehead" style="margin-bottom:0"><p class="eyebrow">${LV[l]}</p><h1>Tricks</h1>
+      <p class="lede">Grouped by where they show up on the test. Each lesson takes a few minutes: the idea, a worked example, then five to try.</p></header>
       <div class="filters">${[['all', 'All'], ['new', 'Not started'], ['learning', 'Learning'], ['solid', 'Accurate'], ['fast', 'Fast']].map(([k, n]) => `<button class="chip" data-act="tfilter" data-f="${k}" aria-pressed="${f === k}">${n}</button>`).join('')}</div>
       ${groups.map(([c, arr]) => { const shown = arr.filter(id => f === 'all' || NS.trickStatus(id, l).key === f); if (!shown.length) return '';
-        return `<div class="colhead"><h2>Problems</h2><span class="rng">${COLR[c]}</span><span class="faint small">${shown.length} trick${shown.length > 1 ? 's' : ''}</span></div>
+        return `<div class="colhead"><h2>Problems <span class="rng">${COLR[c]}</span></h2><span class="faint small">${shown.length} trick${shown.length > 1 ? 's' : ''}</span></div>
         <div class="tlist">${shown.map(id => { const t = NS.TRICKS[id]; const st = NS.trickStatus(id, l);
-          return `<button class="titem${id === next ? ' isnext' : ''}" data-go="t" data-arg="${id}"><h3>${NS.rich(t.title)}</h3>${id === next && st.key === 'new' ? '<span class="pill learning">Up next</span>' : pillFor(st, true)}<p>${NS.rich(t.s)}</p></button>`; }).join('')}</div>`; }).join('')}
+          return `<button class="titem${id === next ? ' isnext' : ''}" data-go="t" data-arg="${id}"><h3>${NS.rich(t.title)}</h3><span class="stc">${id === next && st.key === 'new' ? '<span class="pill upnext">Up next</span>' : pillFor(st, true)}</span><p>${NS.rich(t.s)}</p></button>`; }).join('')}</div>`; }).join('')}
       ${footer()}`;
   }
 
@@ -222,10 +226,10 @@
     main.innerHTML = `<button class="back" data-go="tricks">${IC.left} All tricks</button>
       <div class="lesson" style="margin-top:12px">
         <article class="stack">
-          <div><div class="row" style="gap:10px"><p class="eyebrow">Problems ${COLR[c]}</p>${pillFor(st, true)}</div><h1 style="margin-top:6px">${NS.rich(t.title)}</h1><p class="spot"><b>Use it when:</b> ${NS.rich(t.s)}</p></div>
-          <div class="card"><h3 style="margin-bottom:12px">How</h3><ol class="how">${t.how.map(s => `<li><span>${NS.rich(s)}</span></li>`).join('')}</ol></div>
+          <div><div class="row" style="gap:14px"><p class="eyebrow">Problems ${COLR[c]}</p>${pillFor(st, true)}</div><h1 style="margin-top:6px">${NS.rich(t.title)}</h1><p class="spot"><b>Use it when:</b> ${NS.rich(t.s)}</p></div>
+          <section class="lsec"><h3>How</h3><ol class="how">${t.how.map(s => `<li><span>${NS.rich(s)}</span></li>`).join('')}</ol></section>
           <div class="card example" id="example"></div>
-          <div class="grid2"><div class="note why"><b>Why it works</b>${NS.rich(t.why)}</div><div class="note watch"><b>Watch out</b>${NS.rich(t.watch)}</div></div>
+          <div class="grid2" style="gap:24px"><div class="note why"><b>Why it works</b>${NS.rich(t.why)}</div><div class="note watch"><b>Watch out</b>${NS.rich(t.watch)}</div></div>
           ${nextId ? `<p class="faint small">Next in the list: <button class="btn link" data-go="t" data-arg="${nextId}">${NS.rich(trickName(nextId))} →</button></p>` : ''}
         </article>
         <aside class="sticky"><div class="card" id="tryit"></div></aside>
@@ -237,7 +241,7 @@
     const n = state.exShown; const all = n >= p.steps.length;
     box.innerHTML = `<div class="row" style="justify-content:space-between"><h3>Worked example</h3><button class="btn link" data-act="exNew">Another example</button></div>
       <div class="exq ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)} <span class="faint">${p.pre ? esc(p.pre) : ''}${n && all ? `<b style="color:var(--ink)">${R(NS.keyHtml(p.a), true)}</b>` : '<u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</u>'}${p.suffix ? ' ' + esc(p.suffix) : ''}</span></div>
-      ${n === 0 ? '<p class="muted small" style="margin-bottom:12px">Try it in your head first. Then walk through the shortcut.</p>' : ''}
+      ${n === 0 ? '<p class="muted small" style="margin-bottom:12px">Work it in your head first, then step through the shortcut.</p>' : ''}
       <ol class="steps">${p.steps.slice(0, n).map(s => `<li>${R(s, true)}</li>`).join('')}</ol>
       <div class="row" style="margin-top:12px">${all ? '' : `<button class="btn small ghost" data-act="exStep">${n === 0 ? 'Show the first step' : 'Next step'}</button>${n > 0 ? '<button class="btn link" data-act="exAll">Show all</button>' : ''}`}</div>`;
   }
@@ -288,20 +292,19 @@
     if (!state.pickSet || !sets.find(s => s.k === state.pickSet)) state.pickSet = sets[0].k;
     const cur = sets.find(s => s.k === state.pickSet);
     const ids = NS.tricksFor(l);
-    main.innerHTML = `<div class="setup"><p class="eyebrow">${LV[l]}</p><h1>Practice</h1>
-      <span class="label">Mode</span>
-      <div class="opts">
-        <button class="opt" data-act="pmode" data-m="practice" aria-pressed="${state.pickMode === 'practice'}"><b>Practice round</b><span>20 problems, no clock. Miss one and you see how to do that exact problem fast.</span></button>
-        <button class="opt" data-act="pmode" data-m="sprint" aria-pressed="${state.pickMode === 'sprint'}"><b>Sprint</b><span>As many as you can before time runs out. Right answers move on by themselves.</span></button>
+    const modeHint = state.pickMode === 'sprint' ? 'As many as you can before time runs out. Right answers move on by themselves.' : '20 problems, no clock. Miss one and you see how to do that exact problem fast.';
+    main.innerHTML = `<div class="setup"><header class="pagehead"><p class="eyebrow">${LV[l]}</p><h1>Practice</h1></header>
+      <div class="cfg">
+        <div class="cfg-row"><span class="cfg-l">Mode</span><div class="cfg-v"><div class="row" style="gap:8px"><div class="seg" role="group" aria-label="Mode"><button data-act="pmode" data-m="practice" aria-pressed="${state.pickMode === 'practice'}">Practice round</button><button data-act="pmode" data-m="sprint" aria-pressed="${state.pickMode === 'sprint'}">Sprint</button></div>
+          ${state.pickMode === 'sprint' ? `<div class="seg" role="group" aria-label="Sprint length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([sec, nm]) => `<button data-act="plen" data-s="${sec}" aria-pressed="${state.sprintLen === sec}">${nm}</button>`).join('')}</div>` : ''}</div>
+          <p class="note-s">${modeHint}</p></div></div>
+        <div class="cfg-row"><span class="cfg-l">Difficulty</span><div class="cfg-v">${diffSeg('pdiff', state.pickDiff, true)}</div></div>
+        ${cur.tricks.length > 1 ? `<div class="cfg-row"><span class="cfg-l">Trick names</span><div class="cfg-v"><button class="switch" role="switch" aria-checked="${!!S.data.settings.names}" data-act="names"><span class="sw" aria-hidden="true"></span><span class="swt"><span>${S.data.settings.names ? 'Shown on each problem.' : 'Hidden, like a real test. You spot the trick; the name shows after you answer.'}</span></span></button></div></div>` : ''}
       </div>
-      ${state.pickMode === 'sprint' ? `<div class="seg" style="margin-top:12px" role="group" aria-label="Sprint length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([s, n]) => `<button data-act="plen" data-s="${s}" aria-pressed="${state.sprintLen === s}">${n}</button>`).join('')}</div>` : ''}
-      <span class="label">Difficulty</span>
-      ${diffSeg('pdiff', state.pickDiff, true)}
-      <span class="label">Problems from</span>
-      <div class="opts">${sets.map(s => `<button class="opt" data-act="pset" data-k="${s.k}" aria-pressed="${s.k === state.pickSet}"><b>${NS.rich(s.name)}</b><span>${NS.rich(s.d)}</span></button>`).join('')}</div>
+      <h2 class="label">Problems from</h2>
+      <div class="opts" role="group" aria-label="Problems from">${sets.map(st => `<button class="opt" data-act="pset" data-k="${st.k}" aria-pressed="${st.k === state.pickSet}"><b>${NS.rich(st.name)}</b><span>${NS.rich(st.d)}</span></button>`).join('')}</div>
       ${state.pickSet === 'custom' ? `<div class="picker" id="picker">${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<h4>Problems ${COLR[c]}</h4>${arr.map(id => `<label><input type="checkbox" data-trick="${id}" ${state.custom.has(id) ? 'checked' : ''}>${NS.rich(trickName(id))}</label>`).join('')}` : ''; }).join('')}</div>` : ''}
-      ${cur.tricks.length > 1 ? `<button class="switch" role="switch" aria-checked="${!!S.data.settings.names}" data-act="names"><span class="sw" aria-hidden="true"></span><span class="swt"><b>Show trick names</b><span>${S.data.settings.names ? 'Each problem is labeled with its trick.' : 'Off, like a real test. You spot the trick, and the name shows after you answer.'}</span></span></button>` : ''}
-      <div class="row startbar" style="margin-top:24px"><button class="btn hi" data-act="startPractice" ${cur.tricks.length ? '' : 'disabled'}>Start ${state.pickMode === 'sprint' ? 'sprint' : 'round'} <span class="kbd">Enter</span></button>${cur.tricks.length ? '' : '<span class="faint small">Pick at least one trick.</span>'}</div>
+      <div class="row startbar"><button class="btn" data-act="startPractice" ${cur.tricks.length ? '' : 'disabled'}>Start ${state.pickMode === 'sprint' ? 'sprint' : 'round'} <span class="kbd">Enter</span></button>${cur.tricks.length ? '' : '<span class="faint small">Pick at least one trick.</span>'}</div>
       </div>${footer()}`;
     const pk = $('#picker'); if (pk) pk.addEventListener('change', e => { const id = e.target.dataset.trick; if (!id) return; if (e.target.checked) state.custom.add(id); else state.custom.delete(id); const keep = pk.scrollTop; state.keepScroll = true; viewPractice(); const p2 = $('#picker'); if (p2) p2.scrollTop = keep; });
   }
@@ -335,10 +338,10 @@
     const pct = s.mode === 'practice' ? s.results.length / s.total * 100 : 0;
     main.innerHTML = `<div class="session">
       <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>${diffChip(p.diff || 'contest', s.auto ? '<span class="dauto"> · auto</span>' : '')}
-        <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span>${s.mode === 'sprint' ? `<span class="clock" id="clock">${fmtTime(s.dur)}</span>` : `<span class="faint mono small">${s.results.length + 1}/${s.total}</span>`}</div>
+        <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span>${s.mode === 'sprint' ? `<span class="clock" id="clock">${fmtTime(s.dur)}</span>` : `<span class="faint num small">${s.results.length + 1}/${s.total}</span>`}</div>
       <div class="prog"><span id="progbar" style="width:${pct}%"></span></div>
       <div class="stage" id="stage">
-        <span class="tk" id="stk">${s.tricks.length === 1 || S.data.settings.names ? NS.rich(trickName(p.trick), true) : s.mode === 'sprint' ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* within 5%</span>' : ''}
+        <span class="tk" id="stk">${s.tricks.length === 1 ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : s.mode === 'sprint' ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* within 5%</span>' : ''}
         <div class="prob ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</div>
         <div>${blankHtml(p, 'id="sin"')}</div>
         <div class="preview" id="spv"></div>
@@ -416,9 +419,9 @@
     if (arg && memoSet(arg)) return viewMemoSet(arg);
     state.memoSetId = null;
     const tot = NS.MEMO.reduce((a, s) => { const c = NS.memoCount(l, s.id); a.k += c.known; a.t += c.total; return a; }, { k: 0, t: 0 });
-    main.innerHTML = `<p class="eyebrow">${LV[l]}</p><h1>Memorize</h1>
-      <p class="muted" style="margin-top:8px;max-width:62ch">Some answers you don’t work out. You just know them. Look over a table, then drill it until every answer comes without thinking.</p>
-      <div class="row" style="margin-top:18px"><button class="btn hi" data-act="memoMix">Drill a mix</button><span class="faint small">20 cards from every set, mostly ones you don’t know yet. ${tot.k} of ${tot.t} facts known.</span></div>
+    main.innerHTML = `<header class="pagehead" style="margin-bottom:0"><p class="eyebrow">${LV[l]}</p><h1>Memorize</h1>
+      <p class="lede">Some answers you don’t work out; you just know them. Look over a table, then drill it until every answer comes without thinking.</p></header>
+      <div class="row" style="margin-top:20px"><button class="btn" data-act="memoMix">Drill a mix</button><span class="faint small">20 cards from every set, mostly ones you don’t know yet. ${tot.k} of ${tot.t} facts known.</span></div>
       <div class="msets">${NS.MEMO.map(s => { const c = NS.memoCount(l, s.id); return `<button class="mset" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.title, true)}</b><span class="muted small">${NS.rich(s.blurb[l], true)}</span><span class="mprog">${memoBar(c)}</span></button>`; }).join('')}</div>
       ${footer()}`;
   }
@@ -464,7 +467,7 @@
     const right = m.results.filter(x => x.ok).length, wrong = m.results.length - right;
     main.innerHTML = `<div class="session">
       <div class="sbar"><button class="x" data-act="memoQuit" aria-label="End drill">${IC.x}</button><span class="what">${NS.rich(m.title, true)}</span>
-        <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span><span class="faint mono small">${Math.min(m.results.length + 1, m.total)}/${m.total}</span></div>
+        <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span><span class="faint num small">${Math.min(m.results.length + 1, m.total)}/${m.total}</span></div>
       <div class="prog"><span style="width:${m.results.length / m.total * 100}%"></span></div>
       <div class="stage" id="stage">
         <span class="tk">${NS.rich(memoTitle(c.set), true)}</span>
@@ -520,31 +523,29 @@
     if (state.test && state.test.done) return renderResults();
     const l = lv(); const hist = L().tests.slice().reverse().slice(0, 8); if (!state.testDiff) state.testDiff = S.data.settings.tdiff || 'contest';
     const codeDiff = c => { const sp = c && NS.readTestCode(c); return sp && sp.diff !== 'contest' ? ` · ${NS.DIFFS[NS.diffIdx(sp.diff)].name}` : ''; };
-    main.innerHTML = `<div class="setup"><p class="eyebrow">${LV[l]}</p><h1>Practice tests</h1>
-      <p class="muted" style="margin-top:8px;max-width:62ch">Same layout and scoring as a contest test. Your graded sheet shows the shortcut for anything you miss.</p>
-      <span class="label">Test</span>
-      <div class="opts">
-        <button class="opt" data-act="tkind" data-k="full" aria-pressed="${state.testKind === 'full'}"><b>Full test</b><span>80 problems · 10:00</span></button>
-        <button class="opt" data-act="tkind" data-k="col" aria-pressed="${state.testKind === 'col'}"><b>One column</b><span>20 problems · 2:30</span></button>
+    main.innerHTML = `<div class="setup"><header class="pagehead"><p class="eyebrow">${LV[l]}</p><h1>Practice tests</h1>
+      <p class="lede">Same layout, timing and scoring as a contest test. Your graded sheet shows the shortcut for anything you miss.</p></header>
+      <div class="cfg">
+        <div class="cfg-row"><span class="cfg-l">Test</span><div class="cfg-v"><div class="row" style="gap:8px"><div class="seg" role="group" aria-label="Test length"><button data-act="tkind" data-k="full" aria-pressed="${state.testKind === 'full'}">Full test</button><button data-act="tkind" data-k="col" aria-pressed="${state.testKind === 'col'}">One column</button></div>
+          ${state.testKind === 'col' ? `<div class="seg" role="group" aria-label="Column">${[1, 2, 3, 4].map(c => `<button data-act="tcol" data-c="${c}" aria-pressed="${state.testCol === c}">${COLR[c]}</button>`).join('')}</div>` : ''}</div>
+          <p class="note-s">${state.testKind === 'full' ? '80 problems in 10 minutes.' : `Problems ${COLR[state.testCol]}: 20 problems in 2 minutes 30 seconds.`}</p></div></div>
+        <div class="cfg-row"><span class="cfg-l">Difficulty</span><div class="cfg-v">${diffSeg('tdiff', state.testDiff, false)}</div></div>
       </div>
-      ${state.testKind === 'col' ? `<div class="seg" style="margin-top:12px" role="group" aria-label="Column">${[1, 2, 3, 4].map(c => `<button data-act="tcol" data-c="${c}" aria-pressed="${state.testCol === c}">${COLR[c]}</button>`).join('')}</div>` : ''}
-      <span class="label">Difficulty</span>
-      ${diffSeg('tdiff', state.testDiff, false)}
-      <div class="row" style="margin-top:22px"><button class="btn hi" data-act="startTest">Start the clock</button><span class="faint small">Tip: press Enter to move to the next blank. Don’t stop on a hard one for long; a skip costs the same as a miss.</span></div>
+      <div class="row startbar"><button class="btn" data-act="startTest">Start the clock</button><span class="faint small">Enter moves to the next blank. Don’t sit on a hard one; a skip costs the same as a miss.</span></div>
       <div class="codes">
         <div class="codebox"><label for="tcode"><b>Got a test code?</b> <span class="muted">Everyone who enters the same code gets the same test, so a team can take one together and compare.</span></label>
           <div class="row" style="margin-top:10px"><input id="tcode" class="field" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ${l === 'ms' ? 'MF' : 'HF'}-7K2M" maxlength="10" aria-describedby="tcodemsg"><button class="btn ghost" data-act="codeStart">Start this test</button></div>
-          <p class="small" id="tcodemsg" aria-live="polite"></p></div>
+          <p class="small" id="tcodemsg" aria-live="polite" style="margin-top:8px"></p></div>
         <div class="codebox" id="teambox">${teamBox()}</div>
       </div>
-      <details class="card" style="margin-top:22px"><summary style="cursor:pointer;font-weight:700">Scoring and a few reminders</summary>
+      <details class="rules"><summary>Scoring and a few reminders</summary>
         <div class="grid2" style="margin-top:14px">
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept anything within 5% of the exact answer.</li></ul>
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Every right answer is +5 and every wrong or skipped one is −4, so a skip is never free.</li><li>Stop when the clock stops. Answers you haven’t reached don’t count against you.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
         </div></details>
-      <div class="sect"><h2>Recent tests</h2>${hist.length ? `<div class="card tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm; columns in between.</div>'}</div>
+      <div class="sect"><div class="sect-h"><h2>Recent tests</h2></div>${hist.length ? `<div class="tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm, with single columns in between.</div>'}</div>
     </div>${footer()}`;
-    const tc = $('#tcode'); if (tc) tc.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ACT.codeStart(); } });
+    const tc = $('#tcode'); if (tc) { tc.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ACT.codeStart(); } }); tc.addEventListener('input', () => { tc.removeAttribute('aria-invalid'); $('#tcodemsg').textContent = ''; }); }
   }
   // a fresh code for whatever test is selected above, without starting it
   function teamBox() {
@@ -568,7 +569,7 @@
   function stopTest() { clearInterval(state.testTimer); state.test = null; $('.dock') && $('.dock').remove(); document.body.classList.remove('in-session'); }
   function renderTest() {
     const T = state.test; setNav('test');
-    main.innerHTML = `<div class="sheet-top"><span class="clock" id="tclock">${fmtTime(T.dur)}</span><span class="muted small" id="tdone">0 answered</span><span style="flex:1"></span>${T.diff !== 'contest' ? diffChip(T.diff) : ''}<span class="faint small mono tcode" title="Test code">${T.code}</span><button class="btn small ghost" data-act="finishTest">Finish and grade</button></div>
+    main.innerHTML = `<div class="sheet-top"><button class="x" data-act="leaveTest" aria-label="Leave this test" title="Leave this test">${IC.x}</button><span class="clock" id="tclock">${fmtTime(T.dur)}</span><span class="muted small" id="tdone">0 answered</span><span style="flex:1"></span>${T.diff !== 'contest' ? diffChip(T.diff) : ''}<span class="faint small mono tcode" title="Test code">${T.code}</span><button class="btn small ghost" data-act="finishTest">Finish and grade</button></div>
       <div id="sheet">${pages(T.probs, (p, i) => `<div class="q" data-i="${i}" id="q${i}"><span class="qn">${p.est ? '<span class="s">*</span>' : ''}(${p.n})</span><div class="qb"><span class="t ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</span>${blankHtml(p, `data-i="${i}" id="a${i}"`)}</div></div>`)}</div>
       <p class="faint small" style="margin-top:12px">${touch ? '' : 'Enter or ↓ moves to the next blank; ↑ goes back.'}</p>`;
     if (touch) { const d = document.createElement('div'); d.className = 'dock'; d.innerHTML = keypadHtml(T.probs[0], true); document.body.appendChild(d); main.style.paddingBottom = '330px'; }
@@ -649,18 +650,18 @@
     const total = Object.values(tricks).reduce((s, t) => s + t.n, 0); const ok = Object.values(tricks).reduce((s, t) => s + t.ok, 0);
     const fulls = L().tests.filter(t => t.kind === 'full'); const st = ids.map(id => NS.trickStatus(id, l).key); const cnt = k => st.filter(x => x === k).length;
     const rows = ids.filter(id => tricks[id] && tricks[id].n).map(id => ({ id, st: NS.trickStatus(id, l), t: tricks[id] }));
-    main.innerHTML = `<p class="eyebrow">${LV[l]}</p><h1>Progress</h1>
-      <div class="kv card" style="margin-top:18px"><div><b>${total}</b><span>problems answered</span></div><div><b>${total ? Math.round(ok / total * 100) + '%' : '—'}</b><span>accuracy</span></div><div><b>${NS.streak(l)}</b><span>day streak</span></div><div><b>${L().tests.length}</b><span>tests taken</span></div></div>
-      <div class="sect"><h2>Full test scores</h2>${fulls.length ? `<div class="card">${chartSvg(fulls.slice(-20).map(t => t.score), 400)}<p class="faint small" style="margin-top:6px">Out of 400. Tracking the last ${Math.min(20, fulls.length)} full tests.</p></div>` : '<div class="empty">Take a full test to start a score history.</div>'}</div>
-      <div class="sect"><h2>Tricks</h2><div class="card">${statusBar(cnt, ids.length)}</div>
+    main.innerHTML = `<header class="pagehead"><p class="eyebrow">${LV[l]}</p><h1>Progress</h1></header>
+      <div class="stats4"><div><b>${total}</b><span>problems answered</span></div><div><b>${total ? Math.round(ok / total * 100) + '%' : '—'}</b><span>accuracy</span></div><div><b>${NS.streak(l)}</b><span>day streak</span></div><div><b>${L().tests.length}</b><span>tests taken</span></div></div>
+      <div class="sect"><div class="sect-h"><h2>Full test scores</h2></div>${fulls.length ? `${chartSvg(fulls.slice(-20).map(t => t.score), 400)}<p class="faint small">Out of 400. Your last ${Math.min(20, fulls.length)} full test${fulls.length > 1 ? 's' : ''}.</p>` : '<div class="empty">Take a full test to start a score history.</div>'}</div>
+      <div class="sect"><div class="sect-h"><h2>Tricks</h2></div><div>${statusBar(cnt, ids.length)}</div>
         ${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<div><p class="eyebrow" style="margin:6px 0 8px">Problems ${COLR[c]}</p><div class="heat">${arr.map(id => { const s = NS.trickStatus(id, l); return `<button class="cell ${s.key}" data-go="t" data-arg="${id}" title="${esc(s.label)}">${NS.rich(trickName(id))}</button>`; }).join('')}</div></div>` : ''; }).join('')}</div>
-      ${rows.length ? `<div class="sect"><h2>Detail</h2><div class="card tablewrap"><table class="t"><thead><tr><th>Trick</th><th>Status</th><th style="text-align:right">Last 12</th><th style="text-align:right">Typical time</th><th style="text-align:right">Target</th></tr></thead><tbody>${rows.sort((a, b) => (a.st.acc ?? 0) - (b.st.acc ?? 0)).map(x => `<tr><td><button class="btn link" data-go="t" data-arg="${x.id}" style="padding:0">${NS.rich(trickName(x.id))}</button></td><td>${pillFor(x.st)}</td><td class="n">${x.st.acc !== null ? Math.round(x.st.acc * 100) + '%' : '—'}</td><td class="n">${x.st.med ? x.st.med.toFixed(1) + 's' : '—'}</td><td class="n">${x.st.target}s</td></tr>`).join('')}</tbody></table></div></div>` : ''}
-      <div class="sect"><div class="sect-h"><h2>Facts</h2><button class="btn link" data-go="memorize">Memorize →</button></div><div class="card mfacts">${NS.MEMO.map(s => `<button class="mf" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.short || s.title, true)}</b><span class="mprog">${memoBar(NS.memoCount(l, s.id))}</span></button>`).join('')}</div></div>
-      <div class="sect"><h2>Use another device</h2><div class="card">
+      ${rows.length ? `<div class="sect"><div class="sect-h"><h2>Detail</h2><span class="faint small">Weakest first</span></div><div class="tablewrap"><table class="t"><thead><tr><th>Trick</th><th>Status</th><th style="text-align:right">Last 12</th><th style="text-align:right">Typical time</th><th style="text-align:right">Target</th></tr></thead><tbody>${rows.sort((a, b) => (a.st.acc ?? 0) - (b.st.acc ?? 0)).map(x => `<tr><td><button class="btn link" data-go="t" data-arg="${x.id}" style="padding:0">${NS.rich(trickName(x.id))}</button></td><td>${pillFor(x.st)}</td><td class="n">${x.st.acc !== null ? Math.round(x.st.acc * 100) + '%' : '—'}</td><td class="n">${x.st.med ? x.st.med.toFixed(1) + 's' : '—'}</td><td class="n">${x.st.target}s</td></tr>`).join('')}</tbody></table></div></div>` : ''}
+      <div class="sect"><div class="sect-h"><h2>Facts</h2><button class="btn link" data-go="memorize">Memorize →</button></div><div class="mfacts">${NS.MEMO.map(s => `<button class="mf" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.short || s.title, true)}</b><span class="mprog">${memoBar(NS.memoCount(l, s.id))}</span></button>`).join('')}</div></div>
+      <div class="sect"><div class="sect-h"><h2>Use another device</h2></div><div>
         <p class="muted" style="max-width:62ch">Progress is saved in this browser only. To move it, copy your progress code, send it to yourself (an email or a note works), then paste it on the other device. One code carries both levels.</p>
         <div class="row" style="margin-top:14px"><button class="btn" data-act="exportCode">Copy my progress code</button><button class="btn ghost" data-act="importOpen">Paste a code</button></div>
         <div id="moveout"></div></div></div>
-      <div class="sect"><h2>Reset</h2><div id="resetbox"><button class="btn ghost" data-act="resetAsk">Erase ${LV[l].toLowerCase()} progress</button></div></div>
+      <div class="sect"><div class="sect-h"><h2>Reset</h2></div><div id="resetbox"><button class="btn ghost" data-act="resetAsk">Erase ${LV[l].toLowerCase()} progress</button></div></div>
       ${footer()}`;
   }
 
@@ -737,6 +738,7 @@
     teamStart() { const tc = state.teamCode; const spec = tc && NS.readTestCode(tc.code); if (spec && spec.lv === lv()) startTest(spec); },
     startTest() { startTest(); },
     finishTest() { const T = state.test; if (!T) return; const blank = T.answers.filter(a => !a.trim()).length; confirmBar(`Grade now? ${fmtTime(Math.max(0, T.dur - (Date.now() - T.start) / 1000))} is left on the clock.`, 'Grade it', () => gradeTest(false)); void blank; },
+    leaveTest() { guard(() => go('test')); },
     testAgain() { state.test = null; startTest(); },
     memoDrill(d) { startMemo([d.id], memoSet(d.id).title); },
     memoMix() { guard(() => startMemo(NS.MEMO.map(s => s.id), 'Mixed facts')); },
@@ -756,18 +758,18 @@
     memoAgain() { const m = state.memo; startMemo(m.ids, m.title); },
     memoBack() { const m = state.memo; state.memo = null; if (m.ids.length === 1) go('memorize', m.ids[0]); else go('memorize'); },
     exportCode(d, el) {
-      const out = $('#moveout'); el.disabled = true;
+      const out = $('#moveout'); const label = el.textContent; el.setAttribute('aria-busy', 'true'); el.textContent = 'Making your code…';
       const made = NS.exportProgress(S.data);
       // start the copy inside the click, so browsers that are strict about clipboard access still allow it
       let copied;
       try { copied = window.ClipboardItem && navigator.clipboard && navigator.clipboard.write ? navigator.clipboard.write([new ClipboardItem({ 'text/plain': made.then(c => new Blob([c], { type: 'text/plain' })) })]) : made.then(c => navigator.clipboard.writeText(c)); } catch (e) { copied = Promise.reject(e); }
       made.then(code => {
-        el.disabled = false;
+        el.removeAttribute('aria-busy'); el.textContent = label;
         out.innerHTML = `<textarea class="codearea" id="pcode" readonly rows="4" spellcheck="false" aria-label="Your progress code">${esc(code)}</textarea><p class="small muted" id="pmsg" style="margin-top:8px"></p>`;
         const kb = Math.max(1, Math.round(code.length / 1000));
         copied.then(() => { $('#pmsg').innerHTML = `<b style="color:var(--ok)">Copied.</b> ${code.length > 2000 ? `It’s long (about ${kb}k characters), so an email or a note to yourself is the safest way to send it.` : 'Paste it on your other device.'}`; },
           () => { const ta = $('#pcode'); ta.focus(); ta.select(); $('#pmsg').textContent = 'Your browser didn’t let the page copy it. The code is selected above: copy it yourself (Ctrl+C, or ⌘C on a Mac).'; });
-      }, () => { el.disabled = false; out.innerHTML = '<p class="small" style="color:var(--bad);margin-top:10px">This browser couldn’t make a code.</p>'; });
+      }, () => { el.removeAttribute('aria-busy'); el.textContent = label; out.innerHTML = '<p class="small fieldmsg" style="margin-top:10px">This browser couldn’t make a code. Try a current version of Chrome, Safari, Edge or Firefox.</p>'; });
     },
     importOpen() {
       $('#moveout').innerHTML = `<label class="small" for="pin" style="display:block;margin-top:16px"><b>Paste the code from your other device</b></label><textarea class="codearea" id="pin" rows="4" spellcheck="false" autocomplete="off" placeholder="It starts with EIT1"></textarea><div class="row" style="margin-top:10px"><button class="btn" data-act="importRead">Load it</button></div><div id="pconf" aria-live="polite"></div>`;
@@ -788,7 +790,7 @@
     codeStart() {
       const inp = $('#tcode'); const msg = $('#tcodemsg'); const v = inp.value.trim();
       const spec = NS.readTestCode(v);
-      const say = t => { msg.textContent = t; msg.style.color = 'var(--bad)'; inp.focus(); };
+      const say = t => { msg.textContent = t; msg.className = 'small fieldmsg'; inp.setAttribute('aria-invalid', 'true'); inp.focus(); };
       if (!v) return say('Type the code first. It looks like HF-7K2M.');
       if (!spec) return say('That code doesn’t look right. Codes are two characters, a dash, then four more, like HF-7K2M. Harder or easier tests add one more letter at the end, like HF-7K2M-H.');
       if (spec.lv !== lv()) return say(`That’s a ${LV[spec.lv].toLowerCase()} test. Switch levels with the button at the top right, then enter it again.`);

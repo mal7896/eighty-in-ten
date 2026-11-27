@@ -117,6 +117,7 @@ function mathify(s) {
   let t = String(s);
   t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
   t = t.replace(/(\d),(?=\d{3}(?!\d))/g, '$1{,}');
+  t = t.replace(/(\d) +\(/g, '$1\\ ('); // "10 (6 + 4)" is an aside in prose, not 10 times (6 + 4)
   t = t.replace(/([+\-−×]\s*)…(\s*[+\-−×=])/g, '$1\\cdots $2');
   t = t.replace(/\(mod (\d+)\)/g, '\\;(\\text{mod } $1)');
   t = t.replace(/√(\d+)/g, '\\sqrt{$1}');
@@ -221,7 +222,10 @@ function tex(latex, display) {
   if (KCACHE.has(key)) return KCACHE.get(key);
   let html;
   const K = (typeof katex !== 'undefined') ? katex : (typeof window !== 'undefined' && window.katex);
-  if (K) { try { html = K.renderToString((display ? '\\displaystyle ' : '') + latex, { throwOnError: true, strict: false, output: 'html' }); } catch (e) { html = latexFallback(latex); } }
+  // limits, sums, products and integrals always get display style, so the subscript sits under "lim" or Σ
+  // and the fraction beside it stays full size, even in small text such as the answer key or a printed test
+  const big = !display && /\\(lim|sum|prod|int|iint)(?![a-z])/.test(latex);
+  if (K) { try { html = K.renderToString((display || big ? '\\displaystyle ' : '') + latex, { throwOnError: true, strict: false, output: 'html' }); if (big) html = '<span class="dmath">' + html + '</span>'; } catch (e) { html = latexFallback(latex); } }
   else html = latexFallback(latex);
   if (KCACHE.size > 4000) KCACHE.clear();
   KCACHE.set(key, html); return html;
@@ -232,17 +236,20 @@ NS.render = function (str, opts = {}) {
   let s = String(str);
   if (opts.dollars) s = s.replace(/\$([^$]+)\$/g, (m0, l) => mk(l));
   const parts = s.split(/(<[^>]*>|\u0001[^\u0002]*\u0002)/);
-  let html = '', buf = [], pend = '';
-  const flushMath = () => { if (buf.length) { html += tex(buf.join(' '), opts.display); buf = []; } if (pend) { html += pend; pend = ''; } };
+  let html = '', buf = [], pend = '', mathAt = -1;
+  // math followed straight away by punctuation stays on the same line as it, so a "." never starts a line
+  const flushMath = () => { mathAt = -1; if (buf.length) { mathAt = html.length; html += tex(buf.join(' '), opts.display); buf = []; } if (pend) { html += pend; pend = ''; mathAt = -1; } };
+  // a word joiner (U+2060) forbids only the break between the math and the punctuation; long math can still wrap
+  const addText = t => { if (mathAt >= 0 && /^[.,;:!?)\]]/.test(t)) t = '\u2060' + t; mathAt = -1; html += esc(t); };
   for (const part of parts) {
     if (!part) continue;
-    if (part[0] === '<') { flushMath(); html += part; continue; }
+    if (part[0] === '<') { flushMath(); mathAt = -1; html += part; continue; }
     if (part[0] === LM) { if (pend.trim()) flushMath(); pend = ''; buf.push(part.slice(1, -1)); continue; }
     const plain = part.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
     for (const r of runsOf(plain, buf.length > 0)) {
       if (r.m) { if (pend.trim()) flushMath(); pend = ''; buf.push(mathify(r.s)); }
       else if (!r.s.trim() && buf.length) pend += r.s;
-      else { flushMath(); html += esc(r.s); }
+      else { flushMath(); addText(r.s); }
     }
   }
   flushMath();

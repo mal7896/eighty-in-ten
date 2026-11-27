@@ -201,6 +201,7 @@ body.in-session main { padding-top: 20px; }
 .seg button { border: 1px solid transparent; background: none; padding: 6px 13px; border-radius: 6px; font-weight: 600; color: var(--ink-2); min-height: 34px; font-size: .92rem; }
 .seg button:hover { color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--line-2); box-shadow: 0 1px 1px rgba(0, 0, 0, .04); }
+.nobr { white-space: nowrap; }
 mark { background: linear-gradient(transparent 12%, var(--hi) 12%, var(--hi) 88%, transparent 88%); color: var(--hi-ink); padding: 0 3px; }
 .back { background: none; border: 0; color: var(--ink-2); font-weight: 600; padding: 4px 0; display: inline-flex; gap: 6px; align-items: center; font-size: .92rem; }
 .back:hover { color: var(--ink); }
@@ -626,66 +627,86 @@ body.nolevel main { padding-bottom: 48px; }
 .arow .chip::before { content: ""; display: inline-block; width: 13px; height: 13px; border: 1.5px solid var(--line-2); border-radius: 3px; margin-right: 8px; vertical-align: -2px; }
 .arow .chip[aria-pressed="true"]::before { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--surface); }
 
-/* ---- printable test: UIL layout on letter paper ----
-   Times New Roman Bold for text and math alike, upright variables, blanks at the end of the line, even spacing. */
+/* ---- printable test: the UIL sheet ----
+   Every size and position here is taken from real UIL tests (2019–2026), in points. The screen shows the page
+   with its margins as padding; in print the same margins come from @page, so the two lay out identically. */
 .paper { --uk: 1; display: grid; gap: calc(24px * var(--uk)); margin-top: 22px; justify-content: start; }
-.upage { --ufs: 11pt; --times: "Times New Roman", Tinos, "Liberation Serif", Times, serif; --arial: Arial, Arimo, "Liberation Sans", Helvetica, sans-serif;
-  width: 8.5in; height: 11in; padding: .5in .5in .45in; background: #fff; color: #000; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; position: relative;
-  font-family: var(--times); font-weight: 700; font-size: var(--ufs); line-height: 1.15; zoom: var(--uk); -webkit-font-smoothing: auto; }
+.upage { --ufs: 11pt; --ugap: .53em; --times: "Times New Roman", Tinos, "Liberation Serif", Times, serif; --arial: Arial, Arimo, "Liberation Sans", Helvetica, sans-serif;
+  width: 612pt; height: 792pt; padding: 36pt 22pt 30pt 18pt; background: #fff; color: #000; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; position: relative;
+  font-family: var(--times); font-weight: 700; font-size: var(--ufs); line-height: 1.17; zoom: var(--uk); -webkit-font-smoothing: auto; }
 .upage .katex { font-size: 1em; }
 .upage .katex :is(.mord, .mbin, .mrel, .mopen, .mclose, .mpunct, .minner, .mop):not(.op-symbol):not(.amsrm), .upage .katex .mathnormal, .upage .katex .mathit, .upage .katex .text { font-family: var(--times), KaTeX_Main !important; font-weight: 700; font-style: normal; }
 .upage .katex .mathnormal { margin-right: 0 !important; }
-.uhead { text-align: center; }
-.uhead h2 { font-family: var(--times); font-weight: 700; font-size: 1.3em; margin: 0; line-height: 1.2; letter-spacing: 0; }
-.uhead p { font-size: 1.3em; margin: 0; }
-.ubox { display: flex; justify-content: space-between; align-items: flex-end; margin-top: -4px; }
-.ucn { display: flex; align-items: flex-end; gap: 6px; font-size: .95em; margin-bottom: 20px; }
-.ucn i, .uscore i { display: inline-block; border-bottom: .75pt solid #000; }
-.ucn i { width: 1.1in; }
-.uscore { border-collapse: collapse; font-family: var(--arial); font-weight: 400; font-size: .85em; }
-.uscore td { padding: 2px 4px; }
-.uscore td:first-child { text-align: right; padding-right: 8px; }
-.uscore i { width: .6in; height: 1em; }
-.uscore .ul td { font-weight: 700; font-size: .85em; text-align: center; padding-top: 1px; }
-.uwarn { display: grid; grid-template-columns: 1fr 1.3fr 1fr; font-size: .95em; margin: 4px 0 10px; line-height: 1.2; }
-.uwarn span:nth-child(2) { text-align: center; }
-.udir { font-weight: 400; font-size: .92em; line-height: 1.2; margin: 0 0 10px; text-align: justify; }
+.upage .katex .kp { font-family: KaTeX_Main !important; font-weight: 700; }
+.upage .katex .mfrac { font-size: 1.1em; }
+.upage .dmath .katex .mfrac { font-size: 1em; }
+.dmath { display: inline-block; }
+/* header lines: each sits where the real sheet puts it (line-height = the font's own height, so top = the text's top) */
+.uhd { position: relative; height: 243.5pt; }
+.ukh { position: relative; height: 70.7pt; }
+.ua2 { position: absolute; white-space: nowrap; }
+.ua2.ctr { text-align: center; }
+.t14 { font-size: 14pt; line-height: 1.107; }
+.t12b { font-size: 12pt; line-height: 1.107; }
+.t11b { font-size: 11pt; line-height: 1.107; }
+.t10b { font-size: 10pt; line-height: 1.18; }
+.a10 { font-family: var(--arial); font-weight: 400; font-size: 10pt; line-height: 1.117; }
+.a8b { font-family: var(--arial); font-weight: 700; font-size: 8pt; line-height: 1.117; }
+.a9b { font-family: var(--arial); font-weight: 700; font-size: 9pt; line-height: 1.117; }
+.udir { font-weight: 400; font-size: 10pt; line-height: 11.7pt; white-space: normal; text-align: justify; }
 .udir b { font-weight: 700; }
-.uconduct, .ustop { font-family: var(--arial); font-weight: 700; font-size: .78em; margin: 0 0 10px; }
-.ustop { text-align: center; margin-bottom: 18px; }
-.ucols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .3in; }
-.uq { display: grid; grid-template-columns: 2.5em minmax(0, 1fr); gap: 0 .35em; align-items: baseline; padding: var(--ugap, .6em) 0; break-inside: avoid; }
+/* the full test's directions break where the real sheet's do, each line justified */
+.udir .jl { display: block; text-align: justify; text-align-last: justify; }
+.udir .jlast { display: block; }
+/* problem columns: numbers right-aligned at 45.5pt and 337.1pt from the page edge, text 5.5pt after them,
+   answer lines ending at 293pt and 588.3pt (583pt on the back) */
+.ucols { display: grid; grid-template-columns: 275pt 278.7pt; column-gap: 16.6pt; align-items: start; }
+.up1 .ucols { margin-top: calc(5.85pt - var(--ugap)); }
+.up2 .ucols { grid-template-columns: 275pt 273.4pt; margin-top: calc(3.35pt - var(--ugap)); }
+.uq { display: grid; grid-template-columns: 27.5pt minmax(0, 1fr); column-gap: 5.5pt; align-items: baseline; padding: var(--ugap) 0; break-inside: avoid; }
 .un { text-align: right; white-space: nowrap; }
-.ut { display: flex; flex-wrap: wrap; align-items: baseline; row-gap: .04em; min-width: 0; }
+.ut { display: flex; flex-wrap: wrap; align-items: baseline; min-width: 0; }
 .ua { white-space: nowrap; max-width: 100%; }
-.ua.sp { margin-right: .26em; }
-.ub { flex: 1 0 .55in; display: flex; align-items: baseline; gap: .3em; margin-left: .3em; }
+.ua.sp { margin-right: .25em; }
+.ub { flex: 1 0 .55in; display: flex; align-items: baseline; gap: .3em; margin-left: .25em; }
 .ub i { flex: 1; height: 1em; border-bottom: .75pt solid #000; }
 .ub .sx { white-space: nowrap; }
-.ufoot { position: absolute; left: .5in; right: .5in; bottom: .22in; margin: 0; text-align: center; font-family: var(--arial); font-weight: 400; font-size: 7pt; color: #777; }
-.ukey h2 { font-size: 1.15em; margin: 12px 0 2px; }
-.unot { font-size: 1.05em; margin: 0 0 6px; }
-.unote { font-size: .9em; line-height: 1.3; margin: 0 0 16px; }
-.ukcols { display: grid; gap: 0 .3in; }
-.ukcols.k4 { grid-template-columns: repeat(4, 1fr); }
-.ukcols.k2 { grid-template-columns: repeat(2, 1fr); max-width: 4.5in; }
-.uk { display: grid; grid-template-columns: 2.7em minmax(0, 1fr); gap: .4em; align-items: baseline; padding: .32em 0; font-weight: 700; }
+/* answer key: four columns on a 2-inch grid, numbers right-aligned at 60.5, 204.5, 348 and 492pt */
+.ukcols { display: grid; grid-template-columns: 144pt 144pt 144pt minmax(0, 1fr); margin-left: 15pt; }
+/* nothing may reach past the right margin: a browser shrinks every page to fit the widest thing on it */
+.uhd, .ukh, .ucols, .ukcols { max-width: 100%; }
+.ukcols.k2 { grid-template-columns: repeat(2, 144pt); }
+.ukcols > div { margin-top: calc(5.85pt - var(--ugap)); }
+.uk { display: grid; grid-template-columns: 27.5pt minmax(0, 1fr); column-gap: 5.5pt; align-items: baseline; padding: var(--ugap) 0; font-size: 11pt; }
+.uk .ukv { padding-right: 6pt; }
+.upage .or { font-family: var(--times); color: #000; }
+@page { size: letter; margin: 36pt 22pt 30pt 18pt; }
 @media print {
-  @page { size: letter; margin: 0; }
-  html, body { background: #fff !important; }
-  header.top, nav.tabbar, .noprint, .foot, #confirmbar, .toast { display: none !important; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  :root { padding: 0 !important; }
+  body::before { display: none !important; }
+  header.top, nav.tabbar, .noprint, .foot, #confirmbar, .toast, .dock { display: none !important; }
   main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
   .paper { display: block; margin: 0; }
-  .upage { zoom: 1 !important; border: 0; box-shadow: none; break-after: page; page-break-after: always; }
+  .upage { zoom: 1 !important; width: auto; height: auto; min-height: 0; padding: 0; overflow: visible; border: 0; box-shadow: none; break-after: page; page-break-after: always; }
   .upage:last-child { break-after: auto; page-break-after: auto; }
 }
-.upage .katex .mfrac { font-size: 1.2em; }
-.upage .or { font-family: var(--times); color: #000; font-weight: 400; font-size: .92em; }
+.dmath { display: inline-block; }
 
 /* ---- display settings page ---- */
 .dprev .prob { font-size: 1.6rem; }
 .dprev .dprev-a { display: inline-block; width: auto; min-width: 5em; }
 .dprev .keypad { pointer-events: none; }
+
+.arow .rng .pair { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 600px) { .arow { flex-direction: column; align-items: flex-start; } }
+/* test codes in the history table stay on one line */
+table.t td .mono, table.t td button.mono { white-space: nowrap; }
+
+/* a highlighted stacked fraction gets the whole highlight, not a band through its middle */
+mark:has(.mfrac) { background: var(--hi); border-radius: 2px; padding: 1px 4px; }
+/* the bottom bar's six labels must fit a phone at any text size */
+nav.tabbar button { font-size: clamp(10px, .68rem, 12px) !important; }
 
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -809,6 +830,7 @@ function mathify(s) {
   let t = String(s);
   t = t.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
   t = t.replace(/(\d),(?=\d{3}(?!\d))/g, '$1{,}');
+  t = t.replace(/(\d) +\(/g, '$1\\ ('); // "10 (6 + 4)" is an aside in prose, not 10 times (6 + 4)
   t = t.replace(/([+\-−×]\s*)…(\s*[+\-−×=])/g, '$1\\cdots $2');
   t = t.replace(/\(mod (\d+)\)/g, '\\;(\\text{mod } $1)');
   t = t.replace(/√(\d+)/g, '\\sqrt{$1}');
@@ -913,7 +935,10 @@ function tex(latex, display) {
   if (KCACHE.has(key)) return KCACHE.get(key);
   let html;
   const K = (typeof katex !== 'undefined') ? katex : (typeof window !== 'undefined' && window.katex);
-  if (K) { try { html = K.renderToString((display ? '\\displaystyle ' : '') + latex, { throwOnError: true, strict: false, output: 'html' }); } catch (e) { html = latexFallback(latex); } }
+  // limits, sums, products and integrals always get display style, so the subscript sits under "lim" or Σ
+  // and the fraction beside it stays full size, even in small text such as the answer key or a printed test
+  const big = !display && /\\(lim|sum|prod|int|iint)(?![a-z])/.test(latex);
+  if (K) { try { html = K.renderToString((display || big ? '\\displaystyle ' : '') + latex, { throwOnError: true, strict: false, output: 'html' }); if (big) html = '<span class="dmath">' + html + '</span>'; } catch (e) { html = latexFallback(latex); } }
   else html = latexFallback(latex);
   if (KCACHE.size > 4000) KCACHE.clear();
   KCACHE.set(key, html); return html;
@@ -924,17 +949,20 @@ NS.render = function (str, opts = {}) {
   let s = String(str);
   if (opts.dollars) s = s.replace(/\$([^$]+)\$/g, (m0, l) => mk(l));
   const parts = s.split(/(<[^>]*>|\u0001[^\u0002]*\u0002)/);
-  let html = '', buf = [], pend = '';
-  const flushMath = () => { if (buf.length) { html += tex(buf.join(' '), opts.display); buf = []; } if (pend) { html += pend; pend = ''; } };
+  let html = '', buf = [], pend = '', mathAt = -1;
+  // math followed straight away by punctuation stays on the same line as it, so a "." never starts a line
+  const flushMath = () => { mathAt = -1; if (buf.length) { mathAt = html.length; html += tex(buf.join(' '), opts.display); buf = []; } if (pend) { html += pend; pend = ''; mathAt = -1; } };
+  // a word joiner (U+2060) forbids only the break between the math and the punctuation; long math can still wrap
+  const addText = t => { if (mathAt >= 0 && /^[.,;:!?)\]]/.test(t)) t = '\u2060' + t; mathAt = -1; html += esc(t); };
   for (const part of parts) {
     if (!part) continue;
-    if (part[0] === '<') { flushMath(); html += part; continue; }
+    if (part[0] === '<') { flushMath(); mathAt = -1; html += part; continue; }
     if (part[0] === LM) { if (pend.trim()) flushMath(); pend = ''; buf.push(part.slice(1, -1)); continue; }
     const plain = part.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
     for (const r of runsOf(plain, buf.length > 0)) {
       if (r.m) { if (pend.trim()) flushMath(); pend = ''; buf.push(mathify(r.s)); }
       else if (!r.s.trim() && buf.length) pend += r.s;
-      else { flushMath(); html += esc(r.s); }
+      else { flushMath(); addText(r.s); }
     }
   }
   flushMath();
@@ -5590,7 +5618,7 @@ NS.G({
   }
   function route() {
     const h = location.hash.slice(1) || 'home';
-    if (!lv() || h === 'level') return viewLevel();
+    if ((!lv() && h !== 'display' && !h.startsWith('print-')) || h === 'level') return viewLevel();
     const [v, ...rest] = h.split('-'); const arg = rest.join('-');
     if (state.session && !state.session.done && v !== 'practice' && v !== 't') endSession(true);
     state.view = v;
@@ -5770,9 +5798,9 @@ NS.G({
     return `<div class="cfg-row"><span class="cfg-l">Length</span><div class="cfg-v"><div class="seg" role="group" aria-label="Length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([sec, nm]) => `<button data-act="plen" data-s="${sec}" aria-pressed="${state.sprintLen === sec}">${nm}</button>`).join('')}</div>
         <p class="note-s" id="arbest">${best ? `Your best with these settings: <b>${best}</b>.` : 'Your best score for these settings shows here.'}</p></div></div>
       <div class="cfg-row"><span class="cfg-l">Problems</span><div class="cfg-v arith">
-        <div class="arow"><button class="chip" data-act="arop" data-op="+" aria-pressed="${on('+')}">Addition</button><span class="rng">${rngIn('add', 0, 'Addition: first number from')}<span>to</span>${rngIn('add', 1, 'Addition: first number to')}<span class="op">+</span>${rngIn('add', 2, 'Addition: second number from')}<span>to</span>${rngIn('add', 3, 'Addition: second number to')}</span></div>
+        <div class="arow"><button class="chip" data-act="arop" data-op="+" aria-pressed="${on('+')}">Addition</button><span class="rng"><span class="pair">${rngIn('add', 0, 'Addition: first number from')}<span>to</span>${rngIn('add', 1, 'Addition: first number to')}</span><span class="op">+</span><span class="pair">${rngIn('add', 2, 'Addition: second number from')}<span>to</span>${rngIn('add', 3, 'Addition: second number to')}</span></span></div>
         <div class="arow"><button class="chip" data-act="arop" data-op="-" aria-pressed="${on('-')}">Subtraction</button><span class="muted small">Addition problems in reverse</span></div>
-        <div class="arow"><button class="chip" data-act="arop" data-op="x" aria-pressed="${on('x')}">Multiplication</button><span class="rng">${rngIn('mul', 0, 'Multiplication: first number from')}<span>to</span>${rngIn('mul', 1, 'Multiplication: first number to')}<span class="op">×</span>${rngIn('mul', 2, 'Multiplication: second number from')}<span>to</span>${rngIn('mul', 3, 'Multiplication: second number to')}</span></div>
+        <div class="arow"><button class="chip" data-act="arop" data-op="x" aria-pressed="${on('x')}">Multiplication</button><span class="rng"><span class="pair">${rngIn('mul', 0, 'Multiplication: first number from')}<span>to</span>${rngIn('mul', 1, 'Multiplication: first number to')}</span><span class="op">×</span><span class="pair">${rngIn('mul', 2, 'Multiplication: second number from')}<span>to</span>${rngIn('mul', 3, 'Multiplication: second number to')}</span></span></div>
         <div class="arow"><button class="chip" data-act="arop" data-op="/" aria-pressed="${on('/')}">Division</button><span class="muted small">Multiplication problems in reverse</span></div>
         <p class="note-s" id="armsg">${a.ops === NS.ARITH_DEF.ops && a.add.join() === NS.ARITH_DEF.add.join() && a.mul.join() === NS.ARITH_DEF.mul.join() ? 'The usual warm-up ranges.' : '<button class="btn link small" data-act="arreset">Back to the usual ranges</button>'}</p></div></div>`;
   }
@@ -5939,7 +5967,7 @@ NS.G({
         <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><p class="small faint">${dline}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div><div><b>${(total / n).toFixed(1)}s</b><span>average</span></div>${timed(s) ? '' : `<div><b>${fmtTime(total)}</b><span>total time</span></div>`}</div></div></div>
         <div class="row" style="margin-top:20px"><button class="btn hi" data-act="again">Go again <span class="kbd">Enter</span></button>${misses.length && !arith ? '<button class="btn ghost" data-act="redoMissed">Redo the misses</button>' : ''}<button class="btn ghost" data-act="newSetup">Change settings</button></div></div>
       ${Object.keys(by).length > 1 ? `<div class="card"><h3 style="margin-bottom:6px">By trick</h3><div class="tablewrap"><table class="t"><thead><tr><th>Trick</th><th style="text-align:right">Right</th><th></th></tr></thead><tbody>${Object.entries(by).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n).map(([k, v]) => `<tr><td>${NS.rich(trickName(k))}</td><td class="n">${v.ok}/${v.n}</td><td style="text-align:right"><button class="btn link small" data-go="t" data-arg="${k}">Lesson</button></td></tr>`).join('')}</tbody></table></div></div>` : ''}
-      ${misses.length ? `<div class="card"><h3>${arith ? 'Misses' : 'Misses, with the shortcut'}</h3><div class="stack" style="margin-top:10px;gap:0">${misses.map((x, i) => `<details style="border-top:1px solid var(--line);padding:10px 0" ${i === 0 ? 'open' : ''}><summary style="cursor:pointer"><span class="m">${R(x.p.p.h)}</span> <span class="faint small">you wrote</span> <span class="m" style="color:var(--bad)">${x.given ? esc(x.given) : '—'}</span> <span class="faint small">· answer</span> <span class="m">${R(NS.keyHtml(x.p.a), true)}</span></summary><ol class="steps" style="margin-top:10px">${x.p.steps.map(t => `<li>${R(t, true)}</li>`).join('')}</ol></details>`).join('')}</div></div>` : ''}
+      ${misses.length ? `<div class="card"><h3>${arith ? 'Misses' : 'Misses, with the shortcut'}</h3><div class="stack" style="margin-top:10px;gap:0">${misses.map((x, i) => `<details style="border-top:1px solid var(--line);padding:10px 0" ${i === 0 ? 'open' : ''}><summary style="cursor:pointer"><span>${R(x.p.p.h)}</span> <span class="faint small">you wrote</span> <span class="m" style="color:var(--bad)">${x.given ? esc(x.given) : '—'}</span> <span class="faint small">· answer</span> <span class="m">${R(NS.keyHtml(x.p.a), true)}</span></summary><ol class="steps" style="margin-top:10px">${x.p.steps.map(t => `<li>${R(t, true)}</li>`).join('')}</ol></details>`).join('')}</div></div>` : ''}
     </div>`;
     $('[data-act="again"]').focus();
   }
@@ -6179,45 +6207,60 @@ NS.G({
     const v = p.a.v.num(); const lo = Math.ceil(Math.min(v * 0.95, v * 1.05) - 1e-9), hi = Math.floor(Math.max(v * 0.95, v * 1.05) + 1e-9);
     return `${NS.fmtn(lo)} — ${NS.fmtn(hi)}`;
   }
-  // UIL layout on letter paper: problems 1–33 on the front, 34–80 on the back, two columns each; key on its own page
-  const SPLIT = { full: [[0, 17, 33], [33, 57, 80]], col: [[0, 10, 20]] };
+  // UIL layout on letter paper, measured from real UIL tests (2019–2026): 11pt Times New Roman Bold, problem numbers
+  // right-aligned at 0.63in (left column) and 4.68in (right column), answer lines ending at 4.07in and 8.17in,
+  // problems 1–33, 34 or 35 on the front and the rest on the back, and an answer key whose four columns mirror the
+  // test's columns. Positions below are in points from the page's top-left corner, as on the real sheet.
+  const PG = { top: 36, left: 18, right: 22, bottom: 30 };
   function uilProb(p) {
     const LB = '\u0001\\underline{\\phantom{0000}}\u0002'; let h = p.p.h; let tail = true;
     if (h.includes(LB)) { const t = h.trimEnd(); if (t.endsWith(LB)) h = t.slice(0, -LB.length); else { tail = false; h = h.split(LB).join('\u0001\\underline{\\phantom{00000000}}\u0002'); } }
     const blank = tail ? `<span class="ub">${p.pre ? `<span>${esc(p.pre)}</span>` : ''}<i></i>${p.suffix ? `<span class="sx">${esc(p.suffix)}</span>` : ''}${p.form ? `<span class="sx">${esc(p.form)}</span>` : ''}</span>` : '';
     return `<div class="uq"><span class="un">${p.est ? '*' : ''}(${p.n})</span><div class="ut"><span class="up">${R(h)}</span>${blank}</div></div>`;
   }
+  // an absolutely placed line of the header: x and y are the real sheet's text positions in points
+  const at = (x, y, cls, html, extra = '') => `<div class="ua2 ${cls}" style="left:${(x - PG.left).toFixed(1)}pt;top:${(y - PG.top).toFixed(1)}pt;${extra}">${html}</div>`;
   function viewPrint(code) {
     const spec = NS.readTestCode(code || '');
-    if (!spec || spec.lv !== lv()) { main.innerHTML = `<button class="back" data-go="test">${IC.left} Tests</button><div class="empty" style="margin-top:16px">${spec ? `That code is for ${LV[spec.lv].toLowerCase()}. Switch levels at the top, then try again.` : 'That test code didn’t work.'}</div>`; return; }
+    // a printed test carries its own level, so any code prints, whatever level this browser is set to
+    if (!spec) { main.innerHTML = `<button class="back" data-go="test">${IC.left} Tests</button><div class="empty" style="margin-top:16px">That test code didn’t work. Codes look like HF-7K2M.</div>`; return; }
     const probs = NS.buildTest(spec.lv, spec.seed, spec.cols, spec.diff); const full = spec.cols.length === 4;
     const dn = NS.DIFFS[NS.diffIdx(spec.diff)].name; const tc = NS.testCode(spec.lv, spec.cols, spec.seed, spec.diff);
     const lvShort = spec.lv === 'hs' ? 'HS' : 'MS';
     const what = `${LV[spec.lv]} Number Sense · ${full ? 'Full test' : `Problems ${COLR[spec.cols[0]]}`} · ${dn}`;
-    const front = `<div class="uhead"><h2>Number Sense Practice Test</h2><p>${lvShort} • ${full ? '' : `Problems ${COLR[spec.cols[0]]} • `}${dn} • ${tc}</p></div>
-      <div class="ubox"><div class="ucn">Contestant’s Number <i></i></div>
-        <table class="uscore" aria-label="Score box"><tr><td>Final</td><td><i></i></td><td><i></i></td></tr><tr><td>2nd</td><td><i></i></td><td><i></i></td></tr><tr><td>1st</td><td><i></i></td><td><i></i></td></tr><tr class="ul"><td></td><td>Score</td><td>Initials</td></tr></table></div>
-      <div class="uwarn"><span>Read directions carefully<br>before beginning test</span><span>DO NOT UNFOLD THIS SHEET<br>UNTIL TOLD TO BEGIN</span><span></span></div>
-      <p class="udir"><b>Directions:</b> Do not turn this page until the person conducting this test gives the signal to begin. This is a ${full ? 'ten-minute' : 'two-and-a-half-minute'} test. There are ${probs.length} problems. Solve accurately and quickly as many as you can in the order in which they appear. ALL PROBLEMS ARE TO BE SOLVED MENTALLY. Make no calculations with paper and pencil. Write only the answer in the space provided at the end of each problem. Problems marked with a ( * ) require approximate integral answers; any answer to a starred problem that is within five percent of the exact answer will be scored correct; all other problems require exact answers.</p>
-      <p class="uconduct">The person conducting this contest should explain these directions to the contestants.</p>
-      <p class="ustop">STOP -- WAIT FOR SIGNAL!</p>`;
-    const split = full ? SPLIT.full : SPLIT.col;
-    const pages = split.map(([a, b, c], i) => `<section class="upage">${i === 0 ? front : ''}<div class="ucols"><div>${probs.slice(a, b).map(uilProb).join('')}</div><div>${probs.slice(b, c).map(uilProb).join('')}</div></div><p class="ufoot">Eighty in Ten · ${tc} · page ${i + 1} of ${split.length}</p></section>`);
-    const kcols = full ? [[0, 17], [17, 33], [33, 57], [57, 80]] : [[0, 10], [10, 20]];
-    const key = `<section class="upage ukey"><p class="unot">DO NOT DISTRIBUTE TO STUDENTS BEFORE OR DURING THE CONTEST</p><h2>Number Sense Answer Key ${lvShort} • ${dn} • ${tc}</h2>
-      <p class="unote">*number) x — y means an integer between x and y inclusive<br>NOTE: If an answer is of the type like ${R('\u0001\\tfrac23\u0002')} it cannot be written as a repeating decimal</p>
-      <div class="ukcols k${kcols.length}">${kcols.map(([a, b]) => `<div>${probs.slice(a, b).map(p => `<div class="uk"><span class="un">${p.est ? '*' : ''}(${p.n})</span><span>${keyRange(p)}</span></div>`).join('')}</div>`).join('')}</div></section>`;
+    const us = n => '_'.repeat(n);
+    const head = `<div class="uhd">
+      ${at(70.5, 39.8, 't14 ctr', 'Number Sense Practice Test', 'width:516pt')}
+      ${at(70.5, 56.2, 't14 ctr', `${lvShort} • ${full ? '' : `Problems ${COLR[spec.cols[0]]} • `}${dn} • ${tc}`, 'width:516pt')}
+      ${at(481, 76.3, 'a10', 'Final')}${at(510.4, 76.3, 'a10', us(6))}${at(553.4, 76.3, 'a10', us(6))}
+      ${at(479.5, 94.2, 'a10', '2nd')}${at(511.3, 94.2, 'a10', us(6))}${at(555.1, 94.2, 'a10', us(6))}
+      ${at(478.4, 112.2, 'a10', '1st')}${at(509.5, 112.2, 'a10', us(6))}${at(553.2, 112.2, 'a10', us(6))}
+      ${at(510.7, 126.6, 'a8b', 'Score')}${at(557.3, 126.6, 'a8b', 'Initials')}
+      ${at(45, 94.3, 't10b', `Contestant’s Number ${us(11)}`)}
+      ${at(45, 125.5, 't10b', 'Read directions carefully<br>before beginning test')}
+      ${at(258.5, 125.5, 't10b ctr', 'DO NOT UNFOLD THIS SHEET<br>UNTIL TOLD TO BEGIN', 'width:146.7pt')}
+      ${full ? at(45, 160.5, 'udir', ['<b>Directions:</b>  Do not turn this page until the person conducting this test gives the signal to begin. This is a ten-minute test. There are', '80 problems. Solve accurately and quickly as many as you can in the order in which they appear. ALL PROBLEMS ARE TO BE', 'SOLVED MENTALLY. Make no calculations with paper and pencil. Write only the answer in the space provided at the end of', 'each problem. Problems marked with a ( * ) require approximate integral answers; any answer to a starred problem that is within', 'five percent of the exact answer will be scored correct; all other problems require exact answers.'].map((t, k, a) => `<span class="${k < a.length - 1 ? 'jl' : 'jlast'}">${t}</span>`).join(''), 'width:530.5pt')
+        : at(45, 160.5, 'udir', `<b>Directions:</b> Do not turn this page until the person conducting this test gives the signal to begin. This is a two-and-a-half-minute test. There are ${probs.length} problems. Solve accurately and quickly as many as you can in the order in which they appear. ALL PROBLEMS ARE TO BE SOLVED MENTALLY. Make no calculations with paper and pencil. Write only the answer in the space provided at the end of each problem. Problems marked with a ( * ) require approximate integral answers; any answer to a starred problem that is within five percent of the exact answer will be scored correct; all other problems require exact answers.`, 'width:530.5pt')}
+      ${at(45, 229.6, 'a9b', 'The person conducting this contest should explain these directions to the contestants.')}
+      ${at(70.5, 250.6, 'a9b ctr', 'STOP -- WAIT FOR SIGNAL!', 'width:516pt')}
+    </div>`;
+    const pages = (full ? [0, 1] : [0]).map(i => `<section class="upage up${i + 1}">${i === 0 ? head : ''}<div class="ucols"><div class="ucl"></div><div class="ucr"></div></div></section>`);
+    const key = `<section class="upage ukey"><div class="ukh">
+      ${at(36, 39, 't11b', 'DO NOT DISTRIBUTE TO STUDENTS BEFORE OR DURING THE CONTEST')}
+      ${at(36, 64.1, 't12b', `Number Sense Answer Key ${lvShort} • ${dn} • ${tc}`)}
+      ${at(36, 76.5, 't10b', '*number) x — y means an integer between x and y inclusive')}
+      ${at(36, 87.2, 't10b', `NOTE: If an answer is of the type like ${R('\u0001\\tfrac23\u0002')} it cannot be written as a repeating decimal`)}
+    </div><div class="ukcols"></div></section>`;
     main.innerHTML = `<div class="noprint"><button class="back" data-go="test">${IC.left} Tests</button>
-      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}, laid out like a UIL test on letter paper: problems 1–33 on the front, the rest on the back. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
+      <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}, laid out like a UIL test on letter paper: the first problems on the front, the rest on the back, and the answer key on its own page. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
       <div class="row" style="margin-bottom:8px"><button class="btn" data-act="doPrint">Print</button><button class="btn ghost" data-act="printNew">A different test</button></div>
-      <p class="faint small" id="printmsg">Print double-sided so it matches a real test sheet. The answer key is the last page, so you can keep it back. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac), with margins set to Default or None.</p></div>
+      <p class="faint small" id="printmsg">Print double-sided so it matches a real test sheet. The answer key is the last page, so you can keep it back. In the print window, open <b>More settings</b> and check that Margins is <b>Default</b>, Scale is <b>Default</b>, and <b>Headers and footers</b> is off. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac).</p></div>
       <div class="paper" id="paper">${pages.join('')}${key}</div>`;
-    state.printSpec = spec;
+    state.printSpec = spec; state.printProbs = probs; state.printFull = full;
     fitPaper();
   }
-  // shrink the type on any page whose problems run past the bottom, so each page prints as one sheet
   // Each word and each piece of math becomes its own box, so the answer blank can take whatever is left of the
-  // last line (as on the real sheet) and only drops to a new line when less than an inch is left.
+  // last line (as on the real sheet) and only drops to a new line when less than about half an inch is left.
   function atomize(up) {
     const atoms = []; let last = null, glue = false;
     // pieces with no space between them stay together, as in normal text ("(" + math, math + ".")
@@ -6233,24 +6276,49 @@ NS.G({
     });
     up.replaceWith(...atoms);
   }
-  // One type size for every page. Each page then spaces its problems out as much as it can (up to a roomy limit),
-  // the way the real front and back sheets do; the type steps down only when a page can't fit with decent spacing.
+  // Times draws some symbols KaTeX builds from pieces (≠) or places differently (′); use the plain glyphs
+  function printGlyphs(root) {
+    $$('.katex .mrel', root).forEach(e => { if (e.querySelector(':scope > .mrel > .vbox .rlap') && /=$/.test(e.textContent)) { e.textContent = '≠'; } });
+    $$('.katex .mord', root).forEach(e => { if (/^[′″‴]$/.test(e.textContent)) e.classList.add('kp'); });
+  }
+  // Fill the columns: the front gets 35, 34 or 33 problems (left column one more when odd, as on the real tests),
+  // the back is split where its two columns come out closest in height, and the key's columns follow the same split.
   function fitPaper() {
     const paper = $('#paper'); if (!paper) return;
-    $$('.up', paper).forEach(atomize);
+    const probs = state.printProbs, full = state.printFull;
+    const nodes = probs.map(p => { const d = document.createElement('div'); d.innerHTML = uilProb(p); return d.firstElementChild; });
+    nodes.forEach(n => { atomize(n.querySelector('.up')); printGlyphs(n); });
+    const keyNodes = probs.map(p => { const d = document.createElement('div'); d.className = 'uk'; d.innerHTML = `<span class="un">${p.est ? '*' : ''}(${p.n})</span><span class="ukv">${keyRange(p).split('<span class="or"> or </span>').join(', ')}</span>`; printGlyphs(d); return d; });
+    const pgs = $$('.upage', paper); const tests = pgs.filter(p => !p.classList.contains('ukey'));
+    const cols = tests.map(p => [$('.ucl', p), $('.ucr', p)]);
+    let cut = null;
+    const place = (front) => {
+      if (!full) { cols[0][0].replaceChildren(...nodes.slice(0, 10)); cols[0][1].replaceChildren(...nodes.slice(10)); cut = [10, 20]; return; }
+      const l1 = Math.ceil(front / 2);
+      cols[0][0].replaceChildren(...nodes.slice(0, l1)); cols[0][1].replaceChildren(...nodes.slice(l1, front));
+      // back: try every split and keep the one with the most even columns
+      const back = nodes.slice(front); cols[1][0].replaceChildren(...back); const hs = back.map(n => n.getBoundingClientRect().height);
+      let best = Math.ceil(back.length / 2), bestD = Infinity;
+      for (let k = Math.floor(back.length / 2) - 4; k <= Math.ceil(back.length / 2) + 4; k++) { const a = hs.slice(0, k).reduce((x, y) => x + y, 0), b = hs.slice(k).reduce((x, y) => x + y, 0); const d = Math.max(a, b); if (d < bestD) { bestD = d; best = k; } }
+      cols[1][0].replaceChildren(...back.slice(0, best)); cols[1][1].replaceChildren(...back.slice(best));
+      cut = [l1, front, front + best, probs.length];
+    };
     const fit = () => {
       paper.style.setProperty('--uk', 1);
-      const pgs = $$('.upage', paper);
-      const gapFor = (pg, fs, gLo) => { pg.style.setProperty('--ufs', fs + 'pt'); for (let g = 0.8; g >= gLo - 1e-9; g -= 0.02) { pg.style.setProperty('--ugap', g.toFixed(2) + 'em'); if (pageFits(pg)) return g; } return null; };
-      let fs = 12, done = false;
-      for (const [lo, gLo] of [[10.5, 0.42], [8.5, 0.2]]) {
-        for (fs = lo === 10.5 ? 12 : 10.25; fs >= lo - 1e-9; fs -= 0.25) if (pgs.every(pg => gapFor(pg, fs, gLo) !== null)) { done = true; break; }
-        if (done) break;
-      }
-      if (!done) { fs = 8.5; pgs.forEach(pg => gapFor(pg, fs, 0)); }
-      paper.dataset.fit = fs; scalePaper();
+      const set = (fs, g) => pgs.forEach(pg => { pg.style.setProperty('--ufs', fs + 'pt'); pg.style.setProperty('--ugap', g + 'em'); });
+      const tries = [];
+      for (let fs = 11; fs >= 10 - 1e-9; fs -= 0.25) for (let g = 0.53; g >= 0.4 - 1e-9; g -= 0.03) tries.push([fs, +g.toFixed(2)]);
+      for (let fs = 11; fs >= 9 - 1e-9; fs -= 0.25) for (let g = 0.37; g >= 0.2 - 1e-9; g -= 0.03) tries.push([fs, +g.toFixed(2)]);
+      let done = false;
+      for (const [fs, g] of tries) { set(fs, g); for (const front of full ? [35, 34, 33] : [20]) { place(front); if (tests.every(pageFits)) { done = true; break; } } if (done) break; }
+      if (!done) { set(9, 0.2); place(33); }
+      // the key mirrors the test's columns
+      const bounds = full ? [0, ...cut] : [0, 10, 20]; const kc = $('.ukcols', paper);
+      kc.className = 'ukcols k' + (bounds.length - 1);
+      kc.replaceChildren(...bounds.slice(0, -1).map((a, i) => { const c = document.createElement('div'); c.append(...keyNodes.slice(a, bounds[i + 1])); return c; }));
+      paper.dataset.fit = `${pgs[0].style.getPropertyValue('--ufs')}/${pgs[0].style.getPropertyValue('--ugap')}/${cut.join(',')}`; scalePaper();
     };
-    const want = ['700 11pt "Times New Roman"', '700 11pt Tinos', '400 11pt Tinos'];
+    const want = ['700 11pt "Times New Roman"', '700 11pt Tinos', '400 11pt Tinos', '700 10pt Arial'];
     const ready = document.fonts ? Promise.all(want.map(f => document.fonts.load(f).catch(() => null))).then(() => document.fonts.ready) : Promise.resolve();
     ready.then(fit, fit);
   }
@@ -6279,8 +6347,8 @@ NS.G({
   const DISPLAY_DEF = { theme: 'system', tsize: 'm', contrast: 'std', font: 'std', motion: 'auto', pad: 'auto' };
   const dset = k => S.data.settings[k] || DISPLAY_DEF[k];
   function viewDisplay() {
-    const ex = NS.makeProblem('sameFront', lv() || 'ms', 31); const changed = DISPLAY.some(([k]) => dset(k) !== DISPLAY_DEF[k]);
-    main.innerHTML = `<div class="setup"><header class="pagehead"><h1>Display and reading</h1>
+    const ex = NS.makeProblem('sameFront', lv() || 'ms', 31); const back = lv() ? '' : `<button class="back" data-go="level">${IC.left} Choose your level</button>`; const changed = DISPLAY.some(([k]) => dset(k) !== DISPLAY_DEF[k]);
+    main.innerHTML = `<div class="setup">${back}<header class="pagehead"${back ? ' style="margin-top:10px"' : ''}><h1>Display and reading</h1>
       <p class="lede">Make the site easier to read and use. These settings are saved in this browser and move with your progress code.</p></header>
       <div class="cfg">${DISPLAY.map(([k, label, opts, notes]) => `<div class="cfg-row"><span class="cfg-l" id="dl-${k}">${label}</span><div class="cfg-v"><div class="seg" role="group" aria-labelledby="dl-${k}">${opts.map(([v, n]) => `<button data-act="dset" data-k="${k}" data-v="${v}" aria-pressed="${dset(k) === v}">${n}</button>`).join('')}</div><p class="note-s">${notes[dset(k)]}</p></div></div>`).join('')}</div>
       <h2 class="label">Preview</h2>
@@ -6348,7 +6416,6 @@ NS.G({
     level() { guard(() => { state.session = null; location.hash = 'level'; }); },
     dset(d) { S.data.settings[d.k] = d.v; if (d.v === DISPLAY_DEF[d.k]) delete S.data.settings[d.k]; S.save(); applyTheme(); state.keepScroll = true; viewDisplay(); const b = $(`[data-act="dset"][data-k="${d.k}"][data-v="${d.v}"]`); if (b) b.focus({ preventScroll: true }); },
     dreset() { Object.keys(DISPLAY_DEF).forEach(k => delete S.data.settings[k]); S.save(); applyTheme(); state.keepScroll = true; viewDisplay(); toast('Standard settings restored'); },
-    theme() { const order = ['system', 'light', 'dark']; const cur = S.data.settings.theme || 'system'; const nx = order[(order.indexOf(cur) + 1) % 3]; S.data.settings.theme = nx; S.save(); applyTheme(); state.keepScroll = true; route(); },
     tfilter(d) { state.trickFilter = d.f; state.keepScroll = true; viewTricks(); },
     jumpTry() { const b = $('#tryit'); if (b) { b.scrollIntoView({ behavior: NS.reduceMotion() ? 'auto' : 'smooth', block: 'start' }); const i = $('#tryin'); if (i && !touch) setTimeout(() => i.focus({ preventScroll: true }), 300); } },
     exStep() { state.exShown++; renderExample(state.lessonId); },
@@ -6384,7 +6451,7 @@ NS.G({
     arop(d) { const a = arithCfg(); const has = a.ops.includes(d.op); if (has && a.ops.length === 1) { toast('Keep at least one kind of problem'); return; } a.ops = has ? a.ops.replace(d.op, '') : a.ops + d.op; S.data.settings.arith = NS.arithClean(a); S.save(); state.keepScroll = true; viewPractice(); },
     arreset() { delete S.data.settings.arith; S.save(); state.keepScroll = true; viewPractice(); },
     quickArith() { guard(() => { state.pickMode = 'arith'; startSession({ mode: 'arith', dur: 120, tricks: [], arith: arithCfg(), label: 'Arithmetic warm-up' }); }); },
-    quickEst() { guard(() => startSession({ mode: 'practice', beh: state.pickBeh === 'test' ? 'test' : 'normal', len: 10, tricks: ['estimate'], label: 'Starred estimation' })); },
+    quickEst() { guard(() => startSession({ mode: 'practice', beh: S.data.settings.pbeh || 'normal', len: 10, tricks: ['estimate'], label: 'Starred estimation' })); },
     pdiff(d) { state.pickDiff = d.d; S.data.settings.pdiff = d.d; S.save(); state.keepScroll = true; viewPractice(); },
     tdiff(d) { state.testDiff = d.d; S.data.settings.tdiff = d.d; S.save(); state.teamCode = null; state.keepScroll = true; viewTests(); },
     sSubmit() {

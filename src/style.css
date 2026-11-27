@@ -187,6 +187,7 @@ body.in-session main { padding-top: 20px; }
 .seg button { border: 1px solid transparent; background: none; padding: 6px 13px; border-radius: 6px; font-weight: 600; color: var(--ink-2); min-height: 34px; font-size: .92rem; }
 .seg button:hover { color: var(--ink); }
 .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); border-color: var(--line-2); box-shadow: 0 1px 1px rgba(0, 0, 0, .04); }
+.nobr { white-space: nowrap; }
 mark { background: linear-gradient(transparent 12%, var(--hi) 12%, var(--hi) 88%, transparent 88%); color: var(--hi-ink); padding: 0 3px; }
 .back { background: none; border: 0; color: var(--ink-2); font-weight: 600; padding: 4px 0; display: inline-flex; gap: 6px; align-items: center; font-size: .92rem; }
 .back:hover { color: var(--ink); }
@@ -612,63 +613,83 @@ body.nolevel main { padding-bottom: 48px; }
 .arow .chip::before { content: ""; display: inline-block; width: 13px; height: 13px; border: 1.5px solid var(--line-2); border-radius: 3px; margin-right: 8px; vertical-align: -2px; }
 .arow .chip[aria-pressed="true"]::before { background: var(--ink); border-color: var(--ink); box-shadow: inset 0 0 0 2px var(--surface); }
 
-/* ---- printable test: UIL layout on letter paper ----
-   Times New Roman Bold for text and math alike, upright variables, blanks at the end of the line, even spacing. */
+/* ---- printable test: the UIL sheet ----
+   Every size and position here is taken from real UIL tests (2019–2026), in points. The screen shows the page
+   with its margins as padding; in print the same margins come from @page, so the two lay out identically. */
 .paper { --uk: 1; display: grid; gap: calc(24px * var(--uk)); margin-top: 22px; justify-content: start; }
-.upage { --ufs: 11pt; --times: "Times New Roman", Tinos, "Liberation Serif", Times, serif; --arial: Arial, Arimo, "Liberation Sans", Helvetica, sans-serif;
-  width: 8.5in; height: 11in; padding: .5in .5in .45in; background: #fff; color: #000; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; position: relative;
-  font-family: var(--times); font-weight: 700; font-size: var(--ufs); line-height: 1.15; zoom: var(--uk); -webkit-font-smoothing: auto; }
+.upage { --ufs: 11pt; --ugap: .53em; --times: "Times New Roman", Tinos, "Liberation Serif", Times, serif; --arial: Arial, Arimo, "Liberation Sans", Helvetica, sans-serif;
+  width: 612pt; height: 792pt; padding: 36pt 22pt 30pt 18pt; background: #fff; color: #000; border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; position: relative;
+  font-family: var(--times); font-weight: 700; font-size: var(--ufs); line-height: 1.17; zoom: var(--uk); -webkit-font-smoothing: auto; }
 .upage .katex { font-size: 1em; }
 .upage .katex :is(.mord, .mbin, .mrel, .mopen, .mclose, .mpunct, .minner, .mop):not(.op-symbol):not(.amsrm), .upage .katex .mathnormal, .upage .katex .mathit, .upage .katex .text { font-family: var(--times), KaTeX_Main !important; font-weight: 700; font-style: normal; }
 .upage .katex .mathnormal { margin-right: 0 !important; }
-.uhead { text-align: center; }
-.uhead h2 { font-family: var(--times); font-weight: 700; font-size: 1.3em; margin: 0; line-height: 1.2; letter-spacing: 0; }
-.uhead p { font-size: 1.3em; margin: 0; }
-.ubox { display: flex; justify-content: space-between; align-items: flex-end; margin-top: -4px; }
-.ucn { display: flex; align-items: flex-end; gap: 6px; font-size: .95em; margin-bottom: 20px; }
-.ucn i, .uscore i { display: inline-block; border-bottom: .75pt solid #000; }
-.ucn i { width: 1.1in; }
-.uscore { border-collapse: collapse; font-family: var(--arial); font-weight: 400; font-size: .85em; }
-.uscore td { padding: 2px 4px; }
-.uscore td:first-child { text-align: right; padding-right: 8px; }
-.uscore i { width: .6in; height: 1em; }
-.uscore .ul td { font-weight: 700; font-size: .85em; text-align: center; padding-top: 1px; }
-.uwarn { display: grid; grid-template-columns: 1fr 1.3fr 1fr; font-size: .95em; margin: 4px 0 10px; line-height: 1.2; }
-.uwarn span:nth-child(2) { text-align: center; }
-.udir { font-weight: 400; font-size: .92em; line-height: 1.2; margin: 0 0 10px; text-align: justify; }
+.upage .katex .kp { font-family: KaTeX_Main !important; font-weight: 700; }
+.upage .katex .mfrac { font-size: 1.1em; }
+.upage .dmath .katex .mfrac { font-size: 1em; }
+.dmath { display: inline-block; }
+/* header lines: each sits where the real sheet puts it (line-height = the font's own height, so top = the text's top) */
+.uhd { position: relative; height: 243.5pt; }
+.ukh { position: relative; height: 70.7pt; }
+.ua2 { position: absolute; white-space: nowrap; }
+.ua2.ctr { text-align: center; }
+.t14 { font-size: 14pt; line-height: 1.107; }
+.t12b { font-size: 12pt; line-height: 1.107; }
+.t11b { font-size: 11pt; line-height: 1.107; }
+.t10b { font-size: 10pt; line-height: 1.18; }
+.a10 { font-family: var(--arial); font-weight: 400; font-size: 10pt; line-height: 1.117; }
+.a8b { font-family: var(--arial); font-weight: 700; font-size: 8pt; line-height: 1.117; }
+.a9b { font-family: var(--arial); font-weight: 700; font-size: 9pt; line-height: 1.117; }
+.udir { font-weight: 400; font-size: 10pt; line-height: 11.7pt; white-space: normal; text-align: justify; }
 .udir b { font-weight: 700; }
-.uconduct, .ustop { font-family: var(--arial); font-weight: 700; font-size: .78em; margin: 0 0 10px; }
-.ustop { text-align: center; margin-bottom: 18px; }
-.ucols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .3in; }
-.uq { display: grid; grid-template-columns: 2.5em minmax(0, 1fr); gap: 0 .35em; align-items: baseline; padding: var(--ugap, .6em) 0; break-inside: avoid; }
+/* the full test's directions break where the real sheet's do, each line justified */
+.udir .jl { display: block; text-align: justify; text-align-last: justify; }
+.udir .jlast { display: block; }
+/* problem columns: numbers right-aligned at 45.5pt and 337.1pt from the page edge, text 5.5pt after them,
+   answer lines ending at 293pt and 588.3pt (583pt on the back) */
+.ucols { display: grid; grid-template-columns: 275pt 278.7pt; column-gap: 16.6pt; align-items: start; }
+.up1 .ucols { margin-top: calc(5.85pt - var(--ugap)); }
+.up2 .ucols { grid-template-columns: 275pt 273.4pt; margin-top: calc(3.35pt - var(--ugap)); }
+.uq { display: grid; grid-template-columns: 27.5pt minmax(0, 1fr); column-gap: 5.5pt; align-items: baseline; padding: var(--ugap) 0; break-inside: avoid; }
 .un { text-align: right; white-space: nowrap; }
-.ut { display: flex; flex-wrap: wrap; align-items: baseline; row-gap: .04em; min-width: 0; }
+.ut { display: flex; flex-wrap: wrap; align-items: baseline; min-width: 0; }
 .ua { white-space: nowrap; max-width: 100%; }
-.ua.sp { margin-right: .26em; }
-.ub { flex: 1 0 .55in; display: flex; align-items: baseline; gap: .3em; margin-left: .3em; }
+.ua.sp { margin-right: .25em; }
+.ub { flex: 1 0 .55in; display: flex; align-items: baseline; gap: .3em; margin-left: .25em; }
 .ub i { flex: 1; height: 1em; border-bottom: .75pt solid #000; }
 .ub .sx { white-space: nowrap; }
-.ufoot { position: absolute; left: .5in; right: .5in; bottom: .22in; margin: 0; text-align: center; font-family: var(--arial); font-weight: 400; font-size: 7pt; color: #777; }
-.ukey h2 { font-size: 1.15em; margin: 12px 0 2px; }
-.unot { font-size: 1.05em; margin: 0 0 6px; }
-.unote { font-size: .9em; line-height: 1.3; margin: 0 0 16px; }
-.ukcols { display: grid; gap: 0 .3in; }
-.ukcols.k4 { grid-template-columns: repeat(4, 1fr); }
-.ukcols.k2 { grid-template-columns: repeat(2, 1fr); max-width: 4.5in; }
-.uk { display: grid; grid-template-columns: 2.7em minmax(0, 1fr); gap: .4em; align-items: baseline; padding: .32em 0; font-weight: 700; }
+/* answer key: four columns on a 2-inch grid, numbers right-aligned at 60.5, 204.5, 348 and 492pt */
+.ukcols { display: grid; grid-template-columns: 144pt 144pt 144pt minmax(0, 1fr); margin-left: 15pt; }
+/* nothing may reach past the right margin: a browser shrinks every page to fit the widest thing on it */
+.uhd, .ukh, .ucols, .ukcols { max-width: 100%; }
+.ukcols.k2 { grid-template-columns: repeat(2, 144pt); }
+.ukcols > div { margin-top: calc(5.85pt - var(--ugap)); }
+.uk { display: grid; grid-template-columns: 27.5pt minmax(0, 1fr); column-gap: 5.5pt; align-items: baseline; padding: var(--ugap) 0; font-size: 11pt; }
+.uk .ukv { padding-right: 6pt; }
+.upage .or { font-family: var(--times); color: #000; }
+@page { size: letter; margin: 36pt 22pt 30pt 18pt; }
 @media print {
-  @page { size: letter; margin: 0; }
-  html, body { background: #fff !important; }
-  header.top, nav.tabbar, .noprint, .foot, #confirmbar, .toast { display: none !important; }
+  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  :root { padding: 0 !important; }
+  body::before { display: none !important; }
+  header.top, nav.tabbar, .noprint, .foot, #confirmbar, .toast, .dock { display: none !important; }
   main { padding: 0 !important; max-width: none !important; margin: 0 !important; }
   .paper { display: block; margin: 0; }
-  .upage { zoom: 1 !important; border: 0; box-shadow: none; break-after: page; page-break-after: always; }
+  .upage { zoom: 1 !important; width: auto; height: auto; min-height: 0; padding: 0; overflow: visible; border: 0; box-shadow: none; break-after: page; page-break-after: always; }
   .upage:last-child { break-after: auto; page-break-after: auto; }
 }
-.upage .katex .mfrac { font-size: 1.2em; }
-.upage .or { font-family: var(--times); color: #000; font-weight: 400; font-size: .92em; }
+.dmath { display: inline-block; }
 
 /* ---- display settings page ---- */
 .dprev .prob { font-size: 1.6rem; }
 .dprev .dprev-a { display: inline-block; width: auto; min-width: 5em; }
 .dprev .keypad { pointer-events: none; }
+
+.arow .rng .pair { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+@media (max-width: 600px) { .arow { flex-direction: column; align-items: flex-start; } }
+/* test codes in the history table stay on one line */
+table.t td .mono, table.t td button.mono { white-space: nowrap; }
+
+/* a highlighted stacked fraction gets the whole highlight, not a band through its middle */
+mark:has(.mfrac) { background: var(--hi); border-radius: 2px; padding: 1px 4px; }
+/* the bottom bar's six labels must fit a phone at any text size */
+nav.tabbar button { font-size: clamp(10px, .68rem, 12px) !important; }

@@ -37,8 +37,13 @@ html = f'''<title>Eighty in Ten</title>
 # local preview with a document skeleton like the publisher adds
 (root/'dist'/'preview.html').write_text('<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}[hidden]{display:none!important}</style></head><body>' + html.replace('<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>', '<script>' + kjs_local + '</script>') + '</body></html>')
 # standalone site for GitHub Pages (docs/ folder): same page with its own document skeleton
-skel = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
+ICONS = ('<link rel="icon" href="favicon.ico" sizes="48x48"><link rel="icon" href="favicon.svg" type="image/svg+xml">'
+         '<link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="manifest" href="site.webmanifest">'
+         '<meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#131311" media="(prefers-color-scheme: dark)">')
+skel = '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>' + ICONS + '</head><body>'
 (root/'docs').mkdir(exist_ok=True)
+# the site icon: a highlighter-yellow tile with 80 on it; sources in src/icons
+for f in (root/'src'/'icons').iterdir(): (root/'docs'/f.name).write_bytes(f.read_bytes())
 (root/'docs'/'index.html').write_text(skel + html + '</body></html>')
 (root/'docs'/'.nojekyll').write_text('')
 print(len(html)//1024, 'KB')

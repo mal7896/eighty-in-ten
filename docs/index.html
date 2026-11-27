@@ -666,8 +666,7 @@ body.nolevel main { padding-bottom: 48px; }
 .uq { display: grid; grid-template-columns: 27.5pt minmax(0, 1fr); column-gap: 5.5pt; align-items: baseline; padding: var(--ugap) 0; break-inside: avoid; }
 .un { text-align: right; white-space: nowrap; }
 .ut { display: flex; flex-wrap: wrap; align-items: baseline; min-width: 0; }
-.ua { white-space: nowrap; max-width: 100%; }
-.ua.sp { margin-right: .25em; }
+.ua { white-space: pre; max-width: 100%; } /* a real space ends each word, so copied text keeps its spaces */
 .ub { flex: 1 0 .55in; display: flex; align-items: baseline; gap: .3em; margin-left: .25em; }
 .ub i { flex: 1; height: 1em; border-bottom: .75pt solid #000; }
 .ub .sx { white-space: nowrap; }
@@ -866,7 +865,7 @@ const H = NS.H = {
   pow(b, e) { const B = piece(b), E = piece(e); const l = `{${B.l}}^{${E.l}}`; return { h: mk(l), t: `(${B.t})^(${E.t})`, l }; },
   sqrt(x) { const X = piece(x); const l = `\\sqrt{${X.l}}`; return { h: mk(l), t: `sqrt(${X.t})`, l }; },
   cbrt(x) { const X = piece(x); const l = `\\sqrt[3]{${X.l}}`; return { h: mk(l), t: `cbrt(${X.t})`, l }; },
-  base(s, b) { const l = `${s}_{${b === 10 ? '\\text{ten}' : b}}`; return { h: mk(l), t: '', l }; },
+  base(s, b) { const l = `${s}_{${b}}`; return { h: mk(l), t: '', l }; },
   paren(x) { const X = piece(x); return { h: `(${X.h})`, t: `(${X.t})`, l: `(${X.l})` }; },
   rep(s) { const l = mathify(s) + '\\ldots'; return { h: mk(l), t: '', l }; },
   bar(prefix, rep) { const l = `${prefix}\\overline{${rep}}`; return { h: mk(l), t: '', l }; },
@@ -886,6 +885,62 @@ NS.latexPlain = function (l) {
   t = t.replace(/\{,\}/g, ',').replace(/\\%/g, '%').replace(/\\\$/g, '$').replace(/\\[,!;]/g, '').replace(/\\(left|right)/g, '').replace(/\\[a-zA-Z]+/g, '').replace(/[{}]/g, '');
   return t.replace(/\s+/g, ' ').trim();
 };
+// the article before a number: an 8, an 11, an 18, an 80, a 7
+NS.an = v => (/^(8|1[18](?!\d))/.test(String(v)) ? 'an' : 'a');
+NS.An = v => (NS.an(v) === 'an' ? 'An' : 'A');
+// LaTeX → readable Unicode text, for copying a problem: x², ∛27, (x − 1)/(x + 1), lim(x→2), Σ(k=1 to 7), |a b; c d|
+NS.latexText = (function () {
+  const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '−': '⁻', '+': '⁺', n: 'ⁿ', '(': '⁽', ')': '⁾' };
+  const SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉', '−': '₋', '+': '₊' };
+  const SYM = { times: '×', div: '÷', cdot: '·', pi: 'π', le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', equiv: '≡', to: '→', infty: '∞', theta: 'θ', alpha: 'α', beta: 'β', ldots: '…', cdots: '⋯', dots: '…', circ: '°', degree: '°', cap: '∩', cup: '∪', pm: '±', approx: '≈', prime: '′', lfloor: '⌊', rfloor: '⌋', lceil: '⌈', rceil: '⌉', in: '∈', angle: '∠', triangle: '△', perp: '⊥', cong: '≅', sim: '~', mid: '|', vert: '|', lvert: '|', rvert: '|', quad: ' ', qquad: ' ', bmod: ' mod ', '{': '{', '}': '}', '%': '%', $: '$', '&': '&', '#': '#', ',': ' ', ';': ' ', ':': ' ', ' ': ' ', '!': '', '|': '‖', left: '', right: '', big: '', Big: '', displaystyle: '', textstyle: '', limits: '', nolimits: '' };
+  const FN = ['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin', 'arccos', 'arctan', 'log', 'ln', 'exp', 'det', 'max', 'min'];
+  const BIG = { lim: 'lim', sum: 'Σ', prod: 'Π', int: '∫', iint: '∬' };
+  const tight = s => /^[\w.!′°π⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ⁻₀₁₂₃₄₅₆₇₈₉]+$/.test(s);
+  function convert(s) {
+    let out = '', i = 0;
+    const group = () => { // the next {…} group, or the next single token
+      while (s[i] === ' ') i++;
+      if (s[i] === '{') { let d = 0, j = i; for (; j < s.length; j++) { if (s[j] === '\\') { j++; continue; } if (s[j] === '{') d++; else if (s[j] === '}' && --d === 0) break; } const g = s.slice(i + 1, j); i = j + 1; return g; }
+      if (s[i] === '\\') { const m = /^\\([a-zA-Z]+|.)/.exec(s.slice(i)); i += m[0].length; return m[0]; }
+      return s[i++] || '';
+    };
+    const opt = () => { if (s[i] !== '[') return null; const j = s.indexOf(']', i); const g = s.slice(i + 1, j); i = j + 1; return g; };
+    const scripts = () => { let lo = null, hi = null; for (;;) { while (s[i] === ' ') i++; if (s[i] === '_' && lo === null) { i++; lo = convert(group()); } else if (s[i] === '^' && hi === null) { i++; hi = convert(group()); } else break; } return [lo, hi]; };
+    const par = x => (tight(x) ? x : `(${x})`);
+    while (i < s.length) {
+      const c = s[i];
+      if (c === '\\') {
+        const m = /^\\([a-zA-Z]+|.)/.exec(s.slice(i)); const name = m[1]; i += m[0].length;
+        if (name === 'frac' || name === 'dfrac' || name === 'tfrac') { const a = convert(group()), b = convert(group()); out += `${/\d$/.test(out) ? ' ' : ''}${par(a)}/${par(b)}`; continue; }
+        if (name === 'binom') { const a = convert(group()), b = convert(group()); out += `C(${a}, ${b})`; continue; }
+        if (name === 'sqrt') { const n = opt(); const x = convert(group()); out += (n === null || n === '2' ? '√' : n === '3' ? '∛' : n === '4' ? '∜' : [...n].map(ch => SUP[ch] || ch).join('') + '√') + par(x); continue; }
+        if (name === 'text' || name === 'mathrm' || name === 'textrm' || name === 'operatorname' || name === 'mathit' || name === 'textbf' || name === 'mathbf') { out += name === 'operatorname' ? convert(group()) + ' ' : group(); continue; }
+        if (name === 'overline') { out += [...convert(group())].map(ch => ch + '̅').join(''); continue; }
+        if (name === 'underline') { group(); out += '____'; continue; }
+        if (name === 'hspace' || name === 'vphantom' || name === 'phantom') { group(); out += ' '; continue; }
+        if (name === 'pmod') { out += ` (mod ${convert(group())})`; continue; }
+        if (name === 'begin') { const env = group(); const end = s.indexOf(`\\end{${env}}`, i); const body = s.slice(i, end); i = end + `\\end{${env}}`.length;
+          const rows = body.split(/\\\\/).map(r => r.split('&').map(x => convert(x).trim()).join(' ')).filter(Boolean).join('; ');
+          const [l, r] = { vmatrix: ['|', '|'], Vmatrix: ['‖', '‖'], bmatrix: ['[', ']'], pmatrix: ['(', ')'] }[env] || ['', '']; out += l + rows + r; continue; }
+        if (BIG[name]) { const [lo, hi] = scripts(); out += BIG[name] + (lo !== null && hi !== null ? `(${lo.trim()} to ${hi.trim()})` : lo !== null ? `(${lo.trim()})` : '') + ' '; continue; }
+        if (FN.includes(name)) { out += name; const [lo, hi] = scripts(); if (lo !== null) out += [...lo].every(ch => SUB[ch]) ? [...lo].map(ch => SUB[ch]).join('') : `_${par(lo)}`; if (hi !== null) out += [...hi].every(ch => SUP[ch]) ? [...hi].map(ch => SUP[ch]).join('') : `^${par(hi)}`; if (/^[\w(]/.test(s.slice(i).trimStart()) && !/^\s*\(/.test(s.slice(i))) out += ' '; continue; }
+        out += SYM[name] !== undefined ? SYM[name] : name; continue;
+      }
+      if (c === '{') { out += convert(group()); continue; }
+      if (c === '^' || c === '_') { i++; const x = convert(group()).trim(); const map = c === '^' ? SUP : SUB;
+        if (c === '^' && (x === '°' || x === '′' || x === '′′')) out += x;
+        else if (x && [...x].every(ch => map[ch])) out += [...x].map(ch => map[ch]).join('');
+        else out += c + par(x);
+        continue; }
+      if (c === '~') { out += ' '; i++; continue; }
+      if (c === '-') { out += '−'; i++; continue; }
+      if (c === '}') { i++; continue; }
+      out += c; i++;
+    }
+    return out;
+  }
+  return l => convert(String(l)).replace(/\[\[/g, '⟦').replace(/\]\]/g, '⟧').replace(/\s+/g, ' ').trim();
+})();
 // a lightweight HTML fallback when KaTeX is unavailable
 function latexFallback(l) {
   let t = esc(l);
@@ -1077,6 +1132,11 @@ NS.keyHtml = function (spec) {
   if (f !== 'mixed') parts.push(H.Qi(v).h);
   if (f === 'any' && v.terminates()) parts.push(H.dec(v).h);
   return [...new Set(parts)].join('<span class="or"> or </span>');
+};
+// a problem as plain text, for copying: math in plain form, the blank as a line, units and form after it
+NS.plainProblem = function (p) {
+  const txt = String(p.p.h).replace(/\u0001([^\u0002]*)\u0002/g, (m0, l) => /\\underline/.test(l) ? '______' : NS.latexText(l)).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  return `${txt} ${p.pre || ''}${txt.includes('______') ? '' : '______'}${p.suffix ? ' ' + p.suffix : ''}${p.form ? ' ' + p.form : ''}`.replace(/\s+/g, ' ').trim();
 };
 NS.keyText = function (spec) { // plain text key (for aria / tests)
   if (spec.type === 'text') return spec.v;
@@ -1604,7 +1664,7 @@ NS.G({
       if (r.chance(0.5)) { // two fractions
         let a, b, c, d; do { b = r.int(5, 15); d = r.int(5, 15); a = r.int(Math.ceil(b / 2), b - 1); c = r.int(Math.ceil(d / 2), d - 1); } while (b === d || M.gcd(a, b) !== 1 || M.gcd(c, d) !== 1 || a * d === b * c || Math.abs(a / b - c / d) > 0.06);
         const x = q(a, b), y = q(c, d); const pickX = (x.cmp(y) > 0) === larger; const v = pickX ? x : y;
-        return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}: `, H.frac(a, b), ' or ', H.frac(c, d), '?'), a: A.num(v), params: { a, b, c, d, larger },
+        return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}, `, H.frac(a, b), ' or ', H.frac(c, d), '?'), a: A.num(v), params: { a, b, c, d, larger },
           steps: [`Cross-multiply: ${a}×${d} = ${a * d} and ${c}×${b} = ${c * b}.`, `The bigger cross product sits with the bigger fraction: ${x.cmp(y) > 0 ? `${a}/${b}` : `${c}/${d}`} is larger.`, `Answer: ${hl(H.frac(Number(v.n), Number(v.d)).h)}`] };
       }
       let a, b; do { b = r.pick([3, 6, 7, 9, 11, 12, 13, 14]); a = r.int(1, b - 1); } while (M.gcd(a, b) !== 1);
@@ -1613,7 +1673,7 @@ NS.G({
       if (dv.eq(f)) return this.gen(r, lv);
       const pickF = (f.cmp(dv) > 0) === larger; const v = pickF ? f : dv;
       const decf = (Number(f.n) / Number(f.d)).toFixed(4).replace(/^0/, '');
-      return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}: `, H.frac(a, b), ' or ', H.dec(dv), '?'), a: { ...A.num(v), show: pickF ? H.frac(a, b).h : H.dec(dv).h }, params: { a, b, dv: dv.toDecStr(), larger },
+      return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}, `, H.frac(a, b), ' or ', H.dec(dv), '?'), a: { ...A.num(v), show: pickF ? H.frac(a, b).h : H.dec(dv).h }, params: { a, b, dv: dv.toDecStr(), larger },
         steps: [`${a}/${b} = ${decf}…`, `Compare with ${H.dec(dv).h}: ${f.cmp(dv) > 0 ? `${a}/${b} is larger` : `${H.dec(dv).h} is larger`}.`, `Answer: ${hl(pickF ? H.frac(a, b).h : H.dec(dv).h)}`] };
     },
   });
@@ -1696,10 +1756,10 @@ NS.G({
     gen(r, lv, x = 1) {
       const kd = r.pick(['mean', 'missing', 'median']);
       if (kd === 'mean') { const xs = Array.from({ length: x >= 2 ? r.int(4, 5) : r.int(3, 4) }, () => r.int(8, 60)); const s = xs.reduce((x, y) => x + y, 0); const v = q(s, xs.length);
-        return { p: H.cat(`The mean of ${xs.join(', ')} is`), a: A.num(v), params: { xs }, steps: [`Sum: ${s}. Divide by ${xs.length}.`, `Answer: ${hl(H.Qf(v).h)}`] }; }
+        return { p: H.cat(`The average of ${xs.slice(0, -1).join(', ')}, and ${xs[xs.length - 1]} is`), a: A.num(v), params: { xs }, steps: [`Sum: ${s}. Divide by ${xs.length}.`, `Answer: ${hl(H.Qf(v).h)}`] }; }
       if (kd === 'missing') { const n = r.int(4, 6), m = r.int(10, 40); const xs = Array.from({ length: n - 1 }, () => r.int(m - 9, m + 9)); const last = n * m - xs.reduce((x, y) => x + y, 0);
         if (last <= 0) return this.gen(r, lv);
-        return { p: H.cat(`The mean of ${n} numbers is ${m}. ${n - 1} of them are ${xs.join(', ')}. The last one is`), a: A.num(last), params: { n, m, xs }, steps: [`Total must be ${n} × ${m} = ${n * m}.`, `${n * m} − ${xs.reduce((x, y) => x + y, 0)} = ${hl(last)}`] }; }
+        return { p: H.cat(`The average of ${xs.join(', ')}, and k is ${m}. Find k.`), a: A.num(last), params: { n, m, xs }, steps: [`Total must be ${n} × ${m} = ${n * m}.`, `${n * m} − ${xs.reduce((x, y) => x + y, 0)} = ${hl(last)}`] }; }
       const xs = Array.from({ length: r.pick([5, 6, 7]) }, () => r.int(3, 70)); const s = xs.slice().sort((x, y) => x - y);
       const L = s.length; const v = L % 2 ? q(s[(L - 1) / 2]) : q(s[L / 2 - 1] + s[L / 2], 2);
       return { p: H.cat(`The median of ${xs.join(', ')} is`), a: A.num(v), params: { xs }, steps: [`Sort: ${s.join(', ')}.`, L % 2 ? `Middle value: ${hl(s[(L - 1) / 2])}` : `Average the two middles: (${s[L / 2 - 1]} + ${s[L / 2]})/2 = ${hl(H.Qf(v).h)}`] };
@@ -1774,7 +1834,7 @@ NS.G({
       if (kd === 'gl') return { p: H.cat(`The GCD of ${a} and ${b} times their LCM is`), a: A.num(a * b), params: { a, b }, steps: [`GCD × LCM always equals the product of the two numbers.`, `${a} × ${b} = ${hl(fm(a * b))}`] };
       const t = [r.pick([4, 6, 8, 9, 10, 12]), r.pick([14, 15, 16, 18, 20]), r.pick([21, 24, 27, 30, 36])];
       const L = M.lcm(M.lcm(t[0], t[1]), t[2]);
-      return { p: H.cat(`The LCM of ${t.join(', ')} is`), a: A.num(L), params: { t }, steps: [`Take the highest power of each prime: ${t.map(n => `${n} = ${M.factor(n).map(([p, e]) => e > 1 ? `${p}^${e}` : p).join('·')}`).join('; ')}.`, `LCM = ${hl(fm(L))}`] };
+      return { p: H.cat(`The LCM of ${t[0]}, ${t[1]}, and ${t[2]} is`), a: A.num(L), params: { t }, steps: [`Take the highest power of each prime: ${t.map(n => `${n} = ${M.factor(n).map(([p, e]) => e > 1 ? `${p}^${e}` : p).join('·')}`).join('; ')}.`, `LCM = ${hl(fm(L))}`] };
     },
   });
 
@@ -1829,7 +1889,7 @@ NS.G({
       const m = r.pick([5, 7, 9, 11, 13]); let a; do { a = r.int(2, m - 1); } while (M.gcd(a, m) !== 1);
       const b = r.int(1, m - 1);
       let x = 0; while ((a * x - b) % m !== 0) x++;
-      if (r.chance(0.5)) return { p: H.cat(`If ${a}x ≡ ${b} (mod ${m}) and 0 ≤ x < ${m}, then x =`), a: A.num(x), params: { a, b, m }, steps: [`Try x = 0, 1, 2, … or add ${m}s to ${b} until ${a} divides it.`, `${a} × ${x} = ${a * x}, and ${a * x} ≡ ${b} (mod ${m}). x = ${hl(x)}`] };
+      if (r.chance(0.5)) return { p: H.cat(`Find x, 0 ≤ x ≤ ${m - 1}, if ${a}x ≡ ${b} (mod ${m}). x =`), a: A.num(x), params: { a, b, m }, steps: [`Try x = 0, 1, 2, … or add ${m}s to ${b} until ${a} divides it.`, `${a} × ${x} = ${a * x}, and ${a * x} ≡ ${b} (mod ${m}). x = ${hl(x)}`] };
       const m1 = r.pick([3, 4, 5]); let m2; do { m2 = r.pick([7, 8, 9, 11]); } while (M.gcd(m1, m2) !== 1); const r1 = r.int(1, m1 - 1), r2 = r.int(1, m2 - 1);
       let y = 1; while (y % m1 !== r1 || y % m2 !== r2) y++;
       return { p: H.cat(`The smallest positive integer that leaves remainder ${r1} when divided by ${m1} and remainder ${r2} when divided by ${m2} is`), a: A.num(y), params: { m1, m2, r1, r2 }, steps: [`List numbers that leave ${r2} mod ${m2}: ${r2}, ${r2 + m2}, ${r2 + 2 * m2}, …`, `First one that leaves ${r1} mod ${m1}: ${hl(y)}`] };
@@ -1917,7 +1977,7 @@ NS.G({
         return { p: H.cat(`The ${NS.ord(k)} term of 1, 1, 2, 3, 5, 8, … is`), a: A.num(f[k - 1]), params: { kd, k }, steps: [`Each term is the sum of the two before it.`, `${f.slice(-4).join(', ')} → the ${NS.ord(k)} is ${hl(f[k - 1])}`] }; }
       const a = r.int(1, 6), b = r.int(1, 9); const f = [a, b]; while (f.length < 10) f.push(f[f.length - 1] + f[f.length - 2]);
       const s = f.reduce((x, y) => x + y, 0);
-      return { p: H.cat(`The sum of the first 10 terms of ${a}, ${b}, ${a + b}, ${a + 2 * b}, … (each term is the sum of the two before it) is`), a: A.num(s), params: { kd, a, b }, steps: [`For 10 terms of any Fibonacci-style sequence, the sum is 11 × the 7th term.`, `7th term = ${f[6]}. 11 × ${f[6]} = ${hl(s)}`] };
+      return { p: H.cat(`The sum of the first 10 terms of ${f.slice(0, 6).join(', ')}, … is`), a: A.num(s), params: { kd, a, b }, steps: [`For 10 terms of any Fibonacci-style sequence, the sum is 11 × the 7th term.`, `7th term = ${f[6]}. 11 × ${f[6]} = ${hl(s)}`] };
     },
   });
 
@@ -1929,13 +1989,13 @@ NS.G({
       const kd = lv === 'ms' ? r.pick(['to10', 'from10', 'from10', 'b2b']) : r.pick(['to10', 'from10', 'b2b', 'b2b']);
       if (kd === 'to10') { const b = r.pick([2, 3, 4, 5, 6, 7, 8]); const n = r.int(b * b, b ** 3 * 2); const s = toB(n, b);
         const terms = s.split('').map((d, i) => `${d}×${b}^${s.length - 1 - i}`);
-        return { p: H.cat(H.base(s, b), ' = '), suffix: '(base 10)', a: A.num(n), params: { s, b }, steps: [`Place values: ${terms.join(' + ')}.`, `= ${hl(n)}`] }; }
+        return { p: H.cat(H.base(s, b), ' = '), suffix: 'base 10', a: A.num(n), params: { s, b }, steps: [`Place values: ${terms.join(' + ')}.`, `= ${hl(n)}`] }; }
       if (kd === 'from10') { const b = r.pick([2, 3, 4, 5, 6, 7, 8, 9]); const n = r.int(b + 2, Math.min(300, b ** 3)); const s = toB(n, b);
         const divs = []; let x = n; while (x) { divs.push(`${x} ÷ ${b} = ${Math.floor(x / b)} r ${x % b}`); x = Math.floor(x / b); }
-        return { p: H.cat(H.base(String(n), 10), ' = '), suffix: `(base ${b})`, a: A.text(s, 'base'), params: { n, b }, steps: [`Divide by ${b} repeatedly and read the remainders bottom to top.`, divs.join('; '), `Answer: ${hl(s)} in base ${b}`] }; }
+        return { p: H.cat(H.base(String(n), 10), ' = '), suffix: `base ${b}`, a: A.text(s, 'base'), params: { n, b }, steps: [`Divide by ${b} repeatedly and read the remainders bottom to top.`, divs.join('; '), `Answer: ${hl(s)} in base ${b}`] }; }
       const [b1, b2] = r.pick(lv === 'ms' ? [[2, 4], [2, 8], [4, 2], [8, 2]] : [[2, 4], [2, 8], [4, 2], [8, 2], [2, 16], [3, 9], [9, 3]]); const n = r.int(9, b2 === 16 || b1 === 16 ? 255 : 120); const s = toB(n, b1), t = toB(n, b2);
       const g = Math.round(Math.log(Math.max(b1, b2)) / Math.log(Math.min(b1, b2)));
-      return { p: H.cat(H.base(s, b1), ' = '), suffix: `(base ${b2})`, a: A.text(t, 'base'), params: { n, b1, b2 }, steps: [b1 < b2 ? `Group the digits in blocks of ${g} from the right; each block becomes one digit in base ${b2}.` : `Expand each digit into ${g} digits in base ${b2}.`, `Answer: ${hl(t)} in base ${b2}`] };
+      return { p: H.cat(H.base(s, b1), ' = '), suffix: `base ${b2}`, a: A.text(t, 'base'), params: { n, b1, b2 }, steps: [b1 < b2 ? `Group the digits in blocks of ${g} from the right; each block becomes one digit in base ${b2}.` : `Expand each digit into ${g} digits in base ${b2}.`, `Answer: ${hl(t)} in base ${b2}`] };
     },
   });
 
@@ -1945,11 +2005,11 @@ NS.G({
       const b = r.pick([4, 5, 6, 7, 8, 3]); const x = r.int(b + 1, b * b * 2), y = r.int(2, b * b * 2);
       const op = lv === 'ms' ? r.pick(['+', '+', '−']) : r.pick(['+', '−', '×']);
       let a, steps;
-      if (op === '×') { const y2 = r.int(2, b - 1); a = x * y2; steps = [`Work in base 10: ${x} × ${y2} = ${a}.`, `Convert back to base ${b}: ${hl(toB(a, b))}`]; return { p: H.cat(H.base(toB(x, b), b), ' × ', H.base(toB(y2, b), b), ' = '), suffix: `(base ${b})`, a: A.text(toB(a, b), 'base'), params: { x, y: y2, b, op }, steps }; }
+      if (op === '×') { const y2 = r.int(2, b - 1); a = x * y2; steps = [`Work in base 10: ${x} × ${y2} = ${a}.`, `Convert back to base ${b}: ${hl(toB(a, b))}`]; return { p: H.cat(H.base(toB(x, b), b), ' × ', H.base(toB(y2, b), b), ' = '), suffix: `base ${b}`, a: A.text(toB(a, b), 'base'), params: { x, y: y2, b, op }, steps }; }
       if (op === '−' && y > x) return this.gen(r, lv);
       a = op === '+' ? x + y : x - y;
       steps = [`Easiest: convert to base 10. ${NS.m(`${toB(x, b)}_{${b}} = ${x}`)} and ${NS.m(`${toB(y, b)}_{${b}} = ${y}`)}.`, `${x} ${op} ${y} = ${a}, back to base ${b}: ${hl(toB(a, b))}`];
-      return { p: H.cat(H.base(toB(x, b), b), ` ${op} `, H.base(toB(y, b), b), ' = '), suffix: `(base ${b})`, a: A.text(toB(a, b), 'base'), params: { x, y, b, op }, steps };
+      return { p: H.cat(H.base(toB(x, b), b), ` ${op} `, H.base(toB(y, b), b), ' = '), suffix: `base ${b}`, a: A.text(toB(a, b), 'base'), params: { x, y, b, op }, steps };
     },
   });
 
@@ -1958,7 +2018,7 @@ NS.G({
     gen(r) {
       const b = r.pick([2, 4, 5, 8]); const d1 = r.int(1, b - 1), d2 = r.int(1, b - 1);
       const v = q(d1, b).add(q(d2, b * b));
-      return { p: H.cat(H.base(`0.${d1}${d2}`, b), ' = '), suffix: '(base 10 fraction)', a: A.num(v, 'frac'), params: { b, d1, d2 }, steps: [`0.${d1}${d2} in base ${b} = ${d1}/${b} + ${d2}/${b * b}.`, `= ${(d1 * b + d2)}/${b * b} = ${hl(H.Qi(v).h)}`] };
+      return { p: H.cat(H.base(`0.${d1}${d2}`, b), ' = '), suffix: 'base 10 (fraction)', a: A.num(v, 'frac'), params: { b, d1, d2 }, steps: [`0.${d1}${d2} in base ${b} = ${d1}/${b} + ${d2}/${b * b}.`, `= ${(d1 * b + d2)}/${b * b} = ${hl(H.Qi(v).h)}`] };
     },
   });
 })();
@@ -2004,12 +2064,12 @@ NS.G({
       const x = r.int(-9, 15) || 4;
       if (r.chance(0.5)) {
         const a = r.int(2, 9), c = r.int(1, a - 1) || 1; const b = r.int(-15, 15), d = a * x + b - c * x;
-        return { p: H.cat(`If ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${c === 1 ? '' : c}x ${d < 0 ? '−' : '+'} ${Math.abs(d)}, then x =`), a: A.num(x), params: { a, b, c, d },
+        return { p: H.cat(`If ${a}x${b ? ` ${b < 0 ? '−' : '+'} ${Math.abs(b)}` : ''} = ${c === 1 ? '' : c}x${d ? ` ${d < 0 ? '−' : '+'} ${Math.abs(d)}` : ''}, then x =`), a: A.num(x), params: { a, b, c, d },
           steps: [`Move x terms left, numbers right: ${a - c}x = ${d - b}.`, `x = ${hl(x)}`] };
       }
       const den = r.pick([2, 3, 4, 5]); const num = r.int(1, den - 1) || 1; if (M.gcd(num, den) !== 1) return this.gen(r, lv);
       const X = den * r.int(-6, 9); const b = r.int(-12, 12); const rhs = num * X / den + b;
-      return { p: H.cat('If ', H.frac(num, den), `x ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${rhs}, then x =`), a: A.num(X), params: { num, den, b, rhs },
+      return { p: H.cat('If ', H.frac(num, den), `x${b ? ` ${b < 0 ? '−' : '+'} ${Math.abs(b)}` : ''} = ${rhs}, then x =`), a: A.num(X), params: { num, den, b, rhs },
         steps: [`${num}/${den} x = ${rhs - b}.`, `x = ${rhs - b} × ${den}/${num} = ${hl(X)}`] };
     },
   });
@@ -2141,7 +2201,7 @@ NS.G({
       const n = r.int(4, 7), a = r.int(1, 3), b = r.int(1, 4) * r.sign();
       const bt = `(${a === 1 ? '' : a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)})`;
       if (kd === 'coef') { const k = r.int(1, n - 1); const v = M.C(n, k) * a ** k * b ** (n - k);
-        return { p: H.cat('The coefficient of ', H.pow('x', k), ' in the expansion of ', H.pow(bt, n), ' is'), a: A.num(v), params: { n, a, b, k }, steps: [`The term is ${NS.m(`\\binom{${n}}{${k}}(${a}x)^{${k}}(${b})^{${n - k}}`)}.`, `${M.C(n, k)} × ${a ** k} × ${b ** (n - k)} = ${hl(fm(v))}`] }; }
+        return { p: H.cat('The coefficient of the ', k === 1 ? H.L('x') : H.pow('x', k), ' term in the expansion of ', H.pow(bt, n), ' is'), a: A.num(v), params: { n, a, b, k }, steps: [`The term is ${NS.m(`\\binom{${n}}{${k}}(${a}x)^{${k}}(${b})^{${n - k}}`)}.`, `${M.C(n, k)} × ${a ** k} × ${b ** (n - k)} = ${hl(fm(v))}`] }; }
       if (kd === 'sum') { const v = (a + b) ** n; return { p: H.cat('The sum of the coefficients of ', H.pow(bt, n), ' is'), a: A.num(v), params: { n, a, b }, steps: [`Set x = 1: (${a} ${b < 0 ? '−' : '+'} ${Math.abs(b)})^${n}.`, `${a + b}^${n} = ${hl(fm(v))}`] }; }
       return { p: H.cat('The number of terms in the expansion of ', H.pow(bt, n + 3), ' is'), a: A.num(n + 4), params: { n }, steps: [`(x + y)^n has n + 1 terms.`, `${n + 3} + 1 = ${hl(n + 4)}`] };
     },
@@ -2164,7 +2224,7 @@ NS.G({
     gen(r) {
       if (r.chance(0.5)) { const a = r.int(2, 9), b = r.int(1, 12) * r.sign(), c = r.int(-10, 40); const lim = q(c - b, a);
         const largest = lim.isInt() ? Number(lim.n) - 1 : Math.floor(lim.num());
-        return { p: H.cat(`The largest integer x with ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)} < ${c} is`), a: A.num(largest), params: { a, b, c }, steps: [`${a}x < ${c - b}, so x < ${H.Qf(lim).h}.`, `Largest integer: ${hl(largest)}`] }; }
+        return { p: H.cat(`The largest integer x such that ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)} < ${c} is`), a: A.num(largest), params: { a, b, c }, steps: [`${a}x < ${c - b}, so x < ${H.Qf(lim).h}.`, `Largest integer: ${hl(largest)}`] }; }
       let h = r.int(-5, 8); if (!h) h = 3; const k = r.int(2, 9); const strict = r.chance(0.5); const n = strict ? 2 * k - 1 : 2 * k + 1;
       return { p: H.cat(`How many integers satisfy |x ${h < 0 ? '+' : '−'} ${Math.abs(h)}| ${strict ? '<' : '≤'} ${k}?`), a: A.num(n), params: { h, k, strict }, steps: [`${h - k} ${strict ? '<' : '≤'} x ${strict ? '<' : '≤'} ${h + k}.`, `Count: ${hl(n)}`] };
     },
@@ -2175,9 +2235,9 @@ NS.G({
     id: 'functions', trick: 'functions', col: { ms: 4, hs: 4 }, w: 0.6,
     gen(r) {
       const a = r.int(2, 6), b = r.int(-9, 9), c = r.int(1, 3), d = r.int(-5, 5); const x = r.int(-3, 4);
-      const f = H.L(`f(x) = ${a}x ${b < 0 ? '-' : '+'} ${Math.abs(b)}`);
+      const tail = (n) => (n ? ` ${n < 0 ? '-' : '+'} ${Math.abs(n)}` : ''); const f = H.L(`f(x) = ${a}x${tail(b)}`);
       if (r.chance(0.5)) { const g = c * x * x + d; const v = a * g + b;
-        return { p: H.cat(f, ' and ', H.L(`g(x) = ${c === 1 ? '' : c}x^2 ${d < 0 ? '-' : '+'} ${Math.abs(d)}`), '. Then ', H.L(`f(g(${x})) =`)), a: A.num(v), params: { a, b, c, d, x }, steps: [`Inside first: g(${x}) = ${g}.`, `f(${g}) = ${a}(${g}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${hl(v)}`] }; }
+        return { p: H.cat('If ', f, ' and ', H.L(`g(x) = ${c === 1 ? '' : c}x^2${tail(d)}`), ', then ', H.L(`f(g(${x})) =`)), a: A.num(v), params: { a, b, c, d, x }, steps: [`Inside first: g(${x}) = ${g}.`, `f(${g}) = ${a}(${g}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${hl(v)}`] }; }
       if (r.chance(0.3)) { const m = r.int(2, 6), k = r.int(1, 12) * m + r.pick([0, 0, 1, 2]); const v = q(k, m);
         return { p: H.cat('The domain of f(x) = ', H.sqrt(`${k} − ${m}x`), ' is x ≤ k. k ='), a: A.num(v), params: { m, k, dom: 1 }, steps: [`The inside of a square root can't be negative: ${k} − ${m}x ≥ 0.`, `x ≤ ${k}/${m}, so k = ${hl(H.Qf(v).h)}`] }; }
       const y = a * x + b;
@@ -2200,7 +2260,7 @@ NS.G({
       const n = r.pick([5, 6, 8, 9, 10, 12, 15, 18, 20, 24, 30, 36]);
       if (kd === 'interior') { const v = q(180 * (n - 2), n); return { p: H.cat(`Each interior angle of a regular ${NAMES[n]} measures`), suffix: '°', a: A.num(v), params: { kd, n }, steps: [`Exterior angle = 360 ÷ ${n} = ${H.Qf(q(360, n)).h}°.`, `Interior = 180 − ${H.Qf(q(360, n)).h} = ${hl(H.Qf(v).h)}°`] }; }
       if (kd === 'exterior') { const v = q(360, n); return { p: H.cat(`Each exterior angle of a regular ${NAMES[n]} measures`), suffix: '°', a: A.num(v), params: { kd, n }, steps: [`Exterior angles always total 360°.`, `360 ÷ ${n} = ${hl(H.Qf(v).h)}°`] }; }
-      if (kd === 'sum') { const m = r.int(5, 20); return { p: H.cat(`The sum of the interior angles of a ${m}-sided polygon is`), suffix: '°', a: A.num(180 * (m - 2)), params: { kd, m }, steps: [`(n − 2) × 180 = ${m - 2} × 180.`, `= ${hl(fm(180 * (m - 2)))}°`] }; }
+      if (kd === 'sum') { const m = r.int(5, 20); return { p: H.cat(`The sum of the interior angles of ${NS.an(m)} ${m}-sided polygon is`), suffix: '°', a: A.num(180 * (m - 2)), params: { kd, m }, steps: [`(n − 2) × 180 = ${m - 2} × 180.`, `= ${hl(fm(180 * (m - 2)))}°`] }; }
       if (kd === 'diag') { const m = r.int(5, lv === 'ms' ? 15 : 25); const v = m * (m - 3) / 2; return { p: H.cat(`A convex polygon with ${m} sides has how many diagonals?`), a: A.num(v), params: { kd, m }, steps: [`n(n − 3)/2 = ${m} × ${m - 3} / 2.`, `= ${hl(v)}`] }; }
       const ang = 180 - 360 / n; return { p: H.cat(`Each interior angle of a regular polygon is ${ang}°. How many sides does it have?`), a: A.num(n), params: { kd, n }, steps: [`Exterior angle = 180 − ${ang} = ${360 / n}°.`, `Sides = 360 ÷ ${360 / n} = ${hl(n)}`] };
     },
@@ -2245,26 +2305,26 @@ NS.G({
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['box', 'boxSA', 'cubeSA', 'cyl', 'sphere', 'sphSA', 'sphSA', 'cone', 'boxDiag'] : ['cubeSA', 'cyl', 'sphere', 'cone', 'sphSA', 'boxDiag']);
       if (kd === 'box') { const a = r.int(2, 12), b = r.int(2, 12), c = r.int(2, 9); return { p: H.cat(`A rectangular box is ${a} by ${b} by ${c}. Its volume is`), a: A.num(a * b * c), params: { kd, a, b, c }, steps: [`${NS.m('V = lwh')}.`, `${a} × ${b} × ${c} = ${hl(a * b * c)}`] }; }
-      if (kd === 'boxSA') { const a = r.int(2, 10), b = r.int(2, 10), c = r.int(2, 9); const v = 2 * (a * b + b * c + a * c); return { p: H.cat(`The surface area of a ${a} by ${b} by ${c} box is`), a: A.num(v), params: { kd, a, b, c }, steps: [`${NS.m('2(lw + wh + lh)')} = 2(${a * b} + ${b * c} + ${a * c}).`, `= ${hl(v)}`] }; }
+      if (kd === 'boxSA') { const a = r.int(2, 10), b = r.int(2, 10), c = r.int(2, 9); const v = 2 * (a * b + b * c + a * c); return { p: H.cat(`The surface area of ${NS.an(a)} ${a} by ${b} by ${c} box is`), a: A.num(v), params: { kd, a, b, c }, steps: [`${NS.m('2(lw + wh + lh)')} = 2(${a * b} + ${b * c} + ${a * c}).`, `= ${hl(v)}`] }; }
       if (kd === 'cubeSA') { const s = r.int(2, 12); return { p: H.cat(`A cube has volume ${s ** 3}. Its total surface area is`), a: A.num(6 * s * s), params: { kd, s }, steps: [`Edge = ∛${s ** 3} = ${s}.`, `6 × ${s}² = ${hl(6 * s * s)}`] }; }
       if (kd === 'cyl') { const rr = r.int(2, 9), h = r.int(2, 12); return { p: H.cat(`A cylinder has radius ${rr} and height ${h}. Its volume is kπ. k =`), a: A.num(rr * rr * h), params: { kd, rr, h }, steps: [`${NS.m('V = \\pi r^2 h')}.`, `k = ${rr * rr} × ${h} = ${hl(rr * rr * h)}`] }; }
       if (kd === 'sphere') { const rr = 3 * r.int(1, 4); const v = q(4 * rr ** 3, 3); return { p: H.cat(`A sphere has radius ${rr}. Its volume is kπ. k =`), a: A.num(v), params: { kd, rr }, steps: [`${NS.m('V = \\tfrac43 \\pi r^3')}.`, `k = 4/3 × ${rr ** 3} = ${hl(H.Qf(v).h)}`] }; }
       if (kd === 'sphSA') { const rr = r.int(2, 12); return { p: H.cat(`A sphere has radius ${rr}. Its surface area is kπ. k =`), a: A.num(4 * rr * rr), params: { kd, rr }, steps: [`Surface area: ${NS.m('4\\pi r^2')}.`, `k = 4 × ${rr * rr} = ${hl(4 * rr * rr)}`] }; }
       if (kd === 'cone') { const rr = r.int(2, 9), h = 3 * r.int(1, 5); return { p: H.cat(`A cone has radius ${rr} and height ${h}. Its volume is kπ. k =`), a: A.num(rr * rr * h / 3), params: { kd, rr, h }, steps: [`${NS.m('V = \\tfrac13 \\pi r^2 h')}.`, `k = ${rr * rr} × ${h}/3 = ${hl(rr * rr * h / 3)}`] }; }
       const [a, b, c, d] = r.pick([[1, 2, 2, 3], [2, 3, 6, 7], [1, 4, 8, 9], [4, 4, 7, 9], [2, 6, 9, 11], [6, 6, 7, 11], [3, 4, 12, 13], [2, 10, 11, 15]]);
-      return { p: H.cat(`The longest diagonal of a ${a} by ${b} by ${c} box is`), a: A.num(d), params: { kd, a, b, c }, steps: [`√(${a}² + ${b}² + ${c}²) = √${a * a + b * b + c * c}.`, `= ${hl(d)}`] };
+      return { p: H.cat(`The longest diagonal of ${NS.an(a)} ${a} by ${b} by ${c} box is`), a: A.num(d), params: { kd, a, b, c }, steps: [`√(${a}² + ${b}² + ${c}²) = √${a * a + b * b + c * c}.`, `= ${hl(d)}`] };
     },
   });
 
   /* ---------- Platonic solids & Euler ---------- */
-  const SOLIDS = [['tetrahedron', 4, 4, 6], ['cube (hexahedron)', 6, 8, 12], ['octahedron', 8, 6, 12], ['dodecahedron', 12, 20, 30], ['icosahedron', 20, 12, 30]];
+  const SOLIDS = [['tetrahedron', 4, 4, 6], ['cube', 6, 8, 12], ['octahedron', 8, 6, 12], ['dodecahedron', 12, 20, 30], ['icosahedron', 20, 12, 30]];
   G({
     id: 'platonic', trick: 'platonic', col: { ms: 3, hs: 3 },
     gen(r) {
       if (r.chance(0.3)) { const F = r.int(5, 20), V = r.int(5, 20); const E = F + V - 2; return { p: H.cat(`A convex polyhedron has ${F} faces and ${V} vertices. How many edges does it have?`), a: A.num(E), params: { F, V }, steps: [`Euler: F + V − E = 2.`, `E = ${F} + ${V} − 2 = ${hl(E)}`] }; }
       const [name, F, V, E] = r.pick(SOLIDS); const kd = r.pick(['faces', 'vertices', 'edges']);
       const v = { faces: F, vertices: V, edges: E }[kd];
-      return { p: H.cat(`A regular ${name} has how many ${kd}?`), a: A.num(v), params: { name, kd }, steps: [`${name[0].toUpperCase() + name.slice(1)}: ${F} faces, ${V} vertices, ${E} edges.`, `Answer: ${hl(v)}`] };
+      return { p: H.cat(`How many ${kd} does ${name === 'cube' ? 'a cube' : `a regular ${name}`} have?`), a: A.num(v), params: { name, kd }, steps: [`${name[0].toUpperCase() + name.slice(1)}: ${F} faces, ${V} vertices, ${E} edges.`, `Answer: ${hl(v)}`] };
     },
   });
 
@@ -2274,17 +2334,18 @@ NS.G({
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['dist', 'slope', 'mid', 'lineSlope', 'lineSlope', 'yint'] : ['dist', 'slope', 'lineSlope', 'ptLine', 'yint']);
       if (kd === 'dist') { const [a, b, c] = r.pick(TRIPLES.slice(0, 4)); const x1 = r.int(-5, 6), y1 = r.int(-5, 6); const sx = r.sign(), sy = r.sign();
-        return { p: H.cat(`The distance between (${x1}, ${y1}) and (${x1 + sx * a}, ${y1 + sy * b}) is`), a: A.num(c), params: { kd, x1, y1, a, b }, steps: [`Changes: ${a} and ${b}. That's a ${a}–${b}–${c} triangle.`, `Distance ${hl(c)}`] }; }
+        return { p: H.cat(`The distance between (${x1}, ${y1}) and (${x1 + sx * a}, ${y1 + sy * b}) is`), a: A.num(c), params: { kd, x1, y1, a, b }, steps: [`Changes: ${a} and ${b}. That's ${/^(8|1[18](?!\d))/.test(String(a)) ? 'an' : 'a'} ${a}–${b}–${c} triangle.`, `Distance ${hl(c)}`] }; }
       if (kd === 'mid') { const x1 = r.int(-9, 12), x2 = r.int(-9, 12), y1 = r.int(-9, 9), y2 = r.int(-9, 9); const v = q(x1 + x2, 2);
         return { p: H.cat(`The x-coordinate of the midpoint of (${x1}, ${y1}) and (${x2}, ${y2}) is`), a: A.num(v), params: { kd, x1, x2 }, steps: [`Average the x's: (${x1} + ${x2})/2.`, `= ${hl(H.Qf(v).h)}`] }; }
       if (kd === 'slope') { const x1 = r.int(-6, 6), y1 = r.int(-6, 6); let x2 = r.int(-6, 8); if (x2 === x1) x2 = x1 + 3; const y2 = r.int(-6, 9); const v = q(y2 - y1, x2 - x1);
         return { p: H.cat(`The slope of the line through (${x1}, ${y1}) and (${x2}, ${y2}) is`), a: A.num(v), params: { kd, x1, y1, x2, y2 }, steps: [`Rise over run: (${y2} − ${y1 < 0 ? `(${y1})` : y1})/(${x2} − ${x1 < 0 ? `(${x1})` : x1}) = ${y2 - y1}/${x2 - x1}.`, `= ${hl(H.Qf(v).h)}`] }; }
       const a = r.int(1, 9) * r.sign(), b = r.int(1, 9) * r.sign(), c = r.int(-20, 20);
-      if (kd === 'lineSlope') { const v = q(-a, b); return { p: H.cat(`The slope of ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)}y = ${c} is`), a: A.num(v), params: { kd, a, b, c }, steps: [`For ${NS.m('Ax + By = C')}, the slope is ${NS.m('-\\frac AB')} = ${-a}/${b}.`, `= ${hl(H.Qf(v).h)}`] }; }
-      if (kd === 'yint') { const v = q(c, b); return { p: H.cat(`The y-intercept of ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)}y = ${c} is`), a: A.num(v), params: { kd, a, b, c }, steps: [`Set x = 0: ${b}y = ${c}.`, `y = ${hl(H.Qf(v).h)}`] }; }
+      const lineEq = `${a === 1 ? '' : a === -1 ? '−' : a}x ${b < 0 ? '−' : '+'} ${Math.abs(b) === 1 ? '' : Math.abs(b)}y = ${c}`;
+      if (kd === 'lineSlope') { const v = q(-a, b); return { p: H.cat(`The slope of the line ${lineEq} is`), a: A.num(v), params: { kd, a, b, c }, steps: [`For ${NS.m('Ax + By = C')}, the slope is ${NS.m('-\\frac AB')} = ${-a}/${b}.`, `= ${hl(H.Qf(v).h)}`] }; }
+      if (kd === 'yint') { const v = q(c, b); return { p: H.cat(`The y-intercept of the line ${lineEq} is`), a: A.num(v), params: { kd, a, b, c }, steps: [`Set x = 0: ${b}y = ${c}.`, `y = ${hl(H.Qf(v).h)}`] }; }
       const [A0, B0, C0] = r.pick([[3, 4, 5], [4, 3, 5], [5, 12, 13], [12, 5, 13], [6, 8, 10], [8, 15, 17]]); const sA = r.sign(), sB = r.sign(); const cc = r.int(-15, 15); const x0 = r.int(-4, 6), y0 = r.int(-4, 6);
       const v = q(Math.abs(sA * A0 * x0 + sB * B0 * y0 + cc), C0); if (v.sign() === 0) return this.gen(r, lv);
-      return { p: H.cat(`The distance from (${x0}, ${y0}) to the line ${sA * A0}x ${sB < 0 ? '−' : '+'} ${B0}y ${cc < 0 ? '−' : '+'} ${Math.abs(cc)} = 0 is`), a: A.num(v), params: { kd, A0, B0, sA, sB, cc, x0, y0 }, steps: [`Distance: ${NS.m('\\frac{|Ax_0 + By_0 + C|}{\\sqrt{A^2 + B^2}}')}.`, `|${sA * A0 * x0} ${sB * B0 * y0 < 0 ? '−' : '+'} ${Math.abs(sB * B0 * y0)} ${cc < 0 ? '−' : '+'} ${Math.abs(cc)}| / ${C0} = ${hl(H.Qf(v).h)}`] };
+      return { p: H.cat(`The distance from (${x0}, ${y0}) to the line ${sA * A0}x ${sB < 0 ? '−' : '+'} ${B0}y${cc ? ` ${cc < 0 ? '−' : '+'} ${Math.abs(cc)}` : ''} = 0 is`), a: A.num(v), params: { kd, A0, B0, sA, sB, cc, x0, y0 }, steps: [`Distance: ${NS.m('\\frac{|Ax_0 + By_0 + C|}{\\sqrt{A^2 + B^2}}')}.`, `|${sA * A0 * x0} ${sB * B0 * y0 < 0 ? '−' : '+'} ${Math.abs(sB * B0 * y0)} ${cc < 0 ? '−' : '+'} ${Math.abs(cc)}| / ${C0} = ${hl(H.Qf(v).h)}`] };
     },
   });
 
@@ -2312,7 +2373,7 @@ NS.G({
       const kd = r.pick(lv === 'ms' ? ['third', 'ext', 'comp', 'similar', 'isos'] : ['third', 'ext', 'inscribed', 'similar', 'isos', 'comp']);
       if (kd === 'third') { const a = r.int(25, 95), b = r.int(20, 150 - a); return { p: H.cat(`Two angles of a triangle measure ${a}° and ${b}°. The third angle measures`), suffix: '°', a: A.num(180 - a - b), params: { kd, a, b }, steps: [`Angles in a triangle add to 180°.`, `180 − ${a} − ${b} = ${hl(180 - a - b)}°`] }; }
       if (kd === 'ext') { const a = r.int(25, 80), b = r.int(25, 80); return { p: H.cat(`Two interior angles of a triangle are ${a}° and ${b}°. The exterior angle at the third vertex measures`), suffix: '°', a: A.num(a + b), params: { kd, a, b }, steps: [`An exterior angle equals the sum of the two remote interior angles.`, `${a} + ${b} = ${hl(a + b)}°`] }; }
-      if (kd === 'comp') { const a = r.int(12, 78); const sup = r.chance(0.5); const v = (sup ? 180 : 90) - a; return { p: H.cat(`The ${sup ? 'supplement' : 'complement'} of a ${a}° angle measures`), suffix: '°', a: A.num(v), params: { kd, a, sup }, steps: [`${sup ? 'Supplementary angles add to 180°' : 'Complementary angles add to 90°'}.`, `${sup ? 180 : 90} − ${a} = ${hl(v)}°`] }; }
+      if (kd === 'comp') { const a = r.int(12, 78); const sup = r.chance(0.5); const v = (sup ? 180 : 90) - a; return { p: H.cat(`The ${sup ? 'supplement' : 'complement'} of ${NS.an(a)} ${a}° angle measures`), suffix: '°', a: A.num(v), params: { kd, a, sup }, steps: [`${sup ? 'Supplementary angles add to 180°' : 'Complementary angles add to 90°'}.`, `${sup ? 180 : 90} − ${a} = ${hl(v)}°`] }; }
       if (kd === 'isos') { const v = 2 * r.int(10, 60) + (r.chance(0.5) ? 1 : 0); const base = q(180 - v, 2); return { p: H.cat(`The vertex angle of an isosceles triangle is ${v}°. Each base angle measures`), suffix: '°', a: A.num(base), params: { kd, v }, steps: [`The two base angles are equal and share 180 − ${v} = ${180 - v}°.`, `${180 - v} ÷ 2 = ${hl(H.Qf(base).h)}°`] }; }
       if (kd === 'inscribed') { const arc = 2 * r.int(15, 85); return { p: H.cat(`An inscribed angle intercepts an arc of ${arc}°. The angle measures`), suffix: '°', a: A.num(arc / 2), params: { kd, arc }, steps: [`An inscribed angle is half its intercepted arc.`, `${arc} ÷ 2 = ${hl(arc / 2)}°`] }; }
       const s1 = r.int(3, 9); let s2 = r.int(4, 15); if (s2 === s1) s2++; const t = r.int(2, 12); const v = q(t * s2, s1);
@@ -2358,9 +2419,8 @@ NS.G({
   G({
     id: 'roman', trick: 'roman', col: { ms: 1, hs: 1 },
     gen(r) {
-      const kd = r.pick(['toArabic', 'toRoman', 'arith']);
-      if (kd === 'toArabic') { const n = r.int(40, 3999); const s = toRoman(n); return { p: H.cat(`${s} =`), suffix: '(Arabic numeral)', a: A.num(n), params: { s }, steps: [`Split into place values: ${romanParts(n)}.`, `Total: ${hl(n)}`] }; }
-      if (kd === 'toRoman') { const n = r.int(40, 2999); const s = toRoman(n); return { p: H.cat(`${n} =`), suffix: '(Roman numeral)', a: A.text(s, 'roman'), params: { n }, steps: [`Convert each place: ${romanParts(n)}.`, `${hl(s)}`] }; }
+      const kd = r.pick(['toArabic', 'toArabic', 'arith']);
+      if (kd === 'toArabic') { let n; do { n = r.int(40, 3999); } while (toRoman(n).length < 5); const s = toRoman(n); return { p: H.cat(`${s} =`), suffix: '(Arabic numeral)', a: A.num(n), params: { s }, steps: [`Split into place values: ${romanParts(n)}.`, `Total: ${hl(n)}`] }; }
       const x = r.int(500, 2500), y = r.int(40, 900); const plus = r.chance(0.5); const v = plus ? x + y : x - y;
       return { p: H.cat(`${toRoman(x)} ${plus ? '+' : '−'} ${toRoman(y)} =`), suffix: '(Arabic numeral)', a: A.num(v), params: { x, y, plus }, steps: [`${toRoman(x)} = ${x}, ${toRoman(y)} = ${y}.`, `${x} ${plus ? '+' : '−'} ${y} = ${hl(v)}`] };
     },
@@ -2418,7 +2478,7 @@ NS.G({
       const w = r.pick(['BOOK', 'LEVEL', 'APPLE', 'TEXAS', 'BANANA', 'COOKIE', 'STATS', 'RADAR', 'SENSE', 'NUMBER', 'LETTER', 'GEESE', 'PEPPER', 'TOOTH']);
       const cnt = {}; for (const ch of w) cnt[ch] = (cnt[ch] || 0) + 1; const reps = Object.entries(cnt).filter(([, c]) => c > 1);
       const v = reps.reduce((acc, [, c]) => acc / M.fact(c), M.fact(w.length));
-      return { p: H.cat(`How many distinct ways can the letters of ${w} be arranged?`), a: A.num(v), params: { kd, w }, steps: [`${w.length}! = ${M.fact(w.length)}${reps.length ? `, divided by ${reps.map(([ch, c]) => `${c}! for the ${ch}s`).join(' and ')}` : ''}.`, `= ${hl(v)}`] };
+      return { p: H.cat(`How many distinct ${w.length}-letter arrangements can be made from the letters of the word ${w}?`), a: A.num(v), params: { kd, w }, steps: [`${w.length}! = ${M.fact(w.length)}${reps.length ? `, divided by ${reps.map(([ch, c]) => `${c}! for the ${ch}s`).join(' and ')}` : ''}.`, `= ${hl(v)}`] };
     },
   });
 
@@ -2490,11 +2550,11 @@ NS.G({
       if (kd === 'dot') { const a = r.int(-6, 9), b = r.int(-6, 9), c = r.int(-6, 9), d = r.int(-6, 9); const v = a * c + b * d;
         return { p: H.cat(`⟨${a}, ${b}⟩ · ⟨${c}, ${d}⟩ =`.replace(/-/g, '−')), a: A.num(v), params: { a, b, c, d }, steps: [`Multiply matching parts and add: (${a})(${c}) + (${b})(${d}).`, `= ${hl(v)}`] }; }
       const [x, y, z] = r.pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [6, 8, 10], [7, 24, 25], [9, 40, 41]]);
-      if (kd === 'mag') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`The magnitude of ⟨${sx * x}, ${sy * y}⟩ is`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`√(${x}² + ${y}²). It is a ${x}–${y}–${z} triple.`, `= ${hl(z)}`] }; }
-      if (kd === 'polar') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`The point (${sx * x}, ${sy * y}) in polar form is (r, θ) with r > 0. r =`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`r = √(x² + y²).`, `= ${hl(z)}`] }; }
+      if (kd === 'mag') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`The magnitude of ⟨${sx * x}, ${sy * y}⟩ is`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`√(${x}² + ${y}²). It is ${NS.an(x)} ${x}–${y}–${z} triple.`, `= ${hl(z)}`] }; }
+      if (kd === 'polar') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`Let (${sx * x}, ${sy * y}) be the rectangular coordinates for the polar coordinates (r, θ), r > 0. r =`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`r = √(x² + y²).`, `= ${hl(z)}`] }; }
       const rr = 2 * r.int(1, 9); const th = r.pick([60, 120, 240, 300, 30, 150, 210, 330]); const useX = [60, 120, 240, 300].includes(th); const cs = useX ? { 60: q(1, 2), 120: q(-1, 2), 240: q(-1, 2), 300: q(1, 2) }[th] : { 30: q(1, 2), 150: q(1, 2), 210: q(-1, 2), 330: q(-1, 2) }[th];
       const v = cs.mul(rr);
-      return { p: H.cat(`The polar point (${rr}, ${th}°) has rectangular ${useX ? 'x' : 'y'}-coordinate`), a: A.num(v), params: { rr, th }, steps: [`${useX ? 'x = r cos θ' : 'y = r sin θ'} = ${rr} × ${H.Qf(cs).h}.`, `= ${hl(H.Qf(v).h)}`] };
+      return { p: H.cat(`Let (x, y) be the rectangular coordinates for the polar coordinates (${rr}, ${th}°). ${useX ? 'x' : 'y'} =`), a: A.num(v), params: { rr, th }, steps: [`${useX ? 'x = r cos θ' : 'y = r sin θ'} = ${rr} × ${H.Qf(cs).h}.`, `= ${hl(H.Qf(v).h)}`] };
     },
   });
 
@@ -3076,7 +3136,7 @@ NS.G({
       else { f = NS.SEQFAM.sq(); why = () => `These are the squares.`; }
       const n = kd === 'prime' ? r.int(9, 20) : kd === 'geo' ? r.int(6, d === 2 ? 11 : 8) : r.int(10, 18);
       const back = kd === 'arith' && r.chance(0.5) ? r.pick([-3, -2, 2, 3, 5]) : -1; const t = n + back;
-      const first = [1, 2, 3, 4].map(f); const v = f(t);
+      const first = [1, 2, 3, 4, 5].map(f); const v = f(t);
       const gap = back === -1 ? (kd === 'tri' ? `${fm(f(n))} − ${n} = ${hl(fm(v))}` : kd === 'plus' ? `${fm(f(n))} − ${n - 1} = ${hl(fm(v))}` : kd === 'geo' ? `${fm(f(n))} ÷ ${d} = ${hl(fm(v))}` : kd === 'arith' ? `${fm(f(n))} − ${d} = ${hl(fm(v))}` : `It's term ${t}: ${hl(fm(v))}`) : `${back > 0 ? 'Go up' : 'Go down'} ${Math.abs(back)} steps of ${d}: ${fm(f(n))} ${back > 0 ? '+' : '−'} ${Math.abs(back) * d} = ${hl(fm(v))}`;
       return { p: H.cat(`The ${NS.ord(n)} term of ${first.map(fm).join(', ')}, … is ${fm(f(n))}. The ${NS.ord(t)} term is`), a: A.num(v), params: { kd, a, d, n, t }, steps: [why(n), gap] };
     },
@@ -3141,11 +3201,11 @@ NS.G({
       const d = r.pick([3, 4, 6, 6, 8, 9, 11, 12, 15, 18]);
       for (let tries = 0; tries < 200; tries++) {
         const len = r.int(4, 5); const digs = Array.from({ length: len - 1 }, (_, i) => i === 0 ? r.int(1, 9) : r.int(0, 9)); const pos = r.chance(0.7) ? len - 1 : r.int(1, len - 1);
-        const ok = []; for (let k = 1; k <= 9; k++) { const ds = digs.slice(); ds.splice(pos, 0, k); if (Number(ds.join('')) % d === 0) ok.push(k); }
+        const ok = []; for (let k = 0; k <= 9; k++) { const ds = digs.slice(); ds.splice(pos, 0, k); if (Number(ds.join('')) % d === 0) ok.push(k); }
         if (ok.length !== 1) continue; const k = ok[0]; const shown = digs.slice(); shown.splice(pos, 0, 'k');
         const rule = { 3: 'digit sum divisible by 3', 4: 'last two digits divisible by 4', 6: 'even and digit sum divisible by 3', 8: 'last three digits divisible by 8', 9: 'digit sum divisible by 9', 11: 'alternating digit sum divisible by 11', 12: 'divisible by both 3 and 4', 15: 'divisible by both 3 and 5', 18: 'even and digit sum divisible by 9' }[d];
-        return { p: H.cat(`The ${len}-digit number ${shown.join('')} is divisible by ${d}. Find the digit k, k ≠ 0.`), a: A.num(k), params: { digs, pos, d },
-          steps: [`Divisible by ${d} means: ${rule}.`, `Only one nonzero digit works: k = ${hl(k)}`] };
+        return { p: H.cat(`The ${len}-digit number ${shown.join('')} is divisible by ${d}. k =`), a: A.num(k), params: { digs, pos, d },
+          steps: [`Divisible by ${d} means: ${rule}.`, `Only one digit works: k = ${hl(k)}`] };
       }
       return this.gen(r);
     },
@@ -3157,7 +3217,7 @@ NS.G({
     gen(r) {
       const kd = r.pick(['laws', 'factor', 'solve']);
       if (kd === 'laws') { const a = r.int(2, 9), b = -r.int(1, 5), c = r.int(1, 9); const v = a + b - c;
-        return { p: H.cat(H.L(`A^{${a}} \\times A^{${b}} \\div A^{${c}} = A^k`), ' and A ≠ 1. Then k ='), a: A.num(v), params: { kd, a, b, c }, steps: [`Multiplying adds exponents, dividing subtracts them.`, `${a} + (${b}) − ${c} = ${hl(fm(v))}`] }; }
+        return { p: H.cat('If ', H.L(`A^{${a}} \\times A^{${b}} \\div A^{${c}} = A^k`), ' and A ≠ 1, then k ='), a: A.num(v), params: { kd, a, b, c }, steps: [`Multiplying adds exponents, dividing subtracts them.`, `${a} + (${b}) − ${c} = ${hl(fm(v))}`] }; }
       if (kd === 'factor') { const b = r.pick([3, 4, 5, 6, 7]); const e = r.int(4, 9); const k = b - 1;
         return { p: H.cat(H.L(`${b}^{${e}} - ${b}^{${e - 1}} = ${k} \\times ${b}^{n}`), '. n ='), a: A.num(e - 1), params: { kd, b, e }, steps: [`Factor out ${b}^${e - 1}: ${b}^${e - 1}(${b} − 1) = ${k} × ${b}^${e - 1}.`, `n = ${hl(e - 1)}`] }; }
       const b = r.pick([2, 3, 4, 5]); const x = r.int(2, b === 2 ? 10 : 5); const t = b ** x; const pw = r.pick([[1, 0], [2, 0], [1, 1], [1, -1]]); const v = pw[0] === 2 ? x * x : x + pw[1];
@@ -3181,7 +3241,7 @@ NS.G({
       if (kd === 'coefProd') { let v = 1; for (let k = 0; k <= n; k++) v *= co(k); if (Math.abs(v) > 60000) return this.gen(r);
         return { p: H.cat('The product of the coefficients of the terms in the expansion of ', H.L(binL), ' is'), a: A.num(v), params: { kd, a, b, n }, steps: [`The coefficients are ${Array.from({ length: n + 1 }, (_, k) => co(k)).join(', ')}.`, `Their product is ${hl(fm(v))}`] }; }
       if (kd === 'termCoef') { const t = r.int(2, n); const v = co(t - 1);
-        return { p: H.cat(`The coefficient of the ${NS.ord(t)} term of `, H.L(binL), ' is'), a: A.num(v), params: { kd, a, b, n, t }, steps: [`Term ${t} uses ${m(`\\binom{${n}}{${t - 1}}`)} = ${M.C(n, t - 1)}, with x to the ${n - t + 1} and y to the ${t - 1}.`, `${M.C(n, t - 1)} × ${a}^${n - t + 1} × (${b})^${t - 1} = ${hl(fm(v))}`] }; }
+        return { p: H.cat(`The coefficient of the ${NS.ord(t)} term in the expansion of `, H.L(binL), ' is'), a: A.num(v), params: { kd, a, b, n, t }, steps: [`Term ${t} uses ${m(`\\binom{${n}}{${t - 1}}`)} = ${M.C(n, t - 1)}, with x to the ${n - t + 1} and y to the ${t - 1}.`, `${M.C(n, t - 1)} × ${a}^${n - t + 1} × (${b})^${t - 1} = ${hl(fm(v))}`] }; }
       const v = co(1) + co(n - 1);
       return { p: H.cat('In the expansion of ', H.L(binL), ', the sum of the coefficients of the ', H.L(`x^{${n - 1}}y`), ' and ', H.L(`xy^{${n - 1}}`), ' terms is'), a: A.num(v), params: { kd, a, b, n }, steps: [`x^${n - 1}y: ${n} × ${a}^${n - 1} × ${b} = ${co(1)}. xy^${n - 1}: ${n} × ${a} × (${b})^${n - 1} = ${co(n - 1)}.`, `${co(1)} + ${co(n - 1)} = ${hl(fm(v))}`] };
     },
@@ -3208,7 +3268,7 @@ NS.G({
     id: 'similarity', trick: 'geoFacts', col: { ms: 2, hs: 2 },
     gen(r) {
       const a = r.int(2, 6), b = r.int(a + 1, 9), k = r.pick([2, 3, 4, 5]); const what = r.pick(['perimeter', 'area']); const v = what === 'area' ? k * k : k;
-      return { p: H.cat(`A ${a}" by ${b}" picture is enlarged to ${a * k}" by ${b * k}". Its ${what} is multiplied by`), a: A.num(v), params: { a, b, k, what }, steps: [`Every length is multiplied by ${k}.`, what === 'area' ? `Area grows by the square: ${k}² = ${hl(v)}` : `Perimeter is a length: ${hl(v)}`] };
+      return { p: H.cat(`${NS.An(a)} ${a}" by ${b}" picture is enlarged to ${a * k}" by ${b * k}". Its ${what} is multiplied by`), a: A.num(v), params: { a, b, k, what }, steps: [`Every length is multiplied by ${k}.`, what === 'area' ? `Area grows by the square: ${k}² = ${hl(v)}` : `Perimeter is a length: ${hl(v)}`] };
     },
   });
 
@@ -3252,7 +3312,7 @@ NS.G({
     id: 'baseNear', trick: 'bases', col: { ms: 0, hs: 3 },
     gen(r) {
       const b = r.int(3, 9), n = r.int(2, 4); const k = r.int(1, Math.min(b * b - 1, 40)); const v = b ** n - k; const s = toB(v, b), ks = toB(k, b);
-      return { p: H.cat(H.pow(b, n), ' − ', H.n(k), ' ='), suffix: `(base ${b})`, a: A.text(s, 'base'), params: { b, n, k },
+      return { p: H.cat(H.pow(b, n), ' − ', H.n(k), ' ='), suffix: `base ${b}`, a: A.text(s, 'base'), params: { b, n, k },
         steps: [`${b}^${n} in base ${b} is 1 followed by ${n} zeros: ${'1' + '0'.repeat(n)}. And ${k} in base ${b} is ${ks}.`, `${'1' + '0'.repeat(n)} − ${ks} in base ${b}: borrowing turns zeros into ${b - 1}s. Answer: ${hl(s)}`] };
     },
   });
@@ -3302,7 +3362,7 @@ NS.G({
       if (kd === 'n') { const n = r.int(7, 12); const t = fibSeq(a, b, n + 2); const v = t.slice(0, n).reduce((x, y) => x + y);
         return { p: H.cat(`${t.slice(0, 5).join(' + ')} + … + ${t[n - 1]} =`), a: A.num(v), params: { kd, a, b, n }, steps: [`In a Fibonacci-like sequence, the sum of the first n terms is the term two places later minus the 2nd term.`, `The terms continue ${t.slice(n - 2, n + 2).join(', ')}. The term after ${t[n - 1]} is ${t[n]}, then ${t[n + 1]}. ${t[n + 1]} − ${b} = ${hl(fm(v))}`] }; }
       const t = fibSeq(a, b, 10); const S = t.reduce((x, y) => x + y);
-      return { p: H.cat(`The first ten terms of a sequence where each term is the sum of the two before it add up to ${fm(S)}. The 7th term is`), a: A.num(t[6]), params: { kd, a, b }, steps: [`The sum of the first ten terms is always 11 times the 7th term.`, `${fm(S)} ÷ 11 = ${hl(t[6])}`] };
+      return { p: H.cat('The sum of the first 10 terms of ', H.L('a, b, a + b, a + 2b, 2a + 3b, \\ldots'), ` is ${fm(S)}. The 7th term is`), a: A.num(t[6]), params: { kd, a, b }, steps: [`The sum of the first ten terms is always 11 times the 7th term.`, `${fm(S)} ÷ 11 = ${hl(t[6])}`] };
     },
   });
 
@@ -3463,7 +3523,7 @@ NS.G({
         return { p: H.cat(H.L(`\\${outer}\\left(\\${inner}^{-1} ${shown}\\right)`), ' ='), a: A.num(val), params: { kd, inner, outer, arg: arg.num() }, steps: [`Draw the ${o}-${a}-${h} right triangle: ${inner} of the angle is ${H.Qi(arg).h}.`, `${outer} of that angle = ${hl(H.Qi(val).h)}`] }; }
       const opts = [['cos', '-\\tfrac12', 3, 240], ['sin', '-\\tfrac{\\sqrt3}{2}', 4, 300], ['tan', '-1', 2, 135], ['sin', '\\tfrac12', 2, 150], ['cos', '\\tfrac{\\sqrt2}{2}', 4, 315], ['tan', '\\sqrt3', 3, 240], ['cos', '-\\tfrac{\\sqrt3}{2}', 2, 150], ['sin', '-\\tfrac{\\sqrt2}{2}', 3, 225]];
       const [f, l, qd, deg] = r.pick(opts);
-      return { p: H.cat(H.L(`\\${f}\\theta = ${l}`), ` and θ is in quadrant ${['I', 'II', 'III', 'IV'][qd - 1]}, 0° ≤ θ < 360°. θ =`), suffix: '°', a: A.num(deg), params: { kd, f, deg, qd }, steps: [`The reference angle for ${m(l.replace('-', ''))} is ${deg % 90 === 0 ? 90 : [30, 45, 60].find(t => [180 - t, 180 + t, 360 - t].includes(deg) || t === deg)}°.`, `In quadrant ${['I', 'II', 'III', 'IV'][qd - 1]}: θ = ${hl(deg)}°`] };
+      return { p: H.cat('If ', H.L(`\\${f}\\theta = ${l}`), ` and ${(qd - 1) * 90}° < θ < ${qd * 90}°, then θ =`), suffix: '°', a: A.num(deg), params: { kd, f, deg, qd }, steps: [`The reference angle for ${m(l.replace('-', ''))} is ${deg % 90 === 0 ? 90 : [30, 45, 60].find(t => [180 - t, 180 + t, 360 - t].includes(deg) || t === deg)}°.`, `In quadrant ${['I', 'II', 'III', 'IV'][qd - 1]}: θ = ${hl(deg)}°`] };
     },
   });
 
@@ -3523,7 +3583,7 @@ NS.G({
     id: 'baseFracTo', trick: 'bases', col: { ms: 0, hs: 4 },
     gen(r) {
       const b = r.int(3, 9); const d1 = r.int(0, b - 1), d2 = r.int(1, b - 1); if (!d1 && r.chance(0.7)) return this.gen(r); const v = q(d1 * b + d2, b * b);
-      return { p: H.cat('Change ', H.Qi(v), ` to a base ${b} decimal.`), suffix: `(base ${b})`, a: A.text(`.${d1}${d2}`, 'base', [`0.${d1}${d2}`]), params: { b, v: v.toFracStr() },
+      return { p: H.cat('Change ', H.Qi(v), ` to a base ${b} decimal.`), a: A.text(`.${d1}${d2}`, 'base', [`0.${d1}${d2}`]), params: { b, v: v.toFracStr() },
         steps: [`Write it over ${b}² = ${b * b}: ${H.Qi(v).h} = ${m(`\\tfrac{${d1 * b + d2}}{${b * b}}`)}.`, `${d1 * b + d2} = ${d1} × ${b} + ${d2}, so the digits after the point are ${d1}, ${d2}: ${hl(`.${d1}${d2}`)}`] };
     },
   });
@@ -3587,12 +3647,12 @@ NS.G({
     id: 'estGeo', trick: 'estimate', est: true, col: { ms: 0, hs: 4 },
     gen(r) {
       const kd = r.pick(['cylSA', 'cylLat', 'cylVolCm', 'hemi', 'pipe', 'pyramid', 'circ', 'lot']); let v, p, why; const pr = { kd };
-      if (kd === 'cylSA') { const h = r.int(10, 40), d = r.pick([2, 4, 6, 8, 10]); const rr = d / 2; Object.assign(pr, { h, d }); v = PI.mul(2 * rr * (rr + h)); p = `A right cylinder is ${h}" high with a ${d}" diameter. Its total surface area is`; why = `Total area = 2πr² + 2πrh = 2πr(r + h) = 2π × ${rr} × ${rr + h}.`; }
-      else if (kd === 'cylLat') { const hf = r.int(1, 4), d = r.int(5, 12); Object.assign(pr, { hf, d }); v = PI.mul(d * hf * 12); p = `A right cylinder is ${hf}' high with a ${d}" diameter. Its lateral surface area is`; why = `Lateral area = π × diameter × height, all in inches: π × ${d} × ${hf * 12}.`; }
-      else if (kd === 'cylVolCm') { const h = r.int(10, 30), d = r.pick([2, 4, 6, 8]); Object.assign(pr, { h, d }); v = PI.mul((d / 2) ** 2 * h).mul(Q.parseNum('16.387064')); p = `A right cylinder is ${h}" high with a ${d}" diameter. Its volume in cubic centimeters is`; why = `π r² h = π × ${(d / 2) ** 2} × ${h} cubic inches, and 1 in³ ≈ 16.39 cm³.`; }
+      if (kd === 'cylSA') { const h = r.int(10, 40), d = r.pick([2, 4, 6, 8, 10]); const rr = d / 2; Object.assign(pr, { h, d }); v = PI.mul(2 * rr * (rr + h)); p = `A right cylinder is ${h}" high with ${NS.an(d)} ${d}" diameter. Its total surface area is`; why = `Total area = 2πr² + 2πrh = 2πr(r + h) = 2π × ${rr} × ${rr + h}.`; }
+      else if (kd === 'cylLat') { const hf = r.int(1, 4), d = r.int(5, 12); Object.assign(pr, { hf, d }); v = PI.mul(d * hf * 12); p = `A right cylinder is ${hf}' high with ${NS.an(d)} ${d}" diameter. Its lateral surface area is`; why = `Lateral area = π × diameter × height, all in inches: π × ${d} × ${hf * 12}.`; }
+      else if (kd === 'cylVolCm') { const h = r.int(10, 30), d = r.pick([2, 4, 6, 8]); Object.assign(pr, { h, d }); v = PI.mul((d / 2) ** 2 * h).mul(Q.parseNum('16.387064')); p = `A right cylinder is ${h}" high with ${NS.an(d)} ${d}" diameter. Its volume in cubic centimeters is`; why = `π r² h = π × ${(d / 2) ** 2} × ${h} cubic inches, and 1 in³ ≈ 16.39 cm³.`; }
       else if (kd === 'hemi') { const rr = Q.parseNum(r.pick(['5.2', '4', '6.5', '3.5', '7', '8.4'])); const closed = r.chance(0.6); Object.assign(pr, { rr: rr.num(), closed }); v = PI.mul(rr.mul(rr)).mul(closed ? 3 : 2); p = `The ${closed ? 'total' : 'curved'} surface area of a hemisphere with a radius of ${H.dec(rr).h} cm is`; why = closed ? `Curved part 2πr² plus the flat circle πr²: 3πr² = 3π × ${H.dec(rr.mul(rr)).h}.` : `Half a sphere: 2πr² = 2π × ${H.dec(rr.mul(rr)).h}.`; }
       else if (kd === 'pipe') { const d = r.int(2, 12), L = r.int(20, 99); Object.assign(pr, { d, L }); v = PI.mul(q(d * d, 4)).mul(L); p = `A pipe with a diameter of ${d} feet is ${L} feet long. Its volume is`; why = `π r² × length = π × ${H.Qf(q(d * d, 4)).h} × ${L}.`; }
-      else if (kd === 'pyramid') { const a = r.int(9, 30), b = r.int(9, 30), h = r.int(9, 30); Object.assign(pr, { a, b, h }); v = q(a * b * h, 3); p = `A right rectangular pyramid has a ${a} by ${b} base and a height of ${h}. Its volume is`; why = `Volume = one third of base × height = ${a} × ${b} × ${h} ÷ 3.`; }
+      else if (kd === 'pyramid') { const a = r.int(9, 30), b = r.int(9, 30), h = r.int(9, 30); Object.assign(pr, { a, b, h }); v = q(a * b * h, 3); p = `A right rectangular pyramid has ${NS.an(a)} ${a} by ${b} base and a height of ${h}. Its volume is`; why = `Volume = one third of base × height = ${a} × ${b} × ${h} ÷ 3.`; }
       else if (kd === 'circ') { const C = r.int(100, 600); Object.assign(pr, { C }); v = Q.from(C * C).div(PI.mul(4)); p = `The circumference of a circle is ${C} cm. Its area in square cm is`; why = `r = C ÷ 2π, so area = C² ÷ 4π = ${C}² ÷ 12.57.`; }
       else { const f1 = r.pick([q(3, 8), q(1, 4), q(1, 2), q(5, 8)]), f2 = r.pick([q(1, 6), q(1, 3), q(1, 8), q(1, 5)]); Object.assign(pr, { f1: f1.num(), f2: f2.num() }); v = f1.mul(f2).mul(5280 * 5280); p = `A rectangular lot is ${H.Qi(f1).h} of a mile by ${H.Qi(f2).h} of a mile. Its area in square feet is`; why = `A square mile is 5280² = 27,878,400 square feet. Multiply by ${H.Qi(f1).h} × ${H.Qi(f2).h}.`; }
       return { p: H.cat(p), a: A.est(v), params: pr, steps: [why, `≈ ${fm(Math.round(v.num()))}`] };
@@ -3630,7 +3690,7 @@ NS.G({
   const lineL = (a, b, c) => `${term(a, 'x', true)}${term(b, 'y', !a)} = ${c}`;
   const PN = { 3: 'triangle', 4: 'quadrilateral', 5: 'pentagon', 6: 'hexagon', 7: 'heptagon', 8: 'octagon', 9: 'nonagon', 10: 'decagon', 11: 'undecagon', 12: 'dodecagon' };
   const pname = n => PN[n] || `${n}-sided polygon`;
-  const art = s => (/^[aeiou]/.test(s) ? 'an ' : 'a ') + s;
+  const art = s => (/^[aeiou]/.test(s) || NS.an(s) === 'an' ? 'an ' : 'a ') + s;
   const setL = xs => `\\{${xs.join(', ')}\\}`;
   const fact = n => { let f = 1; for (let i = 2; i <= n; i++) f *= i; return f; };
   const ways = s => 6 - Math.abs(7 - s);            // ways two dice make sum s
@@ -3721,7 +3781,7 @@ NS.G({
       if (kd === 'chain') {
         a = r.int(2, 7); b = r.int(-9, 9); const L = r.int(-20, 30), U = L + r.int(15, 60); const xs = []; for (let x = -100; x <= 100; x++) { const y = a * x + b; if (strict ? (L < y && y < U) : (L <= y && y <= U)) xs.push(x); }
         if (xs.length < 2) return this.gen(r); lo = xs[0]; hi = xs[xs.length - 1];
-        p = H.cat('If ', H.L(`${L} ${rel} ${lin(a, b)} ${rel} ${U}`), ', how many integers x make it true?');
+        p = H.cat('How many integers satisfy ', H.L(`${L} ${rel} ${lin(a, b)} ${rel} ${U}`), '?');
         return { p, a: A.num(xs.length), params: { kd, a, b, L, U, strict }, steps: [`Take ${fm(b)} from each part and divide by ${a}: x runs from ${Qs(q(L - b, a))} to ${Qs(q(U - b, a))}${strict ? ', ends not included' : ''}.`, `Integers ${fm(lo)} through ${fm(hi)}: ${hl(xs.length)}`] };
       }
       if (kd === 'sumH') { a = 1; b = -r.int(-12, big ? 45 : 15) || 7; c = r.int(2, big ? 30 : 12); }
@@ -3746,9 +3806,9 @@ NS.G({
       if (kd === 'geo2') { let k, x, y, a, b; do { k = r.int(1, 7); x = r.int(1, 6); y = r.int(1, 6); a = k * x * x; b = k * y * y; } while (x >= y || b > 160 || a < 2);
         const v = k * x * y; return { p: H.cat(`The positive geometric mean of ${a} and ${b} is`), a: A.num(v), params: { kd, xs: [a, b] }, steps: [`Geometric mean: ${m(`\\sqrt{${a} \\cdot ${b}} = \\sqrt{${a * b}}`)}.`, `= ${hl(v)}`] }; }
       if (kd === 'geo3') { let g, a, b, c; for (;;) { g = r.int(2, 12); const G3 = g ** 3; const ds = M.divisors(G3).filter(x => x <= 99 && x > 1); a = r.pick(ds); const rest = G3 / a; const ds2 = M.divisors(rest).filter(x => x <= 99 && x > 1); b = r.pick(ds2); c = rest / b; if (c > 1 && c <= 99 && a < b && b < c) break; }
-        return { p: H.cat(`The geometric mean of ${a}, ${b} and ${c} is`), a: A.num(g), params: { kd, xs: [a, b, c] }, steps: [`Geometric mean of three numbers: the cube root of their product.`, `${m(`\\sqrt[3]{${a} \\cdot ${b} \\cdot ${c}} = \\sqrt[3]{${a * b * c}}`)} = ${hl(g)}`] }; }
+        return { p: H.cat(`The geometric mean of ${a}, ${b}, and ${c} is`), a: A.num(g), params: { kd, xs: [a, b, c] }, steps: [`Geometric mean of three numbers: the cube root of their product.`, `${m(`\\sqrt[3]{${a} \\cdot ${b} \\cdot ${c}} = \\sqrt[3]{${a * b * c}}`)} = ${hl(g)}`] }; }
       if (kd === 'geoRad') { let a, b, s, t; for (;;) { a = r.int(2, 30); b = r.int(2, 30); if (a === b) continue; const n = a * b; s = 1; for (let i = 2; i * i <= n; i++) if (n % (i * i) === 0) s = i; t = n / (s * s); if (s > 1 && t > 1) break; }
-        return { p: H.cat(`The geometric mean of ${a} and ${b} is `, H.L('a\\sqrt{b}'), `, where ${m('b')} has no square factor other than 1. `, H.L('a + b'), ' ='), a: A.num(s + t), params: { kd, a, b },
+        return { p: H.cat(`The positive geometric mean of ${a} and ${b} is `, H.L('a\\sqrt{b}'), ' in simplest form. ', H.L('a + b'), ' ='), a: A.num(s + t), params: { kd, a, b },
           steps: [`${m(`\\sqrt{${a} \\cdot ${b}} = \\sqrt{${a * b}} = \\sqrt{${s * s} \\cdot ${t}} = ${s}\\sqrt{${t}}`)}.`, `a + b = ${s} + ${t} = ${hl(s + t)}`] }; }
       // geoPow
       const pb = r.pick([2, 3, 5]);
@@ -3815,7 +3875,7 @@ NS.G({
       if (kd === 'hexaSA') { const s = r.int(2, 25); return { p: H.cat(`The surface area of a regular hexahedron with edge ${s} is`), a: A.num(6 * s * s), params: { kd, s }, steps: [`A regular hexahedron is a cube: six ${s} × ${s} faces.`, `6 × ${s * s} = ${hl(6 * s * s)}`] }; }
       if (kd === 'pyramid') { const s = r.int(3, 20), h = 3 * r.int(1, 8); const v = s * s * h / 3; return { p: H.cat(`A square pyramid has a base edge of ${s} and a height of ${h}. Its volume is`), a: A.num(v), params: { kd, s, h }, steps: [`${m('V = \\tfrac13 \\cdot \\text{base} \\cdot h')} = ${s * s} × ${h} ÷ 3.`, `= ${hl(v)}`] }; }
       const [a, b, c] = r.pick(TRI.slice(0, 6)); const t = r.pick([1, 1, 2, 3]);
-      return { p: H.cat(`The inner diagonal of a ${c * t} by ${a * t} by ${b * t} box is `, H.L('k\\sqrt{2}'), '. ', k, ' ='), a: A.num(c * t), params: { kd, dims: [c * t, a * t, b * t] }, steps: [`${a * t}² + ${b * t}² = ${c * t}², so the diagonal is ${m(`\\sqrt{${c * t}^2 + ${c * t}^2} = ${c * t}\\sqrt2`)}.`, `k = ${hl(c * t)}`] };
+      return { p: H.cat(`The inner diagonal of ${NS.an(c * t)} ${c * t} by ${a * t} by ${b * t} box is `, H.L('k\\sqrt{2}'), '. ', k, ' ='), a: A.num(c * t), params: { kd, dims: [c * t, a * t, b * t] }, steps: [`${a * t}² + ${b * t}² = ${c * t}², so the diagonal is ${m(`\\sqrt{${c * t}^2 + ${c * t}^2} = ${c * t}\\sqrt2`)}.`, `k = ${hl(c * t)}`] };
     },
   });
 
@@ -3853,7 +3913,7 @@ NS.G({
       // union / intersection of the letters of two words
       let w1, w2, A1, B1, I; do { w1 = r.pick(SETW); w2 = r.pick(SETW); A1 = w1.split('').slice(0, 6); B1 = w2.split('').slice(0, 6); I = A1.filter(x => B1.includes(x)); } while (w1 === w2 || I.length < 1);
       const U = A1.length + B1.length - I.length; const ask = r.pick(['union', 'inter', 'both']); const v = ask === 'union' ? U : ask === 'inter' ? I.length : U + I.length;
-      const q2 = ask === 'union' ? H.cat(H.L('A \\cup B'), ' has how many elements?') : ask === 'inter' ? H.cat(H.L('A \\cap B'), ' has how many elements?') : H.cat('what is the total number of elements in ', H.L('A \\cup B'), ' and ', H.L('A \\cap B'), '?');
+      const q2 = ask === 'union' ? H.cat(H.L('A \\cup B'), ' has how many elements?') : ask === 'inter' ? H.cat(H.L('A \\cap B'), ' has how many elements?') : H.cat('the number of elements in ', H.L('A \\cup B'), ' plus the number in ', H.L('A \\cap B'), ' is');
       return { p: H.cat('If ', H.L(`A = ${setL(A1)}`), ' and ', H.L(`B = ${setL(B1)}`), ', then ', q2), a: A.num(v), params: { kd, A1, B1, ask },
         steps: [`Shared letters: ${m(I.join(', '))} (${I.length}). Union: ${A1.length} + ${B1.length} − ${I.length} = ${U}.`, ask === 'union' ? `${hl(U)}` : ask === 'inter' ? `${hl(I.length)}` : `${U} + ${I.length} = ${hl(v)}`] };
     },
@@ -3879,7 +3939,7 @@ NS.G({
       if (kd === 'oddsToP') { let a, b; do { a = r.int(1, 12); b = r.int(1, 12); } while (M.gcd(a, b) !== 1 || a === b); const v = q(b, a + b);
         return { p: H.cat(`If the odds of losing a game are ${a} : ${b}, the probability of winning is`), a: A.num(v), params: { kd, a, b }, steps: [`Odds of losing ${a} : ${b} means ${a} losing for every ${b} winning, ${a + b} in all.`, `P(win) = ${hl(Qs(v))}`] }; }
       if (kd === 'repeat') { const n = r.int(2, 3), f = r.int(1, 6); const v = q(1, 6 ** n);
-        return { p: H.cat(`A die is rolled ${n === 2 ? 'twice' : 'three times'}. The probability of getting a ${f} every time is`), a: A.num(v), params: { kd, n }, steps: [`Each roll is a ${f} with probability 1/6, and the rolls are independent.`, `${m(`\\left(\\tfrac16\\right)^{${n}}`)} = ${hl(Qs(v))}`] }; }
+        return { p: H.cat(`A die is rolled ${n === 2 ? 'twice' : 'three times'}. The probability of getting ${NS.an(f)} ${f} every time is`), a: A.num(v), params: { kd, n }, steps: [`Each roll is ${NS.an(f)} ${f} with probability 1/6, and the rolls are independent.`, `${m(`\\left(\\tfrac16\\right)^{${n}}`)} = ${hl(Qs(v))}`] }; }
       const red = r.int(2, 9), blue = r.int(2, 9); const k = r.int(1, 15); const v = q(red, red + blue + k);
       return { p: H.cat(`A bag has ${red} red, ${blue} blue and k green marbles. If the probability of drawing a red marble is `, H.Qi(v), ', then ', H.L('k'), ' ='), a: A.num(k), params: { kd, red, blue, P: [Number(v.n), Number(v.d)] },
         steps: [`${red} red out of the total: total = ${red} ÷ ${Qs(v)} = ${red + blue + k}.`, `k = ${red + blue + k} − ${red} − ${blue} = ${hl(k)}`] };
@@ -3894,7 +3954,7 @@ NS.G({
       const kd = r.pick(['word', 'word', 'word', 'line', 'committee', 'outfits']);
       if (kd === 'word') { const w = r.pick(WORDS); const cnt = {}; for (const ch of w) cnt[ch] = (cnt[ch] || 0) + 1; const reps = Object.entries(cnt).filter(([, c]) => c > 1);
         let v = fact(w.length); reps.forEach(([, c]) => { v /= fact(c); });
-        return { p: H.cat(`How many distinct arrangements can be made from all the letters of the word ${w.toUpperCase()}?`), a: A.num(v), params: { kd, w },
+        return { p: H.cat(`How many distinct ${w.length}-letter arrangements can be made from the letters of the word ${w.toUpperCase()}?`), a: A.num(v), params: { kd, w },
           steps: [reps.length ? `${w.length} letters with repeats ${reps.map(([ch, c]) => `${ch.toUpperCase()} × ${c}`).join(', ')}: ${m(`\\frac{${w.length}!}{${reps.map(([, c]) => c + '!').join('\\,')}}`)}.` : `${w.length} different letters: ${w.length}!.`, `= ${hl(fm(v))}`] }; }
       if (kd === 'line') { const n = r.int(4, 9); return { p: H.cat(`In how many ways can ${n} people stand in a straight line?`), a: A.num(fact(n)), params: { kd, n }, steps: [`${n} choices for first place, ${n - 1} for second, and so on: ${n}!.`, `= ${hl(fm(fact(n)))}`] }; }
       if (kd === 'committee') { const n = r.int(6, 15), k = r.int(2, 4); const v = M.C(n, k); return { p: H.cat(`How many ways can a committee of ${k} be chosen from ${n} people?`), a: A.num(v), params: { kd, n, k }, steps: [`Order doesn't matter: ${m(`\\binom{${n}}{${k}}`)}.`, `= ${hl(v)}`] }; }
@@ -3960,11 +4020,11 @@ NS.G({
         return { p: H.cat('The axis of symmetry of ', H.L(`f(x) = ${f(a, b)}${f(c, d)}`), ' is x ='), a: A.num(v), params: { kd, a, b, c, d }, steps: [`The roots are ${Qs(q(b, a))} and ${Qs(q(d, c))}; the axis is halfway between them.`, `(${Qs(q(b, a))} + ${Qp(q(d, c))}) ÷ 2 = ${hl(Qs(v))}`] }; }
       if (kd === 'axisShift') { const b = nz(-12, 12), c = r.int(-9, 9), p = nz(-6, 6); const v = q(-b, 2).sub(p);
         return { p: H.cat('If ', H.L(`f(x) = ${NS.poly([1, b, c]).l}`), ', then ', H.L(`f(x ${p < 0 ? '-' : '+'} ${Math.abs(p)})`), ' has an axis of symmetry of x ='), a: A.num(v), params: { kd, b, p }, steps: [`f has its axis at ${m('x = -\\frac{b}{2}')} = ${Qs(q(-b, 2))}. Replacing ${m('x')} with ${m(`x ${p < 0 ? '-' : '+'} ${Math.abs(p)}`)} slides the graph ${p > 0 ? 'left' : 'right'} ${Math.abs(p)}.`, `${Qs(q(-b, 2))} ${p > 0 ? '−' : '+'} ${Math.abs(p)} = ${hl(Qs(v))}`] }; }
-      if (kd === 'hk') { const a = nz(-5, 5), h = r.int(-9, 9), k = r.int(-12, 12); return { p: H.cat('If ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})^2 ${k < 0 ? '-' : '+'} ${Math.abs(k)}`), ` has vertex ${m('(h, k)')}, then `, H.L('h + k'), ' ='), a: A.num(h + k), params: { kd, h, k }, steps: [`Vertex form: the vertex is (${fm(h)}, ${fm(k)}).`, `${fm(h)} + ${k < 0 ? `(${k})` : k} = ${hl(fm(h + k))}`] }; }
+      if (kd === 'hk') { const a = nz(-5, 5), h = r.int(-9, 9), k = r.int(-12, 12); return { p: H.cat('If ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}${h ? `(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})` : 'x'}^2${k ? ` ${k < 0 ? '-' : '+'} ${Math.abs(k)}` : ''}`), ` has vertex ${m('(h, k)')}, then `, H.L('h + k'), ' ='), a: A.num(h + k), params: { kd, h, k }, steps: [`Vertex form: the vertex is (${fm(h)}, ${fm(k)}).`, `${fm(h)} + ${k < 0 ? `(${k})` : k} = ${hl(fm(h + k))}`] }; }
       if (kd === 'oneRoot') { const a = r.int(1, 6), b = nz(-12, 12); const v = q(b * b, 4 * a); return { p: H.cat('If ', H.L(`${a === 1 ? '' : a}x^2${term(b, 'x')} + c = 0`), ' has exactly one real root, then ', H.L('c'), ' ='), a: A.num(v), params: { kd, a, b }, steps: [`One root means the discriminant is 0: ${m(`${b * b} - ${4 * a}c = 0`)}.`, `${m('c')} = ${b * b} ÷ ${4 * a} = ${hl(Qs(v))}`] }; }
       // realRoots
       if (r.chance(0.5)) { const a = nz(-5, 5), h = r.int(-9, 9); const k = r.pick([0, r.int(1, 12), -r.int(1, 12)]); const v = k === 0 ? 1 : (a > 0) === (k < 0) ? 2 : 0;
-        return { p: H.cat('How many real roots does ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})^2${k ? (k < 0 ? ' - ' : ' + ') + Math.abs(k) : ''}`), ' have?'), a: A.num(v), params: { kd, a, k, form: 'vertex' },
+        return { p: H.cat('How many real roots does ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}${h ? `(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})` : 'x'}^2${k ? (k < 0 ? ' - ' : ' + ') + Math.abs(k) : ''}`), ' have?'), a: A.num(v), params: { kd, a, k, form: 'vertex' },
           steps: [`The vertex is at height ${fm(k)} and the parabola opens ${a > 0 ? 'up' : 'down'}.`, k === 0 ? `It touches the x-axis once: ${hl(1)}` : v ? `It crosses the x-axis: ${hl(2)}` : `It never reaches the x-axis: ${hl(0)}`] }; }
       const a = nz(-6, 6), b = r.int(-12, 12), c = nz(-15, 15); const D = b * b - 4 * a * c; const v = D > 0 ? 2 : D === 0 ? 1 : 0;
       return { p: H.cat(H.L(`${NS.poly([a, b, c]).l} = 0`), ' has how many real roots?'), a: A.num(v), params: { kd, a, b, c, form: 'std' }, steps: [`Discriminant ${m('b^2 - 4ac')} = ${b * b} − (${4 * a * c}) = ${D}.`, `${D > 0 ? 'Positive' : D === 0 ? 'Zero' : 'Negative'}: ${hl(v)}`] };
@@ -3988,8 +4048,8 @@ NS.G({
       if (kd === 'pq') { const p = nz(-12, 12); let qq; do { qq = r.int(-12, 12); } while (!qq || qq === p); const S = p + qq, Pr = p * qq; const v = Math.max(p, qq);
         return { p: H.cat('If ', H.L(`${NS.poly([1, S, Pr]).l} = (x + p)(x + q)`), `, then the greater of ${m('p')} and ${m('q')} is`), a: A.num(v), params: { kd, S, Pr }, steps: [`${m(`p + q = ${S}`)} and ${m(`pq = ${Pr}`)}.`, `${m('p')} and ${m('q')} are ${fm(p)} and ${fm(qq)}: ${hl(fm(v))}`] }; }
       if (kd === 'shiftProd') { const m1 = r.int(-9, 12), m2 = r.int(-9, 12), t = nz(-6, 6); const v = (m1 + t) * (m2 + t);
-        const f = x => `(x ${x < 0 ? '+' : '-'} ${Math.abs(x)})`;
-        return { p: H.cat('If ', H.L(`f(x) = ${f(m1)}${f(m2)}`), ', the product of the roots of ', H.L(`f(x ${t < 0 ? '+' : '-'} ${Math.abs(t)})`), ' is'), a: A.num(v), params: { kd, m1, m2, t }, steps: [`f has roots ${m1} and ${m2}. Replacing x with x ${t < 0 ? '+' : '−'} ${Math.abs(t)} moves each root ${t > 0 ? 'up' : 'down'} by ${Math.abs(t)}: ${m1 + t} and ${m2 + t}.`, `${m1 + t} × ${m2 + t} = ${hl(fm(v))}`] }; }
+        const f = x => (x ? `(x ${x < 0 ? '+' : '-'} ${Math.abs(x)})` : 'x');
+        return { p: H.cat('If ', H.L(`f(x) = ${!m1 && !m2 ? 'x^2' : m1 ? f(m1) + f(m2) : f(m2) + f(m1)}`), ', the product of the roots of ', H.L(`f(x ${t < 0 ? '+' : '-'} ${Math.abs(t)})`), ' is'), a: A.num(v), params: { kd, m1, m2, t }, steps: [`f has roots ${m1} and ${m2}. Replacing x with x ${t < 0 ? '+' : '−'} ${Math.abs(t)} moves each root ${t > 0 ? 'up' : 'down'} by ${Math.abs(t)}: ${m1 + t} and ${m2 + t}.`, `${m1 + t} × ${m2 + t} = ${hl(fm(v))}`] }; }
       if (kd === 'findB') { const a = r.int(1, 6), s = nz(-9, 9), c = nz(-20, 20); const v = -a * s;
         return { p: H.cat('If P and Q are the roots of ', H.L(`${a === 1 ? '' : a}x^2 + bx ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0`), ' and ', H.L(`P + Q = ${s}`), ', then ', H.L('b'), ' ='), a: A.num(v), params: { kd, a, s }, steps: [`${m('P + Q = -\\frac ba')}, so b = −${a} × ${s < 0 ? `(${s})` : s}.`, `b = ${hl(fm(v))}`] }; }
       if (kd === 'findA') { let a0, c, Pr; do { a0 = nz(-9, 9); Pr = nz(-9, 9); c = a0 * Pr; } while (Math.abs(c) < 4 || Math.abs(c) > 60); const b = nz(-15, 15);
@@ -4011,11 +4071,11 @@ NS.G({
     gen(r, lv, xd = 1) {
       const kd = r.pick(['largest', 'largest', 'smallest', 'countPos']); const k = r.int(xd >= 2 ? -15 : -6, xd >= 2 ? 15 : 6), N = r.int(30, xd >= 2 ? 900 : 220); const f = x => x * (x - k);
       const expr = k === 0 ? 'x^2' : `x(x ${k > 0 ? '-' : '+'} ${Math.abs(k)})`; const rt = Math.sqrt(N);
-      if (kd === 'smallest') { let x = 1; while (f(x) <= N) x++; return { p: H.cat('The smallest positive integer x with ', H.L(`${expr} > ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x - 1}: ${f(x - 1)} (not more than ${N}); ${x}: ${f(x)}. Answer ${hl(x)}`] }; }
+      if (kd === 'smallest') { let x = 1; while (f(x) <= N) x++; return { p: H.cat('The smallest positive integer x such that ', H.L(`${expr} > ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x - 1}: ${f(x - 1)} (not more than ${N}); ${x}: ${f(x)}. Answer ${hl(x)}`] }; }
       let x = 300; while (f(x) >= N) x--;
       if (kd === 'countPos') { const cnt = []; for (let y = 1; y <= x; y++) if (f(y) < N) cnt.push(y); if (!cnt.length) return this.gen(r);
-        return { p: H.cat('How many positive integers x make ', H.L(`${expr} < ${N}`), ' true?'), a: A.num(cnt.length), params: { kd, k, N }, steps: [`Try near √${N} ≈ ${rt.toFixed(1)}: ${x} gives ${f(x)}, under ${N}, but ${x + 1} gives ${f(x + 1)}.`, `x = ${cnt[0]} through ${x}: ${hl(cnt.length)}`] }; }
-      return { p: H.cat('The largest integer x with ', H.L(`${expr} < ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x}: ${f(x)} is under ${N}; ${x + 1}: ${f(x + 1)} is too big. Answer ${hl(x)}`] };
+        return { p: H.cat('How many positive integers satisfy ', H.L(`${expr} < ${N}`), '?'), a: A.num(cnt.length), params: { kd, k, N }, steps: [`Try near √${N} ≈ ${rt.toFixed(1)}: ${x} gives ${f(x)}, under ${N}, but ${x + 1} gives ${f(x + 1)}.`, `x = ${cnt[0]} through ${x}: ${hl(cnt.length)}`] }; }
+      return { p: H.cat('The largest integer x such that ', H.L(`${expr} < ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x}: ${f(x)} is under ${N}; ${x + 1}: ${f(x + 1)} is too big. Answer ${hl(x)}`] };
     },
   });
 
@@ -4117,7 +4177,7 @@ NS.G({
     gen(r) {
       const four = r.chance(0.35); const b = r.int(3, 12); let a2 = Math.max(2, b + r.int(-3, 4)); if (four && a2 % 2) a2++; const extra = r.pick([1, 1, 3, 7, 9, 3 ** 2, 7 ** 2]);
       const ask = r.pick(['digits', 'digits', 'sum']); const N = 2n ** BigInt(a2) * 5n ** BigInt(b) * BigInt(extra); const s = N.toString(); const v = ask === 'digits' ? s.length : [...s].reduce((t, ch) => t + +ch, 0);
-      const parts = [four ? H.pow(4, a2 / 2) : H.pow(2, a2), ' × ', H.pow(5, b)]; if (extra > 1) { const [bb, e] = extra === 9 ? [3, 2] : extra === 49 ? [7, 2] : [extra, 1]; parts.push(' × ', e === 2 ? H.pow(bb, 2) : String(bb)); }
+      const parts = [four ? (a2 === 2 ? H.n(4) : H.pow(4, a2 / 2)) : H.pow(2, a2), ' × ', H.pow(5, b)]; if (extra > 1) { const [bb, e] = extra === 9 ? [3, 2] : extra === 49 ? [7, 2] : [extra, 1]; parts.push(' × ', e === 2 ? H.pow(bb, 2) : String(bb)); }
       const t = Math.min(a2, b); const rest = N / 10n ** BigInt(t);
       return { p: ask === 'digits' ? H.cat('How many digits are in ', ...parts, '?') : H.cat('The sum of the digits of ', ...parts, ' is'), a: A.num(v), params: { a2, b, extra, ask },
         steps: [`${four ? `${m(`4^{${a2 / 2}}`)} is ${m(`2^{${a2}}`)}. ` : ''}Pair ${t} twos with ${t} fives to make ${m(`10^{${t}}`)}; what's left is ${rest.toString()}.`, ask === 'digits' ? `${rest.toString()} followed by ${t} zeros: ${hl(v)} digits` : `The zeros add nothing: ${[...rest.toString()].join(' + ')} = ${hl(v)}`] };
@@ -4158,7 +4218,7 @@ NS.G({
       else if (kd === 'hyp') { const x = r.int(20, 90), y = r.int(20, 90); pr.x = x; pr.y = y; v = Math.hypot(x, y); p = `The hypotenuse of a right triangle with legs ${x} and ${y} is`; why = `√(${x * x} + ${y * y}) = √${x * x + y * y}.`; }
       else if (kd === 'sqSide') { const x = 100 * r.int(30, 900); pr.x = x; v = Math.sqrt(x); p = `The side of a square with area ${fm(x)} is`; why = `√${fm(x)}: find the nearest perfect square.`; }
       else if (kd === 'pentBig') { const x = r.int(40, 150); pr.x = x; v = x * (3 * x - 1) / 2; p = `The ${NS.ord(x)} pentagonal number is`; why = `n(3n − 1)/2 = ${x} × ${3 * x - 1} ÷ 2.`; }
-      else { const x = r.int(40, 200); pr.x = x; v = x * (x - 3) / 2; p = `The number of diagonals of a ${x}-sided polygon is`; why = `n(n − 3)/2 = ${x} × ${x - 3} ÷ 2.`; }
+      else { const x = r.int(40, 200); pr.x = x; v = x * (x - 3) / 2; p = `The number of diagonals of ${NS.an(x)} ${x}-sided polygon is`; why = `n(n − 3)/2 = ${x} × ${x - 3} ÷ 2.`; }
       return { p: H.cat(p), a: A.est(ap(v)), params: pr, steps: [why, `≈ ${fm(Math.round(v))}`] };
     },
   });
@@ -4172,7 +4232,7 @@ NS.G({
       else if (kd === 'tetraV') { const x = r.int(6, 40); pr.x = x; v = x ** 3 * Math.SQRT2 / 12; p = `The volume of a regular tetrahedron with edge ${x} is`; why = `s³√2/12 = ${fm(x ** 3)} × 1.414 ÷ 12.`; }
       else if (kd === 'tetraSA') { const x = r.int(8, 60); pr.x = x; v = x * x * Math.sqrt(3); p = `The surface area of a regular tetrahedron with edge ${x} is`; why = `s²√3 = ${x * x} × 1.732.`; }
       else if (kd === 'cubeV') { const x = r.int(21, 99); pr.x = x; v = x ** 3; p = `The volume of a cube with edge ${x} is`; why = `${x}³ = ${x * x} × ${x}.`; }
-      else if (kd === 'boxV') { const x = r.int(15, 60), y = r.int(15, 60), z = r.int(15, 60); pr.xs = [x, y, z]; v = x * y * z; p = `The volume of a ${x} by ${y} by ${z} rectangular prism is`; why = `${x} × ${y} = ${x * y}; × ${z}.`; }
+      else if (kd === 'boxV') { const x = r.int(15, 60), y = r.int(15, 60), z = r.int(15, 60); pr.xs = [x, y, z]; v = x * y * z; p = `The volume of ${NS.an(x)} ${x} by ${y} by ${z} rectangular prism is`; why = `${x} × ${y} = ${x * y}; × ${z}.`; }
       else if (kd === 'pyrV') { const x = r.int(8, 30), y = r.int(8, 40); pr.x = x; pr.y = y; v = x * x * y / 3; p = `The volume of a square pyramid with base edge ${x} and height ${y} is`; why = `${x}² × ${y} ÷ 3.`; }
       else if (kd === 'acres') { const x = r.int(20, 900); pr.x = x; v = 640 * x; p = `${x} square miles =`; pr.suf = 'acres'; why = `640 acres in a square mile: ${x} × 640.`; }
       else if (kd === 'galIn3') { const x = r.int(12, 300); pr.x = x; v = 231 * x; p = `${x} gallons =`; pr.suf = 'cubic inches'; why = `231 cubic inches in a gallon: ${x} × 231.`; }
@@ -4286,7 +4346,7 @@ NS.G({
       if (kd === 'pow') {
         const p = r.pick([5, 7, 11, 13]); let a; do { a = r.int(2, x >= 2 ? 30 : 12); } while (a % p === 0);
         const e = r.int(x >= 2 ? 50 : 20, x >= 2 ? 999 : 120); const v = modPow(a, e, p); const ar = a % p; const er = e % (p - 1);
-        return { p: H.cat(H.pow(a, e), ` ≡ k (mod ${p}), where 0 ≤ k < ${p}. k =`), a: A.num(v), params: { kd, a, e, p },
+        return { p: H.cat(`Find k, 0 ≤ k ≤ ${p - 1}, if `, H.pow(a, e), ` ≡ k (mod ${p}). k =`), a: A.num(v), params: { kd, a, e, p },
           steps: [`${p} is prime, so ${m(`n^{${p - 1}} \\equiv 1 \\pmod{${p}}`)} for any n it doesn't divide (Fermat).${ar !== a ? ` First, ${a} ≡ ${ar}.` : ''} Only the exponent's remainder mod ${p - 1} matters: ${e} ÷ ${p - 1} leaves ${er}.`, `${m(`${ar}^{${er}}`)}${ar ** er <= 2000 ? ` = ${fm(ar ** er)}` : ''} ≡ ${hl(v)} (mod ${p})`] };
       }
       for (let t = 0; t < 200; t++) {
@@ -4320,7 +4380,7 @@ NS.G({
         const e = form === 'k' ? 1 : form === 'kx' ? 2 : 3; // f = (k/e) x^e + C
         const co = q(k, e); const C0 = q(b).sub(co.mul(q(a).pow(e))); const v = co.mul(q(c).pow(e)).add(C0);
         const fp = form === 'k' ? `${k}` : form === 'kx' ? `${k}x` : `${k}x^2`; const F = form === 'k' ? `${k}x` : form === 'kx' ? `${k / 2}x^2` : `${k / 3}x^3`;
-        return { p: H.cat(H.L(`f'(x) = ${fp}`), `, f(${a}) = ${fm(b)}. Find f(${c}).`), a: A.num(v), params: { kd, form, k, a, b, c },
+        return { p: H.cat('If ', H.L(`f'(x) = ${fp}`), ` and f(${a}) = ${fm(b)}, then f(${c}) =`), a: A.num(v), params: { kd, form, k, a, b, c },
           steps: [`Undo the derivative: f(x) = ${m(F.replace(/^1x/, 'x').replace(/^-1x/, '-x'))} + C.`, `f(${a}) = ${fm(b)} gives C = ${Qs(C0)}.`, `f(${c}) = ${hl(Qs(v))}`] };
       }
       if (kd === 'trig') {
@@ -4329,7 +4389,7 @@ NS.G({
         const tbl = f === 'sin' ? (second ? S : C) : (second ? C : S); const sign = f === 'sin' ? (second ? -1 : 1) : -1;
         const ang = r.pick(Object.keys(tbl).map(Number).filter(z => z > 0)); const v = tbl[ang].mul(sign * k);
         const dname = second ? "f''" : "f'"; const d1 = f === 'sin' ? (second ? `-${k === 1 ? '' : k}\\sin x` : `${k === 1 ? '' : k}\\cos x`) : (second ? `-${k === 1 ? '' : k}\\cos x` : `-${k === 1 ? '' : k}\\sin x`);
-        return { p: H.cat(H.L(`f(x) = ${k === 1 ? '' : k}\\${f} x`), ', ', H.L(`${dname}(${ang}^\\circ)`), ' ='), a: A.num(v), params: { kd, f, k, second, ang },
+        return { p: H.cat('If ', H.L(`f(x) = ${k === 1 ? '' : k}\\${f} x`), ', then ', H.L(`${dname}(${ang}^\\circ)`), ' ='), a: A.num(v), params: { kd, f, k, second, ang },
           steps: [`(sin x)′ = cos x and (cos x)′ = −sin x, so ${m(`${dname}(x) = ${d1}`)}.`, `At ${ang}°: ${hl(Qs(v))}`] };
       }
       // chain rule
@@ -4355,7 +4415,7 @@ NS.G({
   G({
     id: 'perfectNum', trick: 'perfectNumbers', col: { ms: 0, hs: 4 }, w: 0.25,
     gen(r, lv, x = 1) {
-      const kd = r.pick(['sum', 'nth', 'proper', 'proper', 'classify', 'classify', 'next']);
+      const kd = r.pick(['sum', 'sum', 'nth', 'proper', 'proper', 'proper']);
       if (kd === 'sum') { const k = r.pick([2, 3, 4]); const v = PERF.slice(0, k).reduce((s, n) => s + n, 0);
         return { p: H.cat(`The sum of the first ${['', '', 'two', 'three', 'four'][k]} perfect numbers is`), a: A.num(v), params: { kd, k }, steps: [`The perfect numbers start 6, 28, 496, 8128.`, `${PERF.slice(0, k).join(' + ')} = ${hl(fm(v))}`] }; }
       if (kd === 'nth') { const k = r.int(2, 4); const v = PERF[k - 1];
@@ -4382,7 +4442,7 @@ NS.G({
         const e = kd === 'cube' ? 3 : 2; const v = f.pow(e).sub(1).mul(100).abs(); const fig = kd === 'cube' ? 'each edge of a cube' : r.pick(['the perimeter of a square', 'the side of a square', 'the radius of a circle', 'the circumference of a circle']);
         const what = kd === 'cube' ? 'volume' : 'area'; const word = up ? 'increases' : 'decreases';
         return { p: H.cat(`If ${fig} ${up ? 'increases' : 'decreases'} by ${p}%, the ${what} ${word} by`), suffix: '%', a: A.num(v, 'dec'), params: { kd, p, up, e },
-          steps: [`Lengths scale by ${Q.from(f).toDecStr()}, so the ${what} scales by ${Q.from(f).toDecStr()}${e === 3 ? '³' : '²'} = ${f.pow(e).toDecStr()}.`, `That's a ${hl(v.toDecStr())}% ${up ? 'increase' : 'decrease'}`] };
+          steps: [`Lengths scale by ${Q.from(f).toDecStr()}, so the ${what} scales by ${Q.from(f).toDecStr()}${e === 3 ? '³' : '²'} = ${f.pow(e).toDecStr()}.`, `That's ${/^(8|1[18](?!\d))/.test(v.toDecStr()) ? 'an' : 'a'} ${hl(v.toDecStr())}% ${up ? 'increase' : 'decrease'}`] };
       }
       if (kd === 'circle') {
         let c1, c2; do { c1 = 2 * r.int(2, 12); c2 = 2 * r.int(2, 12); } while (c1 === c2);
@@ -4626,7 +4686,7 @@ NS.G({
       how: [R`1 mile = 5280 ft = 1760 yd. 1 gal = 4 qt = 8 pt = 16 c = 128 fl oz. 1 lb = 16 oz. 1 ton = 2000 lb. 1 gal = 231 in³. 1 in = 2.54 cm.`, R`Area and volume use the square or cube of the conversion: 1 ft² = 144 in², 1 yd³ = 27 ft³.`, R`A fraction of a mixed amount: convert to the small unit first. $\tfrac34$ of 3 gal 2 qt is $\tfrac34$ of 14 qt, which is 10.5 qt or 21 pints.`, R`Given a rate like 1 gram = .04 oz, divide: 6 oz ÷ .04 = 150 grams.`],
       why: R`A square foot is 12 inches by 12 inches.`,
       watch: R`Big unit to small unit: multiply. Small to big: divide.` },
-    roman: { unit: 'every', title: 'Roman numerals', s: R`Converting either way, or doing arithmetic with them.`,
+    roman: { unit: 'every', title: 'Roman numerals', s: R`Reading them as ordinary numbers, and doing arithmetic with them.`,
       how: [R`I 1, V 5, X 10, L 50, C 100, D 500, M 1000.`, R`A smaller numeral before a larger one subtracts: IV 4, IX 9, XL 40, XC 90, CD 400, CM 900.`, R`Convert one place at a time: 1994 = M CM XC IV.`],
       why: R`No numeral repeats more than three times in a row.`,
       watch: R`49 is XLIX, not IL.` },
@@ -4883,7 +4943,7 @@ NS.G({
       how: [R`$|ax + b| = c$: the two solutions sit evenly around $-\tfrac ba$, so they add to $-\tfrac{2b}a$. The right side doesn't matter.`, R`For one solution, solve $ax + b = c$ and $ax + b = -c$ separately. The gap between them is $\tfrac{2c}a$.`, R`$|x - h| \le k$: the integers from $h - k$ to $h + k$. There are $2k + 1$ of them and they add to $(2k + 1)h$.`, R`$|ax + b| \le c$: solve $-c \le ax + b \le c$, find the integer ends, then sum = count × average of the ends.`, R`Given the solutions of $|x - c| = d$: $c$ is their midpoint and $d$ is half their distance.`],
       why: R`$|x - h|$ is the distance from $x$ to $h$, so the solutions are balanced around $h$.`,
       watch: R`With $<$ the ends drop out. When $-\tfrac ba$ isn't a whole number, the integer solutions aren't centered on it, so list the ends.` },
-    means: { unit: 'every', title: 'Geometric and harmonic means', s: R`"The harmonic mean of 2 and 3 is ___", "The geometric mean of 4, 6 and 9 is ___".`,
+    means: { unit: 'every', title: 'Geometric and harmonic means', s: R`"The harmonic mean of 2 and 3 is ___", "The geometric mean of 4, 6, and 9 is ___".`,
       how: [R`Geometric mean of two numbers: $\sqrt{ab}$. Of three: $\sqrt[3]{abc}$. 4, 6 and 9: $\sqrt[3]{216} = 6$.`, R`Harmonic mean of two numbers: $\tfrac{2ab}{a + b}$. 2 and 3: $\tfrac{12}5 = 2\tfrac25$.`, R`Powers of one base: the geometric mean averages the exponents. $5^9, 5^{10}, 5^{11}, 5^{14}$ → $5^{11}$.`, R`If the root isn't whole, simplify it: $\sqrt{12 \cdot 10} = \sqrt{120} = 2\sqrt{30}$.`],
       why: R`The geometric mean is the side of the square (or cube) with the same area (or volume) as the numbers multiplied together. The harmonic mean is the reciprocal of the average reciprocal.`,
       watch: R`For two different positive numbers, harmonic < geometric < arithmetic. Use it as a check.` },
@@ -4899,8 +4959,8 @@ NS.G({
       how: [R`Know these to three places: $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$, $\sqrt5 \approx 2.236$, $\sqrt6 \approx 2.449$, $\sqrt7 \approx 2.646$, $\sqrt{10} \approx 3.162$.`, R`Add or subtract the decimals, then round once at the end: $\sqrt5 + \sqrt3 \approx 2.236 + 1.732 = 3.968$ → 4.0.`, R`For any other root, start from the square just below: $\sqrt{n} \approx s + \tfrac{n - s^2}{2s}$. $\sqrt{40} \approx 6 + \tfrac4{12} = 6.33$ (it's 6.325). This guess always runs a little high.`, R`A multiple of a root: multiply the decimal. $100\sqrt2 \approx 141.4$ → 141.`],
       why: R`$(s + d)^2 = s^2 + 2sd + d^2$. When $d$ is small, $d^2$ hardly matters, so $d \approx \tfrac{n - s^2}{2s}$.`,
       watch: R`Round only once. Rounding each root first can push the total over the line: $\sqrt2 + \sqrt7 \approx 4.06$, but $1.4 + 2.6 = 4.0$.` },
-    perfectNumbers: { unit: 'nt', title: 'Perfect, abundant and deficient numbers', s: R`"The sum of the first three perfect numbers", "Is 70 abundant, deficient or perfect?", "The sum of the proper divisors of 48".`,
-      how: [R`Proper divisors are all the divisors except the number itself. Add them up and compare with the number.`, R`More than the number: abundant. Less: deficient. Equal: perfect.`, R`Perfect numbers to know: 6, 28, 496, 8128.`, R`Quick sum: get the sum of all divisors from the prime factors, then take away the number. $48 = 2^4 \cdot 3$: $(1 + 2 + 4 + 8 + 16)(1 + 3) = 124$, and $124 - 48 = 76$, so 48 is abundant.`, R`Shortcuts: primes and powers of primes are deficient. Every multiple of 6 past 6 is abundant. The smallest abundant numbers are 12, 18, 20, 24, 30, 36, 40.`],
+    perfectNumbers: { unit: 'nt', title: 'Perfect numbers and proper divisors', s: R`"The sum of the first three perfect numbers", "The sum of the proper divisors of 48".`,
+      how: [R`Proper divisors are all the divisors except the number itself. When they add up to the number, it is perfect.`, R`Perfect numbers to know: 6, 28, 496, 8128.`, R`Quick sum: get the sum of all divisors from the prime factors, then take away the number. $48 = 2^4 \cdot 3$: $(1 + 2 + 4 + 8 + 16)(1 + 3) = 124$, and $124 - 48 = 76$.`, R`A prime's only proper divisor is 1.`],
       why: R`Every even perfect number is $2^{p-1}(2^p - 1)$ where $2^p - 1$ is prime: $p = 2, 3, 5, 7$ give 6, 28, 496, 8128.`,
       watch: R`Leave the number itself out of the proper divisors, but keep 1 in.` },
     scaleChange: { unit: 'geo', title: 'Scaling: perimeter to area, edge to volume', s: R`"The radius of a circle increases by 20%. The area increases by ___%." "The perimeter of a square goes from 16 to 28; the area increases by ___."`,
@@ -6221,7 +6281,8 @@ NS.G({
     const LB = '\u0001\\underline{\\phantom{0000}}\u0002'; let h = p.p.h; let tail = true;
     if (h.includes(LB)) { const t = h.trimEnd(); if (t.endsWith(LB)) h = t.slice(0, -LB.length); else { tail = false; h = h.split(LB).join('\u0001\\underline{\\phantom{00000000}}\u0002'); } }
     const blank = tail ? `<span class="ub">${p.pre ? `<span>${esc(p.pre)}</span>` : ''}<i></i>${p.suffix ? `<span class="sx">${esc(p.suffix)}</span>` : ''}${p.form ? `<span class="sx">${esc(p.form)}</span>` : ''}</span>` : '';
-    return `<div class="uq"><span class="un">${p.est ? '*' : ''}(${p.n})</span><div class="ut"><span class="up">${R(h)}</span>${blank}</div></div>`;
+    const plain = esc(`${p.est ? '*' : ''}(${p.n}) ${NS.plainProblem(p)}`);
+    return `<div class="uq" data-txt="${plain}"><span class="un">${p.est ? '*' : ''}(${p.n})</span><div class="ut"><span class="up">${R(h)}</span>${blank}</div></div>`;
   }
   // an absolutely placed line of the header: x and y are the real sheet's text positions in points
   const at = (x, y, cls, html, extra = '') => `<div class="ua2 ${cls}" style="left:${(x - PG.left).toFixed(1)}pt;top:${(y - PG.top).toFixed(1)}pt;${extra}">${html}</div>`;
@@ -6271,7 +6332,7 @@ NS.G({
     // pieces with no space between them stay together, as in normal text ("(" + math, math + ".")
     const push = (node, breakable) => { if (glue && last && !breakable) { last.appendChild(node); } else { const a = document.createElement('span'); a.className = 'ua'; a.appendChild(node); atoms.push(a); last = a; } glue = true; };
     [...up.childNodes].forEach(n => {
-      if (n.nodeType === 3) { n.textContent.split(/(\s+)/).forEach(ch => { if (!ch) return; if (/^\s+$/.test(ch)) { if (last) last.classList.add('sp'); glue = false; } else push(document.createTextNode(ch)); }); return; }
+      if (n.nodeType === 3) { n.textContent.split(/(\s+)/).forEach(ch => { if (!ch) return; if (/^\s+$/.test(ch)) { if (last) last.appendChild(document.createTextNode(' ')); glue = false; } else push(document.createTextNode(ch)); }); return; }
       if (n.classList && n.classList.contains('katex')) {
         // long math can wrap between its pieces, as KaTeX allows
         const bases = [...n.querySelectorAll(':scope > .katex-html > .base')];
@@ -6293,7 +6354,7 @@ NS.G({
     const probs = state.printProbs, full = state.printFull;
     const nodes = probs.map(p => { const d = document.createElement('div'); d.innerHTML = uilProb(p); return d.firstElementChild; });
     nodes.forEach(n => { atomize(n.querySelector('.up')); printGlyphs(n); });
-    const keyNodes = probs.map(p => { const d = document.createElement('div'); d.className = 'uk'; d.innerHTML = `<span class="un">${p.est ? '*' : ''}(${p.n})</span><span class="ukv">${keyRange(p).split('<span class="or"> or </span>').join(', ')}</span>`; printGlyphs(d); return d; });
+    const keyNodes = probs.map(p => { const d = document.createElement('div'); d.className = 'uk'; d.dataset.txt = `${p.est ? '*' : ''}(${p.n}) ${p.est ? keyRange(p) : NS.keyText(p.a)}`; d.innerHTML = `<span class="un">${p.est ? '*' : ''}(${p.n})</span><span class="ukv">${keyRange(p).split('<span class="or"> or </span>').join(', ')}</span>`; printGlyphs(d); return d; });
     const pgs = $$('.upage', paper); const tests = pgs.filter(p => !p.classList.contains('ukey'));
     const cols = tests.map(p => [$('.ucl', p), $('.ucr', p)]);
     let cut = null;
@@ -6308,6 +6369,8 @@ NS.G({
       cols[1][0].replaceChildren(...back.slice(0, best)); cols[1][1].replaceChildren(...back.slice(best));
       cut = [l1, front, front + best, probs.length];
     };
+    // copying from the sheet gives each problem as one line of plain text
+    if (!paper.dataset.copy) { paper.dataset.copy = 1; paper.addEventListener('copy', e => { const sel = getSelection(); if (!sel.rangeCount) return; const r = sel.getRangeAt(0); const items = [...paper.querySelectorAll('.uq, .uk, .ua2')].filter(el => r.intersectsNode(el)); if (!items.length || !e.clipboardData) return; e.preventDefault(); e.clipboardData.setData('text/plain', items.map(el => el.dataset.txt || el.innerText.replace(/\s+/g, ' ').trim()).join('\n')); }); }
     const fit = () => {
       paper.style.setProperty('--uk', 1);
       const set = (fs, g) => pgs.forEach(pg => { pg.style.setProperty('--ufs', fs + 'pt'); pg.style.setProperty('--ugap', g + 'em'); });

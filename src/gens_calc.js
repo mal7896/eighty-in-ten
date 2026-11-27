@@ -51,11 +51,11 @@
       if (kd === 'dot') { const a = r.int(-6, 9), b = r.int(-6, 9), c = r.int(-6, 9), d = r.int(-6, 9); const v = a * c + b * d;
         return { p: H.cat(`⟨${a}, ${b}⟩ · ⟨${c}, ${d}⟩ =`.replace(/-/g, '−')), a: A.num(v), params: { a, b, c, d }, steps: [`Multiply matching parts and add: (${a})(${c}) + (${b})(${d}).`, `= ${hl(v)}`] }; }
       const [x, y, z] = r.pick([[3, 4, 5], [5, 12, 13], [8, 15, 17], [6, 8, 10], [7, 24, 25], [9, 40, 41]]);
-      if (kd === 'mag') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`The magnitude of ⟨${sx * x}, ${sy * y}⟩ is`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`√(${x}² + ${y}²). It is a ${x}–${y}–${z} triple.`, `= ${hl(z)}`] }; }
-      if (kd === 'polar') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`The point (${sx * x}, ${sy * y}) in polar form is (r, θ) with r > 0. r =`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`r = √(x² + y²).`, `= ${hl(z)}`] }; }
+      if (kd === 'mag') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`The magnitude of ⟨${sx * x}, ${sy * y}⟩ is`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`√(${x}² + ${y}²). It is ${NS.an(x)} ${x}–${y}–${z} triple.`, `= ${hl(z)}`] }; }
+      if (kd === 'polar') { const sx = r.sign(), sy = r.sign(); return { p: H.cat(`Let (${sx * x}, ${sy * y}) be the rectangular coordinates for the polar coordinates (r, θ), r > 0. r =`.replace(/-/g, '−')), a: A.num(z), params: { x, y }, steps: [`r = √(x² + y²).`, `= ${hl(z)}`] }; }
       const rr = 2 * r.int(1, 9); const th = r.pick([60, 120, 240, 300, 30, 150, 210, 330]); const useX = [60, 120, 240, 300].includes(th); const cs = useX ? { 60: q(1, 2), 120: q(-1, 2), 240: q(-1, 2), 300: q(1, 2) }[th] : { 30: q(1, 2), 150: q(1, 2), 210: q(-1, 2), 330: q(-1, 2) }[th];
       const v = cs.mul(rr);
-      return { p: H.cat(`The polar point (${rr}, ${th}°) has rectangular ${useX ? 'x' : 'y'}-coordinate`), a: A.num(v), params: { rr, th }, steps: [`${useX ? 'x = r cos θ' : 'y = r sin θ'} = ${rr} × ${H.Qf(cs).h}.`, `= ${hl(H.Qf(v).h)}`] };
+      return { p: H.cat(`Let (x, y) be the rectangular coordinates for the polar coordinates (${rr}, ${th}°). ${useX ? 'x' : 'y'} =`), a: A.num(v), params: { rr, th }, steps: [`${useX ? 'x = r cos θ' : 'y = r sin θ'} = ${rr} × ${H.Qf(cs).h}.`, `= ${hl(H.Qf(v).h)}`] };
     },
   });
 

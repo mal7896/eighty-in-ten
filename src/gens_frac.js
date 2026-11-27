@@ -130,7 +130,7 @@
       if (r.chance(0.5)) { // two fractions
         let a, b, c, d; do { b = r.int(5, 15); d = r.int(5, 15); a = r.int(Math.ceil(b / 2), b - 1); c = r.int(Math.ceil(d / 2), d - 1); } while (b === d || M.gcd(a, b) !== 1 || M.gcd(c, d) !== 1 || a * d === b * c || Math.abs(a / b - c / d) > 0.06);
         const x = q(a, b), y = q(c, d); const pickX = (x.cmp(y) > 0) === larger; const v = pickX ? x : y;
-        return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}: `, H.frac(a, b), ' or ', H.frac(c, d), '?'), a: A.num(v), params: { a, b, c, d, larger },
+        return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}, `, H.frac(a, b), ' or ', H.frac(c, d), '?'), a: A.num(v), params: { a, b, c, d, larger },
           steps: [`Cross-multiply: ${a}×${d} = ${a * d} and ${c}×${b} = ${c * b}.`, `The bigger cross product sits with the bigger fraction: ${x.cmp(y) > 0 ? `${a}/${b}` : `${c}/${d}`} is larger.`, `Answer: ${hl(H.frac(Number(v.n), Number(v.d)).h)}`] };
       }
       let a, b; do { b = r.pick([3, 6, 7, 9, 11, 12, 13, 14]); a = r.int(1, b - 1); } while (M.gcd(a, b) !== 1);
@@ -139,7 +139,7 @@
       if (dv.eq(f)) return this.gen(r, lv);
       const pickF = (f.cmp(dv) > 0) === larger; const v = pickF ? f : dv;
       const decf = (Number(f.n) / Number(f.d)).toFixed(4).replace(/^0/, '');
-      return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}: `, H.frac(a, b), ' or ', H.dec(dv), '?'), a: { ...A.num(v), show: pickF ? H.frac(a, b).h : H.dec(dv).h }, params: { a, b, dv: dv.toDecStr(), larger },
+      return { p: H.cat(`Which is ${larger ? 'larger' : 'smaller'}, `, H.frac(a, b), ' or ', H.dec(dv), '?'), a: { ...A.num(v), show: pickF ? H.frac(a, b).h : H.dec(dv).h }, params: { a, b, dv: dv.toDecStr(), larger },
         steps: [`${a}/${b} = ${decf}…`, `Compare with ${H.dec(dv).h}: ${f.cmp(dv) > 0 ? `${a}/${b} is larger` : `${H.dec(dv).h} is larger`}.`, `Answer: ${hl(pickF ? H.frac(a, b).h : H.dec(dv).h)}`] };
     },
   });
@@ -222,10 +222,10 @@
     gen(r, lv, x = 1) {
       const kd = r.pick(['mean', 'missing', 'median']);
       if (kd === 'mean') { const xs = Array.from({ length: x >= 2 ? r.int(4, 5) : r.int(3, 4) }, () => r.int(8, 60)); const s = xs.reduce((x, y) => x + y, 0); const v = q(s, xs.length);
-        return { p: H.cat(`The mean of ${xs.join(', ')} is`), a: A.num(v), params: { xs }, steps: [`Sum: ${s}. Divide by ${xs.length}.`, `Answer: ${hl(H.Qf(v).h)}`] }; }
+        return { p: H.cat(`The average of ${xs.slice(0, -1).join(', ')}, and ${xs[xs.length - 1]} is`), a: A.num(v), params: { xs }, steps: [`Sum: ${s}. Divide by ${xs.length}.`, `Answer: ${hl(H.Qf(v).h)}`] }; }
       if (kd === 'missing') { const n = r.int(4, 6), m = r.int(10, 40); const xs = Array.from({ length: n - 1 }, () => r.int(m - 9, m + 9)); const last = n * m - xs.reduce((x, y) => x + y, 0);
         if (last <= 0) return this.gen(r, lv);
-        return { p: H.cat(`The mean of ${n} numbers is ${m}. ${n - 1} of them are ${xs.join(', ')}. The last one is`), a: A.num(last), params: { n, m, xs }, steps: [`Total must be ${n} × ${m} = ${n * m}.`, `${n * m} − ${xs.reduce((x, y) => x + y, 0)} = ${hl(last)}`] }; }
+        return { p: H.cat(`The average of ${xs.join(', ')}, and k is ${m}. Find k.`), a: A.num(last), params: { n, m, xs }, steps: [`Total must be ${n} × ${m} = ${n * m}.`, `${n * m} − ${xs.reduce((x, y) => x + y, 0)} = ${hl(last)}`] }; }
       const xs = Array.from({ length: r.pick([5, 6, 7]) }, () => r.int(3, 70)); const s = xs.slice().sort((x, y) => x - y);
       const L = s.length; const v = L % 2 ? q(s[(L - 1) / 2]) : q(s[L / 2 - 1] + s[L / 2], 2);
       return { p: H.cat(`The median of ${xs.join(', ')} is`), a: A.num(v), params: { xs }, steps: [`Sort: ${s.join(', ')}.`, L % 2 ? `Middle value: ${hl(s[(L - 1) / 2])}` : `Average the two middles: (${s[L / 2 - 1]} + ${s[L / 2]})/2 = ${hl(H.Qf(v).h)}`] };

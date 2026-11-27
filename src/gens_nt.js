@@ -65,7 +65,7 @@
       if (kd === 'gl') return { p: H.cat(`The GCD of ${a} and ${b} times their LCM is`), a: A.num(a * b), params: { a, b }, steps: [`GCD × LCM always equals the product of the two numbers.`, `${a} × ${b} = ${hl(fm(a * b))}`] };
       const t = [r.pick([4, 6, 8, 9, 10, 12]), r.pick([14, 15, 16, 18, 20]), r.pick([21, 24, 27, 30, 36])];
       const L = M.lcm(M.lcm(t[0], t[1]), t[2]);
-      return { p: H.cat(`The LCM of ${t.join(', ')} is`), a: A.num(L), params: { t }, steps: [`Take the highest power of each prime: ${t.map(n => `${n} = ${M.factor(n).map(([p, e]) => e > 1 ? `${p}^${e}` : p).join('·')}`).join('; ')}.`, `LCM = ${hl(fm(L))}`] };
+      return { p: H.cat(`The LCM of ${t[0]}, ${t[1]}, and ${t[2]} is`), a: A.num(L), params: { t }, steps: [`Take the highest power of each prime: ${t.map(n => `${n} = ${M.factor(n).map(([p, e]) => e > 1 ? `${p}^${e}` : p).join('·')}`).join('; ')}.`, `LCM = ${hl(fm(L))}`] };
     },
   });
 
@@ -120,7 +120,7 @@
       const m = r.pick([5, 7, 9, 11, 13]); let a; do { a = r.int(2, m - 1); } while (M.gcd(a, m) !== 1);
       const b = r.int(1, m - 1);
       let x = 0; while ((a * x - b) % m !== 0) x++;
-      if (r.chance(0.5)) return { p: H.cat(`If ${a}x ≡ ${b} (mod ${m}) and 0 ≤ x < ${m}, then x =`), a: A.num(x), params: { a, b, m }, steps: [`Try x = 0, 1, 2, … or add ${m}s to ${b} until ${a} divides it.`, `${a} × ${x} = ${a * x}, and ${a * x} ≡ ${b} (mod ${m}). x = ${hl(x)}`] };
+      if (r.chance(0.5)) return { p: H.cat(`Find x, 0 ≤ x ≤ ${m - 1}, if ${a}x ≡ ${b} (mod ${m}). x =`), a: A.num(x), params: { a, b, m }, steps: [`Try x = 0, 1, 2, … or add ${m}s to ${b} until ${a} divides it.`, `${a} × ${x} = ${a * x}, and ${a * x} ≡ ${b} (mod ${m}). x = ${hl(x)}`] };
       const m1 = r.pick([3, 4, 5]); let m2; do { m2 = r.pick([7, 8, 9, 11]); } while (M.gcd(m1, m2) !== 1); const r1 = r.int(1, m1 - 1), r2 = r.int(1, m2 - 1);
       let y = 1; while (y % m1 !== r1 || y % m2 !== r2) y++;
       return { p: H.cat(`The smallest positive integer that leaves remainder ${r1} when divided by ${m1} and remainder ${r2} when divided by ${m2} is`), a: A.num(y), params: { m1, m2, r1, r2 }, steps: [`List numbers that leave ${r2} mod ${m2}: ${r2}, ${r2 + m2}, ${r2 + 2 * m2}, …`, `First one that leaves ${r1} mod ${m1}: ${hl(y)}`] };
@@ -208,7 +208,7 @@
         return { p: H.cat(`The ${NS.ord(k)} term of 1, 1, 2, 3, 5, 8, … is`), a: A.num(f[k - 1]), params: { kd, k }, steps: [`Each term is the sum of the two before it.`, `${f.slice(-4).join(', ')} → the ${NS.ord(k)} is ${hl(f[k - 1])}`] }; }
       const a = r.int(1, 6), b = r.int(1, 9); const f = [a, b]; while (f.length < 10) f.push(f[f.length - 1] + f[f.length - 2]);
       const s = f.reduce((x, y) => x + y, 0);
-      return { p: H.cat(`The sum of the first 10 terms of ${a}, ${b}, ${a + b}, ${a + 2 * b}, … (each term is the sum of the two before it) is`), a: A.num(s), params: { kd, a, b }, steps: [`For 10 terms of any Fibonacci-style sequence, the sum is 11 × the 7th term.`, `7th term = ${f[6]}. 11 × ${f[6]} = ${hl(s)}`] };
+      return { p: H.cat(`The sum of the first 10 terms of ${f.slice(0, 6).join(', ')}, … is`), a: A.num(s), params: { kd, a, b }, steps: [`For 10 terms of any Fibonacci-style sequence, the sum is 11 × the 7th term.`, `7th term = ${f[6]}. 11 × ${f[6]} = ${hl(s)}`] };
     },
   });
 
@@ -220,13 +220,13 @@
       const kd = lv === 'ms' ? r.pick(['to10', 'from10', 'from10', 'b2b']) : r.pick(['to10', 'from10', 'b2b', 'b2b']);
       if (kd === 'to10') { const b = r.pick([2, 3, 4, 5, 6, 7, 8]); const n = r.int(b * b, b ** 3 * 2); const s = toB(n, b);
         const terms = s.split('').map((d, i) => `${d}×${b}^${s.length - 1 - i}`);
-        return { p: H.cat(H.base(s, b), ' = '), suffix: '(base 10)', a: A.num(n), params: { s, b }, steps: [`Place values: ${terms.join(' + ')}.`, `= ${hl(n)}`] }; }
+        return { p: H.cat(H.base(s, b), ' = '), suffix: 'base 10', a: A.num(n), params: { s, b }, steps: [`Place values: ${terms.join(' + ')}.`, `= ${hl(n)}`] }; }
       if (kd === 'from10') { const b = r.pick([2, 3, 4, 5, 6, 7, 8, 9]); const n = r.int(b + 2, Math.min(300, b ** 3)); const s = toB(n, b);
         const divs = []; let x = n; while (x) { divs.push(`${x} ÷ ${b} = ${Math.floor(x / b)} r ${x % b}`); x = Math.floor(x / b); }
-        return { p: H.cat(H.base(String(n), 10), ' = '), suffix: `(base ${b})`, a: A.text(s, 'base'), params: { n, b }, steps: [`Divide by ${b} repeatedly and read the remainders bottom to top.`, divs.join('; '), `Answer: ${hl(s)} in base ${b}`] }; }
+        return { p: H.cat(H.base(String(n), 10), ' = '), suffix: `base ${b}`, a: A.text(s, 'base'), params: { n, b }, steps: [`Divide by ${b} repeatedly and read the remainders bottom to top.`, divs.join('; '), `Answer: ${hl(s)} in base ${b}`] }; }
       const [b1, b2] = r.pick(lv === 'ms' ? [[2, 4], [2, 8], [4, 2], [8, 2]] : [[2, 4], [2, 8], [4, 2], [8, 2], [2, 16], [3, 9], [9, 3]]); const n = r.int(9, b2 === 16 || b1 === 16 ? 255 : 120); const s = toB(n, b1), t = toB(n, b2);
       const g = Math.round(Math.log(Math.max(b1, b2)) / Math.log(Math.min(b1, b2)));
-      return { p: H.cat(H.base(s, b1), ' = '), suffix: `(base ${b2})`, a: A.text(t, 'base'), params: { n, b1, b2 }, steps: [b1 < b2 ? `Group the digits in blocks of ${g} from the right; each block becomes one digit in base ${b2}.` : `Expand each digit into ${g} digits in base ${b2}.`, `Answer: ${hl(t)} in base ${b2}`] };
+      return { p: H.cat(H.base(s, b1), ' = '), suffix: `base ${b2}`, a: A.text(t, 'base'), params: { n, b1, b2 }, steps: [b1 < b2 ? `Group the digits in blocks of ${g} from the right; each block becomes one digit in base ${b2}.` : `Expand each digit into ${g} digits in base ${b2}.`, `Answer: ${hl(t)} in base ${b2}`] };
     },
   });
 
@@ -236,11 +236,11 @@
       const b = r.pick([4, 5, 6, 7, 8, 3]); const x = r.int(b + 1, b * b * 2), y = r.int(2, b * b * 2);
       const op = lv === 'ms' ? r.pick(['+', '+', '−']) : r.pick(['+', '−', '×']);
       let a, steps;
-      if (op === '×') { const y2 = r.int(2, b - 1); a = x * y2; steps = [`Work in base 10: ${x} × ${y2} = ${a}.`, `Convert back to base ${b}: ${hl(toB(a, b))}`]; return { p: H.cat(H.base(toB(x, b), b), ' × ', H.base(toB(y2, b), b), ' = '), suffix: `(base ${b})`, a: A.text(toB(a, b), 'base'), params: { x, y: y2, b, op }, steps }; }
+      if (op === '×') { const y2 = r.int(2, b - 1); a = x * y2; steps = [`Work in base 10: ${x} × ${y2} = ${a}.`, `Convert back to base ${b}: ${hl(toB(a, b))}`]; return { p: H.cat(H.base(toB(x, b), b), ' × ', H.base(toB(y2, b), b), ' = '), suffix: `base ${b}`, a: A.text(toB(a, b), 'base'), params: { x, y: y2, b, op }, steps }; }
       if (op === '−' && y > x) return this.gen(r, lv);
       a = op === '+' ? x + y : x - y;
       steps = [`Easiest: convert to base 10. ${NS.m(`${toB(x, b)}_{${b}} = ${x}`)} and ${NS.m(`${toB(y, b)}_{${b}} = ${y}`)}.`, `${x} ${op} ${y} = ${a}, back to base ${b}: ${hl(toB(a, b))}`];
-      return { p: H.cat(H.base(toB(x, b), b), ` ${op} `, H.base(toB(y, b), b), ' = '), suffix: `(base ${b})`, a: A.text(toB(a, b), 'base'), params: { x, y, b, op }, steps };
+      return { p: H.cat(H.base(toB(x, b), b), ` ${op} `, H.base(toB(y, b), b), ' = '), suffix: `base ${b}`, a: A.text(toB(a, b), 'base'), params: { x, y, b, op }, steps };
     },
   });
 
@@ -249,7 +249,7 @@
     gen(r) {
       const b = r.pick([2, 4, 5, 8]); const d1 = r.int(1, b - 1), d2 = r.int(1, b - 1);
       const v = q(d1, b).add(q(d2, b * b));
-      return { p: H.cat(H.base(`0.${d1}${d2}`, b), ' = '), suffix: '(base 10 fraction)', a: A.num(v, 'frac'), params: { b, d1, d2 }, steps: [`0.${d1}${d2} in base ${b} = ${d1}/${b} + ${d2}/${b * b}.`, `= ${(d1 * b + d2)}/${b * b} = ${hl(H.Qi(v).h)}`] };
+      return { p: H.cat(H.base(`0.${d1}${d2}`, b), ' = '), suffix: 'base 10 (fraction)', a: A.num(v, 'frac'), params: { b, d1, d2 }, steps: [`0.${d1}${d2} in base ${b} = ${d1}/${b} + ${d2}/${b * b}.`, `= ${(d1 * b + d2)}/${b * b} = ${hl(H.Qi(v).h)}`] };
     },
   });
 })();

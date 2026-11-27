@@ -652,8 +652,7 @@ body.nolevel main { padding-bottom: 48px; }
 .uq { display: grid; grid-template-columns: 27.5pt minmax(0, 1fr); column-gap: 5.5pt; align-items: baseline; padding: var(--ugap) 0; break-inside: avoid; }
 .un { text-align: right; white-space: nowrap; }
 .ut { display: flex; flex-wrap: wrap; align-items: baseline; min-width: 0; }
-.ua { white-space: nowrap; max-width: 100%; }
-.ua.sp { margin-right: .25em; }
+.ua { white-space: pre; max-width: 100%; } /* a real space ends each word, so copied text keeps its spaces */
 .ub { flex: 1 0 .55in; display: flex; align-items: baseline; gap: .3em; margin-left: .25em; }
 .ub i { flex: 1; height: 1em; border-bottom: .75pt solid #000; }
 .ub .sx { white-space: nowrap; }

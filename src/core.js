@@ -153,7 +153,7 @@ const H = NS.H = {
   pow(b, e) { const B = piece(b), E = piece(e); const l = `{${B.l}}^{${E.l}}`; return { h: mk(l), t: `(${B.t})^(${E.t})`, l }; },
   sqrt(x) { const X = piece(x); const l = `\\sqrt{${X.l}}`; return { h: mk(l), t: `sqrt(${X.t})`, l }; },
   cbrt(x) { const X = piece(x); const l = `\\sqrt[3]{${X.l}}`; return { h: mk(l), t: `cbrt(${X.t})`, l }; },
-  base(s, b) { const l = `${s}_{${b === 10 ? '\\text{ten}' : b}}`; return { h: mk(l), t: '', l }; },
+  base(s, b) { const l = `${s}_{${b}}`; return { h: mk(l), t: '', l }; },
   paren(x) { const X = piece(x); return { h: `(${X.h})`, t: `(${X.t})`, l: `(${X.l})` }; },
   rep(s) { const l = mathify(s) + '\\ldots'; return { h: mk(l), t: '', l }; },
   bar(prefix, rep) { const l = `${prefix}\\overline{${rep}}`; return { h: mk(l), t: '', l }; },
@@ -173,6 +173,62 @@ NS.latexPlain = function (l) {
   t = t.replace(/\{,\}/g, ',').replace(/\\%/g, '%').replace(/\\\$/g, '$').replace(/\\[,!;]/g, '').replace(/\\(left|right)/g, '').replace(/\\[a-zA-Z]+/g, '').replace(/[{}]/g, '');
   return t.replace(/\s+/g, ' ').trim();
 };
+// the article before a number: an 8, an 11, an 18, an 80, a 7
+NS.an = v => (/^(8|1[18](?!\d))/.test(String(v)) ? 'an' : 'a');
+NS.An = v => (NS.an(v) === 'an' ? 'An' : 'A');
+// LaTeX → readable Unicode text, for copying a problem: x², ∛27, (x − 1)/(x + 1), lim(x→2), Σ(k=1 to 7), |a b; c d|
+NS.latexText = (function () {
+  const SUP = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹', '−': '⁻', '+': '⁺', n: 'ⁿ', '(': '⁽', ')': '⁾' };
+  const SUB = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉', '−': '₋', '+': '₊' };
+  const SYM = { times: '×', div: '÷', cdot: '·', pi: 'π', le: '≤', leq: '≤', ge: '≥', geq: '≥', ne: '≠', neq: '≠', equiv: '≡', to: '→', infty: '∞', theta: 'θ', alpha: 'α', beta: 'β', ldots: '…', cdots: '⋯', dots: '…', circ: '°', degree: '°', cap: '∩', cup: '∪', pm: '±', approx: '≈', prime: '′', lfloor: '⌊', rfloor: '⌋', lceil: '⌈', rceil: '⌉', in: '∈', angle: '∠', triangle: '△', perp: '⊥', cong: '≅', sim: '~', mid: '|', vert: '|', lvert: '|', rvert: '|', quad: ' ', qquad: ' ', bmod: ' mod ', '{': '{', '}': '}', '%': '%', $: '$', '&': '&', '#': '#', ',': ' ', ';': ' ', ':': ' ', ' ': ' ', '!': '', '|': '‖', left: '', right: '', big: '', Big: '', displaystyle: '', textstyle: '', limits: '', nolimits: '' };
+  const FN = ['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'arcsin', 'arccos', 'arctan', 'log', 'ln', 'exp', 'det', 'max', 'min'];
+  const BIG = { lim: 'lim', sum: 'Σ', prod: 'Π', int: '∫', iint: '∬' };
+  const tight = s => /^[\w.!′°π⁰¹²³⁴⁵⁶⁷⁸⁹ⁿ⁻₀₁₂₃₄₅₆₇₈₉]+$/.test(s);
+  function convert(s) {
+    let out = '', i = 0;
+    const group = () => { // the next {…} group, or the next single token
+      while (s[i] === ' ') i++;
+      if (s[i] === '{') { let d = 0, j = i; for (; j < s.length; j++) { if (s[j] === '\\') { j++; continue; } if (s[j] === '{') d++; else if (s[j] === '}' && --d === 0) break; } const g = s.slice(i + 1, j); i = j + 1; return g; }
+      if (s[i] === '\\') { const m = /^\\([a-zA-Z]+|.)/.exec(s.slice(i)); i += m[0].length; return m[0]; }
+      return s[i++] || '';
+    };
+    const opt = () => { if (s[i] !== '[') return null; const j = s.indexOf(']', i); const g = s.slice(i + 1, j); i = j + 1; return g; };
+    const scripts = () => { let lo = null, hi = null; for (;;) { while (s[i] === ' ') i++; if (s[i] === '_' && lo === null) { i++; lo = convert(group()); } else if (s[i] === '^' && hi === null) { i++; hi = convert(group()); } else break; } return [lo, hi]; };
+    const par = x => (tight(x) ? x : `(${x})`);
+    while (i < s.length) {
+      const c = s[i];
+      if (c === '\\') {
+        const m = /^\\([a-zA-Z]+|.)/.exec(s.slice(i)); const name = m[1]; i += m[0].length;
+        if (name === 'frac' || name === 'dfrac' || name === 'tfrac') { const a = convert(group()), b = convert(group()); out += `${/\d$/.test(out) ? ' ' : ''}${par(a)}/${par(b)}`; continue; }
+        if (name === 'binom') { const a = convert(group()), b = convert(group()); out += `C(${a}, ${b})`; continue; }
+        if (name === 'sqrt') { const n = opt(); const x = convert(group()); out += (n === null || n === '2' ? '√' : n === '3' ? '∛' : n === '4' ? '∜' : [...n].map(ch => SUP[ch] || ch).join('') + '√') + par(x); continue; }
+        if (name === 'text' || name === 'mathrm' || name === 'textrm' || name === 'operatorname' || name === 'mathit' || name === 'textbf' || name === 'mathbf') { out += name === 'operatorname' ? convert(group()) + ' ' : group(); continue; }
+        if (name === 'overline') { out += [...convert(group())].map(ch => ch + '̅').join(''); continue; }
+        if (name === 'underline') { group(); out += '____'; continue; }
+        if (name === 'hspace' || name === 'vphantom' || name === 'phantom') { group(); out += ' '; continue; }
+        if (name === 'pmod') { out += ` (mod ${convert(group())})`; continue; }
+        if (name === 'begin') { const env = group(); const end = s.indexOf(`\\end{${env}}`, i); const body = s.slice(i, end); i = end + `\\end{${env}}`.length;
+          const rows = body.split(/\\\\/).map(r => r.split('&').map(x => convert(x).trim()).join(' ')).filter(Boolean).join('; ');
+          const [l, r] = { vmatrix: ['|', '|'], Vmatrix: ['‖', '‖'], bmatrix: ['[', ']'], pmatrix: ['(', ')'] }[env] || ['', '']; out += l + rows + r; continue; }
+        if (BIG[name]) { const [lo, hi] = scripts(); out += BIG[name] + (lo !== null && hi !== null ? `(${lo.trim()} to ${hi.trim()})` : lo !== null ? `(${lo.trim()})` : '') + ' '; continue; }
+        if (FN.includes(name)) { out += name; const [lo, hi] = scripts(); if (lo !== null) out += [...lo].every(ch => SUB[ch]) ? [...lo].map(ch => SUB[ch]).join('') : `_${par(lo)}`; if (hi !== null) out += [...hi].every(ch => SUP[ch]) ? [...hi].map(ch => SUP[ch]).join('') : `^${par(hi)}`; if (/^[\w(]/.test(s.slice(i).trimStart()) && !/^\s*\(/.test(s.slice(i))) out += ' '; continue; }
+        out += SYM[name] !== undefined ? SYM[name] : name; continue;
+      }
+      if (c === '{') { out += convert(group()); continue; }
+      if (c === '^' || c === '_') { i++; const x = convert(group()).trim(); const map = c === '^' ? SUP : SUB;
+        if (c === '^' && (x === '°' || x === '′' || x === '′′')) out += x;
+        else if (x && [...x].every(ch => map[ch])) out += [...x].map(ch => map[ch]).join('');
+        else out += c + par(x);
+        continue; }
+      if (c === '~') { out += ' '; i++; continue; }
+      if (c === '-') { out += '−'; i++; continue; }
+      if (c === '}') { i++; continue; }
+      out += c; i++;
+    }
+    return out;
+  }
+  return l => convert(String(l)).replace(/\[\[/g, '⟦').replace(/\]\]/g, '⟧').replace(/\s+/g, ' ').trim();
+})();
 // a lightweight HTML fallback when KaTeX is unavailable
 function latexFallback(l) {
   let t = esc(l);
@@ -364,6 +420,11 @@ NS.keyHtml = function (spec) {
   if (f !== 'mixed') parts.push(H.Qi(v).h);
   if (f === 'any' && v.terminates()) parts.push(H.dec(v).h);
   return [...new Set(parts)].join('<span class="or"> or </span>');
+};
+// a problem as plain text, for copying: math in plain form, the blank as a line, units and form after it
+NS.plainProblem = function (p) {
+  const txt = String(p.p.h).replace(/\u0001([^\u0002]*)\u0002/g, (m0, l) => /\\underline/.test(l) ? '______' : NS.latexText(l)).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
+  return `${txt} ${p.pre || ''}${txt.includes('______') ? '' : '______'}${p.suffix ? ' ' + p.suffix : ''}${p.form ? ' ' + p.form : ''}`.replace(/\s+/g, ' ').trim();
 };
 NS.keyText = function (spec) { // plain text key (for aria / tests)
   if (spec.type === 'text') return spec.v;

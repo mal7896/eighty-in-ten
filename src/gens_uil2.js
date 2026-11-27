@@ -21,7 +21,7 @@
     id: 'baseNear', trick: 'bases', col: { ms: 0, hs: 3 },
     gen(r) {
       const b = r.int(3, 9), n = r.int(2, 4); const k = r.int(1, Math.min(b * b - 1, 40)); const v = b ** n - k; const s = toB(v, b), ks = toB(k, b);
-      return { p: H.cat(H.pow(b, n), ' − ', H.n(k), ' ='), suffix: `(base ${b})`, a: A.text(s, 'base'), params: { b, n, k },
+      return { p: H.cat(H.pow(b, n), ' − ', H.n(k), ' ='), suffix: `base ${b}`, a: A.text(s, 'base'), params: { b, n, k },
         steps: [`${b}^${n} in base ${b} is 1 followed by ${n} zeros: ${'1' + '0'.repeat(n)}. And ${k} in base ${b} is ${ks}.`, `${'1' + '0'.repeat(n)} − ${ks} in base ${b}: borrowing turns zeros into ${b - 1}s. Answer: ${hl(s)}`] };
     },
   });
@@ -71,7 +71,7 @@
       if (kd === 'n') { const n = r.int(7, 12); const t = fibSeq(a, b, n + 2); const v = t.slice(0, n).reduce((x, y) => x + y);
         return { p: H.cat(`${t.slice(0, 5).join(' + ')} + … + ${t[n - 1]} =`), a: A.num(v), params: { kd, a, b, n }, steps: [`In a Fibonacci-like sequence, the sum of the first n terms is the term two places later minus the 2nd term.`, `The terms continue ${t.slice(n - 2, n + 2).join(', ')}. The term after ${t[n - 1]} is ${t[n]}, then ${t[n + 1]}. ${t[n + 1]} − ${b} = ${hl(fm(v))}`] }; }
       const t = fibSeq(a, b, 10); const S = t.reduce((x, y) => x + y);
-      return { p: H.cat(`The first ten terms of a sequence where each term is the sum of the two before it add up to ${fm(S)}. The 7th term is`), a: A.num(t[6]), params: { kd, a, b }, steps: [`The sum of the first ten terms is always 11 times the 7th term.`, `${fm(S)} ÷ 11 = ${hl(t[6])}`] };
+      return { p: H.cat('The sum of the first 10 terms of ', H.L('a, b, a + b, a + 2b, 2a + 3b, \\ldots'), ` is ${fm(S)}. The 7th term is`), a: A.num(t[6]), params: { kd, a, b }, steps: [`The sum of the first ten terms is always 11 times the 7th term.`, `${fm(S)} ÷ 11 = ${hl(t[6])}`] };
     },
   });
 
@@ -232,7 +232,7 @@
         return { p: H.cat(H.L(`\\${outer}\\left(\\${inner}^{-1} ${shown}\\right)`), ' ='), a: A.num(val), params: { kd, inner, outer, arg: arg.num() }, steps: [`Draw the ${o}-${a}-${h} right triangle: ${inner} of the angle is ${H.Qi(arg).h}.`, `${outer} of that angle = ${hl(H.Qi(val).h)}`] }; }
       const opts = [['cos', '-\\tfrac12', 3, 240], ['sin', '-\\tfrac{\\sqrt3}{2}', 4, 300], ['tan', '-1', 2, 135], ['sin', '\\tfrac12', 2, 150], ['cos', '\\tfrac{\\sqrt2}{2}', 4, 315], ['tan', '\\sqrt3', 3, 240], ['cos', '-\\tfrac{\\sqrt3}{2}', 2, 150], ['sin', '-\\tfrac{\\sqrt2}{2}', 3, 225]];
       const [f, l, qd, deg] = r.pick(opts);
-      return { p: H.cat(H.L(`\\${f}\\theta = ${l}`), ` and θ is in quadrant ${['I', 'II', 'III', 'IV'][qd - 1]}, 0° ≤ θ < 360°. θ =`), suffix: '°', a: A.num(deg), params: { kd, f, deg, qd }, steps: [`The reference angle for ${m(l.replace('-', ''))} is ${deg % 90 === 0 ? 90 : [30, 45, 60].find(t => [180 - t, 180 + t, 360 - t].includes(deg) || t === deg)}°.`, `In quadrant ${['I', 'II', 'III', 'IV'][qd - 1]}: θ = ${hl(deg)}°`] };
+      return { p: H.cat('If ', H.L(`\\${f}\\theta = ${l}`), ` and ${(qd - 1) * 90}° < θ < ${qd * 90}°, then θ =`), suffix: '°', a: A.num(deg), params: { kd, f, deg, qd }, steps: [`The reference angle for ${m(l.replace('-', ''))} is ${deg % 90 === 0 ? 90 : [30, 45, 60].find(t => [180 - t, 180 + t, 360 - t].includes(deg) || t === deg)}°.`, `In quadrant ${['I', 'II', 'III', 'IV'][qd - 1]}: θ = ${hl(deg)}°`] };
     },
   });
 
@@ -292,7 +292,7 @@
     id: 'baseFracTo', trick: 'bases', col: { ms: 0, hs: 4 },
     gen(r) {
       const b = r.int(3, 9); const d1 = r.int(0, b - 1), d2 = r.int(1, b - 1); if (!d1 && r.chance(0.7)) return this.gen(r); const v = q(d1 * b + d2, b * b);
-      return { p: H.cat('Change ', H.Qi(v), ` to a base ${b} decimal.`), suffix: `(base ${b})`, a: A.text(`.${d1}${d2}`, 'base', [`0.${d1}${d2}`]), params: { b, v: v.toFracStr() },
+      return { p: H.cat('Change ', H.Qi(v), ` to a base ${b} decimal.`), a: A.text(`.${d1}${d2}`, 'base', [`0.${d1}${d2}`]), params: { b, v: v.toFracStr() },
         steps: [`Write it over ${b}² = ${b * b}: ${H.Qi(v).h} = ${m(`\\tfrac{${d1 * b + d2}}{${b * b}}`)}.`, `${d1 * b + d2} = ${d1} × ${b} + ${d2}, so the digits after the point are ${d1}, ${d2}: ${hl(`.${d1}${d2}`)}`] };
     },
   });
@@ -356,12 +356,12 @@
     id: 'estGeo', trick: 'estimate', est: true, col: { ms: 0, hs: 4 },
     gen(r) {
       const kd = r.pick(['cylSA', 'cylLat', 'cylVolCm', 'hemi', 'pipe', 'pyramid', 'circ', 'lot']); let v, p, why; const pr = { kd };
-      if (kd === 'cylSA') { const h = r.int(10, 40), d = r.pick([2, 4, 6, 8, 10]); const rr = d / 2; Object.assign(pr, { h, d }); v = PI.mul(2 * rr * (rr + h)); p = `A right cylinder is ${h}" high with a ${d}" diameter. Its total surface area is`; why = `Total area = 2πr² + 2πrh = 2πr(r + h) = 2π × ${rr} × ${rr + h}.`; }
-      else if (kd === 'cylLat') { const hf = r.int(1, 4), d = r.int(5, 12); Object.assign(pr, { hf, d }); v = PI.mul(d * hf * 12); p = `A right cylinder is ${hf}' high with a ${d}" diameter. Its lateral surface area is`; why = `Lateral area = π × diameter × height, all in inches: π × ${d} × ${hf * 12}.`; }
-      else if (kd === 'cylVolCm') { const h = r.int(10, 30), d = r.pick([2, 4, 6, 8]); Object.assign(pr, { h, d }); v = PI.mul((d / 2) ** 2 * h).mul(Q.parseNum('16.387064')); p = `A right cylinder is ${h}" high with a ${d}" diameter. Its volume in cubic centimeters is`; why = `π r² h = π × ${(d / 2) ** 2} × ${h} cubic inches, and 1 in³ ≈ 16.39 cm³.`; }
+      if (kd === 'cylSA') { const h = r.int(10, 40), d = r.pick([2, 4, 6, 8, 10]); const rr = d / 2; Object.assign(pr, { h, d }); v = PI.mul(2 * rr * (rr + h)); p = `A right cylinder is ${h}" high with ${NS.an(d)} ${d}" diameter. Its total surface area is`; why = `Total area = 2πr² + 2πrh = 2πr(r + h) = 2π × ${rr} × ${rr + h}.`; }
+      else if (kd === 'cylLat') { const hf = r.int(1, 4), d = r.int(5, 12); Object.assign(pr, { hf, d }); v = PI.mul(d * hf * 12); p = `A right cylinder is ${hf}' high with ${NS.an(d)} ${d}" diameter. Its lateral surface area is`; why = `Lateral area = π × diameter × height, all in inches: π × ${d} × ${hf * 12}.`; }
+      else if (kd === 'cylVolCm') { const h = r.int(10, 30), d = r.pick([2, 4, 6, 8]); Object.assign(pr, { h, d }); v = PI.mul((d / 2) ** 2 * h).mul(Q.parseNum('16.387064')); p = `A right cylinder is ${h}" high with ${NS.an(d)} ${d}" diameter. Its volume in cubic centimeters is`; why = `π r² h = π × ${(d / 2) ** 2} × ${h} cubic inches, and 1 in³ ≈ 16.39 cm³.`; }
       else if (kd === 'hemi') { const rr = Q.parseNum(r.pick(['5.2', '4', '6.5', '3.5', '7', '8.4'])); const closed = r.chance(0.6); Object.assign(pr, { rr: rr.num(), closed }); v = PI.mul(rr.mul(rr)).mul(closed ? 3 : 2); p = `The ${closed ? 'total' : 'curved'} surface area of a hemisphere with a radius of ${H.dec(rr).h} cm is`; why = closed ? `Curved part 2πr² plus the flat circle πr²: 3πr² = 3π × ${H.dec(rr.mul(rr)).h}.` : `Half a sphere: 2πr² = 2π × ${H.dec(rr.mul(rr)).h}.`; }
       else if (kd === 'pipe') { const d = r.int(2, 12), L = r.int(20, 99); Object.assign(pr, { d, L }); v = PI.mul(q(d * d, 4)).mul(L); p = `A pipe with a diameter of ${d} feet is ${L} feet long. Its volume is`; why = `π r² × length = π × ${H.Qf(q(d * d, 4)).h} × ${L}.`; }
-      else if (kd === 'pyramid') { const a = r.int(9, 30), b = r.int(9, 30), h = r.int(9, 30); Object.assign(pr, { a, b, h }); v = q(a * b * h, 3); p = `A right rectangular pyramid has a ${a} by ${b} base and a height of ${h}. Its volume is`; why = `Volume = one third of base × height = ${a} × ${b} × ${h} ÷ 3.`; }
+      else if (kd === 'pyramid') { const a = r.int(9, 30), b = r.int(9, 30), h = r.int(9, 30); Object.assign(pr, { a, b, h }); v = q(a * b * h, 3); p = `A right rectangular pyramid has ${NS.an(a)} ${a} by ${b} base and a height of ${h}. Its volume is`; why = `Volume = one third of base × height = ${a} × ${b} × ${h} ÷ 3.`; }
       else if (kd === 'circ') { const C = r.int(100, 600); Object.assign(pr, { C }); v = Q.from(C * C).div(PI.mul(4)); p = `The circumference of a circle is ${C} cm. Its area in square cm is`; why = `r = C ÷ 2π, so area = C² ÷ 4π = ${C}² ÷ 12.57.`; }
       else { const f1 = r.pick([q(3, 8), q(1, 4), q(1, 2), q(5, 8)]), f2 = r.pick([q(1, 6), q(1, 3), q(1, 8), q(1, 5)]); Object.assign(pr, { f1: f1.num(), f2: f2.num() }); v = f1.mul(f2).mul(5280 * 5280); p = `A rectangular lot is ${H.Qi(f1).h} of a mile by ${H.Qi(f2).h} of a mile. Its area in square feet is`; why = `A square mile is 5280² = 27,878,400 square feet. Multiply by ${H.Qi(f1).h} × ${H.Qi(f2).h}.`; }
       return { p: H.cat(p), a: A.est(v), params: pr, steps: [why, `≈ ${fm(Math.round(v.num()))}`] };

@@ -13,7 +13,7 @@
   const lineL = (a, b, c) => `${term(a, 'x', true)}${term(b, 'y', !a)} = ${c}`;
   const PN = { 3: 'triangle', 4: 'quadrilateral', 5: 'pentagon', 6: 'hexagon', 7: 'heptagon', 8: 'octagon', 9: 'nonagon', 10: 'decagon', 11: 'undecagon', 12: 'dodecagon' };
   const pname = n => PN[n] || `${n}-sided polygon`;
-  const art = s => (/^[aeiou]/.test(s) ? 'an ' : 'a ') + s;
+  const art = s => (/^[aeiou]/.test(s) || NS.an(s) === 'an' ? 'an ' : 'a ') + s;
   const setL = xs => `\\{${xs.join(', ')}\\}`;
   const fact = n => { let f = 1; for (let i = 2; i <= n; i++) f *= i; return f; };
   const ways = s => 6 - Math.abs(7 - s);            // ways two dice make sum s
@@ -104,7 +104,7 @@
       if (kd === 'chain') {
         a = r.int(2, 7); b = r.int(-9, 9); const L = r.int(-20, 30), U = L + r.int(15, 60); const xs = []; for (let x = -100; x <= 100; x++) { const y = a * x + b; if (strict ? (L < y && y < U) : (L <= y && y <= U)) xs.push(x); }
         if (xs.length < 2) return this.gen(r); lo = xs[0]; hi = xs[xs.length - 1];
-        p = H.cat('If ', H.L(`${L} ${rel} ${lin(a, b)} ${rel} ${U}`), ', how many integers x make it true?');
+        p = H.cat('How many integers satisfy ', H.L(`${L} ${rel} ${lin(a, b)} ${rel} ${U}`), '?');
         return { p, a: A.num(xs.length), params: { kd, a, b, L, U, strict }, steps: [`Take ${fm(b)} from each part and divide by ${a}: x runs from ${Qs(q(L - b, a))} to ${Qs(q(U - b, a))}${strict ? ', ends not included' : ''}.`, `Integers ${fm(lo)} through ${fm(hi)}: ${hl(xs.length)}`] };
       }
       if (kd === 'sumH') { a = 1; b = -r.int(-12, big ? 45 : 15) || 7; c = r.int(2, big ? 30 : 12); }
@@ -129,9 +129,9 @@
       if (kd === 'geo2') { let k, x, y, a, b; do { k = r.int(1, 7); x = r.int(1, 6); y = r.int(1, 6); a = k * x * x; b = k * y * y; } while (x >= y || b > 160 || a < 2);
         const v = k * x * y; return { p: H.cat(`The positive geometric mean of ${a} and ${b} is`), a: A.num(v), params: { kd, xs: [a, b] }, steps: [`Geometric mean: ${m(`\\sqrt{${a} \\cdot ${b}} = \\sqrt{${a * b}}`)}.`, `= ${hl(v)}`] }; }
       if (kd === 'geo3') { let g, a, b, c; for (;;) { g = r.int(2, 12); const G3 = g ** 3; const ds = M.divisors(G3).filter(x => x <= 99 && x > 1); a = r.pick(ds); const rest = G3 / a; const ds2 = M.divisors(rest).filter(x => x <= 99 && x > 1); b = r.pick(ds2); c = rest / b; if (c > 1 && c <= 99 && a < b && b < c) break; }
-        return { p: H.cat(`The geometric mean of ${a}, ${b} and ${c} is`), a: A.num(g), params: { kd, xs: [a, b, c] }, steps: [`Geometric mean of three numbers: the cube root of their product.`, `${m(`\\sqrt[3]{${a} \\cdot ${b} \\cdot ${c}} = \\sqrt[3]{${a * b * c}}`)} = ${hl(g)}`] }; }
+        return { p: H.cat(`The geometric mean of ${a}, ${b}, and ${c} is`), a: A.num(g), params: { kd, xs: [a, b, c] }, steps: [`Geometric mean of three numbers: the cube root of their product.`, `${m(`\\sqrt[3]{${a} \\cdot ${b} \\cdot ${c}} = \\sqrt[3]{${a * b * c}}`)} = ${hl(g)}`] }; }
       if (kd === 'geoRad') { let a, b, s, t; for (;;) { a = r.int(2, 30); b = r.int(2, 30); if (a === b) continue; const n = a * b; s = 1; for (let i = 2; i * i <= n; i++) if (n % (i * i) === 0) s = i; t = n / (s * s); if (s > 1 && t > 1) break; }
-        return { p: H.cat(`The geometric mean of ${a} and ${b} is `, H.L('a\\sqrt{b}'), `, where ${m('b')} has no square factor other than 1. `, H.L('a + b'), ' ='), a: A.num(s + t), params: { kd, a, b },
+        return { p: H.cat(`The positive geometric mean of ${a} and ${b} is `, H.L('a\\sqrt{b}'), ' in simplest form. ', H.L('a + b'), ' ='), a: A.num(s + t), params: { kd, a, b },
           steps: [`${m(`\\sqrt{${a} \\cdot ${b}} = \\sqrt{${a * b}} = \\sqrt{${s * s} \\cdot ${t}} = ${s}\\sqrt{${t}}`)}.`, `a + b = ${s} + ${t} = ${hl(s + t)}`] }; }
       // geoPow
       const pb = r.pick([2, 3, 5]);
@@ -198,7 +198,7 @@
       if (kd === 'hexaSA') { const s = r.int(2, 25); return { p: H.cat(`The surface area of a regular hexahedron with edge ${s} is`), a: A.num(6 * s * s), params: { kd, s }, steps: [`A regular hexahedron is a cube: six ${s} × ${s} faces.`, `6 × ${s * s} = ${hl(6 * s * s)}`] }; }
       if (kd === 'pyramid') { const s = r.int(3, 20), h = 3 * r.int(1, 8); const v = s * s * h / 3; return { p: H.cat(`A square pyramid has a base edge of ${s} and a height of ${h}. Its volume is`), a: A.num(v), params: { kd, s, h }, steps: [`${m('V = \\tfrac13 \\cdot \\text{base} \\cdot h')} = ${s * s} × ${h} ÷ 3.`, `= ${hl(v)}`] }; }
       const [a, b, c] = r.pick(TRI.slice(0, 6)); const t = r.pick([1, 1, 2, 3]);
-      return { p: H.cat(`The inner diagonal of a ${c * t} by ${a * t} by ${b * t} box is `, H.L('k\\sqrt{2}'), '. ', k, ' ='), a: A.num(c * t), params: { kd, dims: [c * t, a * t, b * t] }, steps: [`${a * t}² + ${b * t}² = ${c * t}², so the diagonal is ${m(`\\sqrt{${c * t}^2 + ${c * t}^2} = ${c * t}\\sqrt2`)}.`, `k = ${hl(c * t)}`] };
+      return { p: H.cat(`The inner diagonal of ${NS.an(c * t)} ${c * t} by ${a * t} by ${b * t} box is `, H.L('k\\sqrt{2}'), '. ', k, ' ='), a: A.num(c * t), params: { kd, dims: [c * t, a * t, b * t] }, steps: [`${a * t}² + ${b * t}² = ${c * t}², so the diagonal is ${m(`\\sqrt{${c * t}^2 + ${c * t}^2} = ${c * t}\\sqrt2`)}.`, `k = ${hl(c * t)}`] };
     },
   });
 
@@ -236,7 +236,7 @@
       // union / intersection of the letters of two words
       let w1, w2, A1, B1, I; do { w1 = r.pick(SETW); w2 = r.pick(SETW); A1 = w1.split('').slice(0, 6); B1 = w2.split('').slice(0, 6); I = A1.filter(x => B1.includes(x)); } while (w1 === w2 || I.length < 1);
       const U = A1.length + B1.length - I.length; const ask = r.pick(['union', 'inter', 'both']); const v = ask === 'union' ? U : ask === 'inter' ? I.length : U + I.length;
-      const q2 = ask === 'union' ? H.cat(H.L('A \\cup B'), ' has how many elements?') : ask === 'inter' ? H.cat(H.L('A \\cap B'), ' has how many elements?') : H.cat('what is the total number of elements in ', H.L('A \\cup B'), ' and ', H.L('A \\cap B'), '?');
+      const q2 = ask === 'union' ? H.cat(H.L('A \\cup B'), ' has how many elements?') : ask === 'inter' ? H.cat(H.L('A \\cap B'), ' has how many elements?') : H.cat('the number of elements in ', H.L('A \\cup B'), ' plus the number in ', H.L('A \\cap B'), ' is');
       return { p: H.cat('If ', H.L(`A = ${setL(A1)}`), ' and ', H.L(`B = ${setL(B1)}`), ', then ', q2), a: A.num(v), params: { kd, A1, B1, ask },
         steps: [`Shared letters: ${m(I.join(', '))} (${I.length}). Union: ${A1.length} + ${B1.length} − ${I.length} = ${U}.`, ask === 'union' ? `${hl(U)}` : ask === 'inter' ? `${hl(I.length)}` : `${U} + ${I.length} = ${hl(v)}`] };
     },
@@ -262,7 +262,7 @@
       if (kd === 'oddsToP') { let a, b; do { a = r.int(1, 12); b = r.int(1, 12); } while (M.gcd(a, b) !== 1 || a === b); const v = q(b, a + b);
         return { p: H.cat(`If the odds of losing a game are ${a} : ${b}, the probability of winning is`), a: A.num(v), params: { kd, a, b }, steps: [`Odds of losing ${a} : ${b} means ${a} losing for every ${b} winning, ${a + b} in all.`, `P(win) = ${hl(Qs(v))}`] }; }
       if (kd === 'repeat') { const n = r.int(2, 3), f = r.int(1, 6); const v = q(1, 6 ** n);
-        return { p: H.cat(`A die is rolled ${n === 2 ? 'twice' : 'three times'}. The probability of getting a ${f} every time is`), a: A.num(v), params: { kd, n }, steps: [`Each roll is a ${f} with probability 1/6, and the rolls are independent.`, `${m(`\\left(\\tfrac16\\right)^{${n}}`)} = ${hl(Qs(v))}`] }; }
+        return { p: H.cat(`A die is rolled ${n === 2 ? 'twice' : 'three times'}. The probability of getting ${NS.an(f)} ${f} every time is`), a: A.num(v), params: { kd, n }, steps: [`Each roll is ${NS.an(f)} ${f} with probability 1/6, and the rolls are independent.`, `${m(`\\left(\\tfrac16\\right)^{${n}}`)} = ${hl(Qs(v))}`] }; }
       const red = r.int(2, 9), blue = r.int(2, 9); const k = r.int(1, 15); const v = q(red, red + blue + k);
       return { p: H.cat(`A bag has ${red} red, ${blue} blue and k green marbles. If the probability of drawing a red marble is `, H.Qi(v), ', then ', H.L('k'), ' ='), a: A.num(k), params: { kd, red, blue, P: [Number(v.n), Number(v.d)] },
         steps: [`${red} red out of the total: total = ${red} ÷ ${Qs(v)} = ${red + blue + k}.`, `k = ${red + blue + k} − ${red} − ${blue} = ${hl(k)}`] };
@@ -277,7 +277,7 @@
       const kd = r.pick(['word', 'word', 'word', 'line', 'committee', 'outfits']);
       if (kd === 'word') { const w = r.pick(WORDS); const cnt = {}; for (const ch of w) cnt[ch] = (cnt[ch] || 0) + 1; const reps = Object.entries(cnt).filter(([, c]) => c > 1);
         let v = fact(w.length); reps.forEach(([, c]) => { v /= fact(c); });
-        return { p: H.cat(`How many distinct arrangements can be made from all the letters of the word ${w.toUpperCase()}?`), a: A.num(v), params: { kd, w },
+        return { p: H.cat(`How many distinct ${w.length}-letter arrangements can be made from the letters of the word ${w.toUpperCase()}?`), a: A.num(v), params: { kd, w },
           steps: [reps.length ? `${w.length} letters with repeats ${reps.map(([ch, c]) => `${ch.toUpperCase()} × ${c}`).join(', ')}: ${m(`\\frac{${w.length}!}{${reps.map(([, c]) => c + '!').join('\\,')}}`)}.` : `${w.length} different letters: ${w.length}!.`, `= ${hl(fm(v))}`] }; }
       if (kd === 'line') { const n = r.int(4, 9); return { p: H.cat(`In how many ways can ${n} people stand in a straight line?`), a: A.num(fact(n)), params: { kd, n }, steps: [`${n} choices for first place, ${n - 1} for second, and so on: ${n}!.`, `= ${hl(fm(fact(n)))}`] }; }
       if (kd === 'committee') { const n = r.int(6, 15), k = r.int(2, 4); const v = M.C(n, k); return { p: H.cat(`How many ways can a committee of ${k} be chosen from ${n} people?`), a: A.num(v), params: { kd, n, k }, steps: [`Order doesn't matter: ${m(`\\binom{${n}}{${k}}`)}.`, `= ${hl(v)}`] }; }
@@ -343,11 +343,11 @@
         return { p: H.cat('The axis of symmetry of ', H.L(`f(x) = ${f(a, b)}${f(c, d)}`), ' is x ='), a: A.num(v), params: { kd, a, b, c, d }, steps: [`The roots are ${Qs(q(b, a))} and ${Qs(q(d, c))}; the axis is halfway between them.`, `(${Qs(q(b, a))} + ${Qp(q(d, c))}) ÷ 2 = ${hl(Qs(v))}`] }; }
       if (kd === 'axisShift') { const b = nz(-12, 12), c = r.int(-9, 9), p = nz(-6, 6); const v = q(-b, 2).sub(p);
         return { p: H.cat('If ', H.L(`f(x) = ${NS.poly([1, b, c]).l}`), ', then ', H.L(`f(x ${p < 0 ? '-' : '+'} ${Math.abs(p)})`), ' has an axis of symmetry of x ='), a: A.num(v), params: { kd, b, p }, steps: [`f has its axis at ${m('x = -\\frac{b}{2}')} = ${Qs(q(-b, 2))}. Replacing ${m('x')} with ${m(`x ${p < 0 ? '-' : '+'} ${Math.abs(p)}`)} slides the graph ${p > 0 ? 'left' : 'right'} ${Math.abs(p)}.`, `${Qs(q(-b, 2))} ${p > 0 ? '−' : '+'} ${Math.abs(p)} = ${hl(Qs(v))}`] }; }
-      if (kd === 'hk') { const a = nz(-5, 5), h = r.int(-9, 9), k = r.int(-12, 12); return { p: H.cat('If ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})^2 ${k < 0 ? '-' : '+'} ${Math.abs(k)}`), ` has vertex ${m('(h, k)')}, then `, H.L('h + k'), ' ='), a: A.num(h + k), params: { kd, h, k }, steps: [`Vertex form: the vertex is (${fm(h)}, ${fm(k)}).`, `${fm(h)} + ${k < 0 ? `(${k})` : k} = ${hl(fm(h + k))}`] }; }
+      if (kd === 'hk') { const a = nz(-5, 5), h = r.int(-9, 9), k = r.int(-12, 12); return { p: H.cat('If ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}${h ? `(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})` : 'x'}^2${k ? ` ${k < 0 ? '-' : '+'} ${Math.abs(k)}` : ''}`), ` has vertex ${m('(h, k)')}, then `, H.L('h + k'), ' ='), a: A.num(h + k), params: { kd, h, k }, steps: [`Vertex form: the vertex is (${fm(h)}, ${fm(k)}).`, `${fm(h)} + ${k < 0 ? `(${k})` : k} = ${hl(fm(h + k))}`] }; }
       if (kd === 'oneRoot') { const a = r.int(1, 6), b = nz(-12, 12); const v = q(b * b, 4 * a); return { p: H.cat('If ', H.L(`${a === 1 ? '' : a}x^2${term(b, 'x')} + c = 0`), ' has exactly one real root, then ', H.L('c'), ' ='), a: A.num(v), params: { kd, a, b }, steps: [`One root means the discriminant is 0: ${m(`${b * b} - ${4 * a}c = 0`)}.`, `${m('c')} = ${b * b} ÷ ${4 * a} = ${hl(Qs(v))}`] }; }
       // realRoots
       if (r.chance(0.5)) { const a = nz(-5, 5), h = r.int(-9, 9); const k = r.pick([0, r.int(1, 12), -r.int(1, 12)]); const v = k === 0 ? 1 : (a > 0) === (k < 0) ? 2 : 0;
-        return { p: H.cat('How many real roots does ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})^2${k ? (k < 0 ? ' - ' : ' + ') + Math.abs(k) : ''}`), ' have?'), a: A.num(v), params: { kd, a, k, form: 'vertex' },
+        return { p: H.cat('How many real roots does ', H.L(`f(x) = ${a === 1 ? '' : a === -1 ? '-' : a}${h ? `(x ${h < 0 ? '+' : '-'} ${Math.abs(h)})` : 'x'}^2${k ? (k < 0 ? ' - ' : ' + ') + Math.abs(k) : ''}`), ' have?'), a: A.num(v), params: { kd, a, k, form: 'vertex' },
           steps: [`The vertex is at height ${fm(k)} and the parabola opens ${a > 0 ? 'up' : 'down'}.`, k === 0 ? `It touches the x-axis once: ${hl(1)}` : v ? `It crosses the x-axis: ${hl(2)}` : `It never reaches the x-axis: ${hl(0)}`] }; }
       const a = nz(-6, 6), b = r.int(-12, 12), c = nz(-15, 15); const D = b * b - 4 * a * c; const v = D > 0 ? 2 : D === 0 ? 1 : 0;
       return { p: H.cat(H.L(`${NS.poly([a, b, c]).l} = 0`), ' has how many real roots?'), a: A.num(v), params: { kd, a, b, c, form: 'std' }, steps: [`Discriminant ${m('b^2 - 4ac')} = ${b * b} − (${4 * a * c}) = ${D}.`, `${D > 0 ? 'Positive' : D === 0 ? 'Zero' : 'Negative'}: ${hl(v)}`] };
@@ -371,8 +371,8 @@
       if (kd === 'pq') { const p = nz(-12, 12); let qq; do { qq = r.int(-12, 12); } while (!qq || qq === p); const S = p + qq, Pr = p * qq; const v = Math.max(p, qq);
         return { p: H.cat('If ', H.L(`${NS.poly([1, S, Pr]).l} = (x + p)(x + q)`), `, then the greater of ${m('p')} and ${m('q')} is`), a: A.num(v), params: { kd, S, Pr }, steps: [`${m(`p + q = ${S}`)} and ${m(`pq = ${Pr}`)}.`, `${m('p')} and ${m('q')} are ${fm(p)} and ${fm(qq)}: ${hl(fm(v))}`] }; }
       if (kd === 'shiftProd') { const m1 = r.int(-9, 12), m2 = r.int(-9, 12), t = nz(-6, 6); const v = (m1 + t) * (m2 + t);
-        const f = x => `(x ${x < 0 ? '+' : '-'} ${Math.abs(x)})`;
-        return { p: H.cat('If ', H.L(`f(x) = ${f(m1)}${f(m2)}`), ', the product of the roots of ', H.L(`f(x ${t < 0 ? '+' : '-'} ${Math.abs(t)})`), ' is'), a: A.num(v), params: { kd, m1, m2, t }, steps: [`f has roots ${m1} and ${m2}. Replacing x with x ${t < 0 ? '+' : '−'} ${Math.abs(t)} moves each root ${t > 0 ? 'up' : 'down'} by ${Math.abs(t)}: ${m1 + t} and ${m2 + t}.`, `${m1 + t} × ${m2 + t} = ${hl(fm(v))}`] }; }
+        const f = x => (x ? `(x ${x < 0 ? '+' : '-'} ${Math.abs(x)})` : 'x');
+        return { p: H.cat('If ', H.L(`f(x) = ${!m1 && !m2 ? 'x^2' : m1 ? f(m1) + f(m2) : f(m2) + f(m1)}`), ', the product of the roots of ', H.L(`f(x ${t < 0 ? '+' : '-'} ${Math.abs(t)})`), ' is'), a: A.num(v), params: { kd, m1, m2, t }, steps: [`f has roots ${m1} and ${m2}. Replacing x with x ${t < 0 ? '+' : '−'} ${Math.abs(t)} moves each root ${t > 0 ? 'up' : 'down'} by ${Math.abs(t)}: ${m1 + t} and ${m2 + t}.`, `${m1 + t} × ${m2 + t} = ${hl(fm(v))}`] }; }
       if (kd === 'findB') { const a = r.int(1, 6), s = nz(-9, 9), c = nz(-20, 20); const v = -a * s;
         return { p: H.cat('If P and Q are the roots of ', H.L(`${a === 1 ? '' : a}x^2 + bx ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0`), ' and ', H.L(`P + Q = ${s}`), ', then ', H.L('b'), ' ='), a: A.num(v), params: { kd, a, s }, steps: [`${m('P + Q = -\\frac ba')}, so b = −${a} × ${s < 0 ? `(${s})` : s}.`, `b = ${hl(fm(v))}`] }; }
       if (kd === 'findA') { let a0, c, Pr; do { a0 = nz(-9, 9); Pr = nz(-9, 9); c = a0 * Pr; } while (Math.abs(c) < 4 || Math.abs(c) > 60); const b = nz(-15, 15);
@@ -394,11 +394,11 @@
     gen(r, lv, xd = 1) {
       const kd = r.pick(['largest', 'largest', 'smallest', 'countPos']); const k = r.int(xd >= 2 ? -15 : -6, xd >= 2 ? 15 : 6), N = r.int(30, xd >= 2 ? 900 : 220); const f = x => x * (x - k);
       const expr = k === 0 ? 'x^2' : `x(x ${k > 0 ? '-' : '+'} ${Math.abs(k)})`; const rt = Math.sqrt(N);
-      if (kd === 'smallest') { let x = 1; while (f(x) <= N) x++; return { p: H.cat('The smallest positive integer x with ', H.L(`${expr} > ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x - 1}: ${f(x - 1)} (not more than ${N}); ${x}: ${f(x)}. Answer ${hl(x)}`] }; }
+      if (kd === 'smallest') { let x = 1; while (f(x) <= N) x++; return { p: H.cat('The smallest positive integer x such that ', H.L(`${expr} > ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x - 1}: ${f(x - 1)} (not more than ${N}); ${x}: ${f(x)}. Answer ${hl(x)}`] }; }
       let x = 300; while (f(x) >= N) x--;
       if (kd === 'countPos') { const cnt = []; for (let y = 1; y <= x; y++) if (f(y) < N) cnt.push(y); if (!cnt.length) return this.gen(r);
-        return { p: H.cat('How many positive integers x make ', H.L(`${expr} < ${N}`), ' true?'), a: A.num(cnt.length), params: { kd, k, N }, steps: [`Try near √${N} ≈ ${rt.toFixed(1)}: ${x} gives ${f(x)}, under ${N}, but ${x + 1} gives ${f(x + 1)}.`, `x = ${cnt[0]} through ${x}: ${hl(cnt.length)}`] }; }
-      return { p: H.cat('The largest integer x with ', H.L(`${expr} < ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x}: ${f(x)} is under ${N}; ${x + 1}: ${f(x + 1)} is too big. Answer ${hl(x)}`] };
+        return { p: H.cat('How many positive integers satisfy ', H.L(`${expr} < ${N}`), '?'), a: A.num(cnt.length), params: { kd, k, N }, steps: [`Try near √${N} ≈ ${rt.toFixed(1)}: ${x} gives ${f(x)}, under ${N}, but ${x + 1} gives ${f(x + 1)}.`, `x = ${cnt[0]} through ${x}: ${hl(cnt.length)}`] }; }
+      return { p: H.cat('The largest integer x such that ', H.L(`${expr} < ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x}: ${f(x)} is under ${N}; ${x + 1}: ${f(x + 1)} is too big. Answer ${hl(x)}`] };
     },
   });
 
@@ -500,7 +500,7 @@
     gen(r) {
       const four = r.chance(0.35); const b = r.int(3, 12); let a2 = Math.max(2, b + r.int(-3, 4)); if (four && a2 % 2) a2++; const extra = r.pick([1, 1, 3, 7, 9, 3 ** 2, 7 ** 2]);
       const ask = r.pick(['digits', 'digits', 'sum']); const N = 2n ** BigInt(a2) * 5n ** BigInt(b) * BigInt(extra); const s = N.toString(); const v = ask === 'digits' ? s.length : [...s].reduce((t, ch) => t + +ch, 0);
-      const parts = [four ? H.pow(4, a2 / 2) : H.pow(2, a2), ' × ', H.pow(5, b)]; if (extra > 1) { const [bb, e] = extra === 9 ? [3, 2] : extra === 49 ? [7, 2] : [extra, 1]; parts.push(' × ', e === 2 ? H.pow(bb, 2) : String(bb)); }
+      const parts = [four ? (a2 === 2 ? H.n(4) : H.pow(4, a2 / 2)) : H.pow(2, a2), ' × ', H.pow(5, b)]; if (extra > 1) { const [bb, e] = extra === 9 ? [3, 2] : extra === 49 ? [7, 2] : [extra, 1]; parts.push(' × ', e === 2 ? H.pow(bb, 2) : String(bb)); }
       const t = Math.min(a2, b); const rest = N / 10n ** BigInt(t);
       return { p: ask === 'digits' ? H.cat('How many digits are in ', ...parts, '?') : H.cat('The sum of the digits of ', ...parts, ' is'), a: A.num(v), params: { a2, b, extra, ask },
         steps: [`${four ? `${m(`4^{${a2 / 2}}`)} is ${m(`2^{${a2}}`)}. ` : ''}Pair ${t} twos with ${t} fives to make ${m(`10^{${t}}`)}; what's left is ${rest.toString()}.`, ask === 'digits' ? `${rest.toString()} followed by ${t} zeros: ${hl(v)} digits` : `The zeros add nothing: ${[...rest.toString()].join(' + ')} = ${hl(v)}`] };
@@ -541,7 +541,7 @@
       else if (kd === 'hyp') { const x = r.int(20, 90), y = r.int(20, 90); pr.x = x; pr.y = y; v = Math.hypot(x, y); p = `The hypotenuse of a right triangle with legs ${x} and ${y} is`; why = `√(${x * x} + ${y * y}) = √${x * x + y * y}.`; }
       else if (kd === 'sqSide') { const x = 100 * r.int(30, 900); pr.x = x; v = Math.sqrt(x); p = `The side of a square with area ${fm(x)} is`; why = `√${fm(x)}: find the nearest perfect square.`; }
       else if (kd === 'pentBig') { const x = r.int(40, 150); pr.x = x; v = x * (3 * x - 1) / 2; p = `The ${NS.ord(x)} pentagonal number is`; why = `n(3n − 1)/2 = ${x} × ${3 * x - 1} ÷ 2.`; }
-      else { const x = r.int(40, 200); pr.x = x; v = x * (x - 3) / 2; p = `The number of diagonals of a ${x}-sided polygon is`; why = `n(n − 3)/2 = ${x} × ${x - 3} ÷ 2.`; }
+      else { const x = r.int(40, 200); pr.x = x; v = x * (x - 3) / 2; p = `The number of diagonals of ${NS.an(x)} ${x}-sided polygon is`; why = `n(n − 3)/2 = ${x} × ${x - 3} ÷ 2.`; }
       return { p: H.cat(p), a: A.est(ap(v)), params: pr, steps: [why, `≈ ${fm(Math.round(v))}`] };
     },
   });
@@ -555,7 +555,7 @@
       else if (kd === 'tetraV') { const x = r.int(6, 40); pr.x = x; v = x ** 3 * Math.SQRT2 / 12; p = `The volume of a regular tetrahedron with edge ${x} is`; why = `s³√2/12 = ${fm(x ** 3)} × 1.414 ÷ 12.`; }
       else if (kd === 'tetraSA') { const x = r.int(8, 60); pr.x = x; v = x * x * Math.sqrt(3); p = `The surface area of a regular tetrahedron with edge ${x} is`; why = `s²√3 = ${x * x} × 1.732.`; }
       else if (kd === 'cubeV') { const x = r.int(21, 99); pr.x = x; v = x ** 3; p = `The volume of a cube with edge ${x} is`; why = `${x}³ = ${x * x} × ${x}.`; }
-      else if (kd === 'boxV') { const x = r.int(15, 60), y = r.int(15, 60), z = r.int(15, 60); pr.xs = [x, y, z]; v = x * y * z; p = `The volume of a ${x} by ${y} by ${z} rectangular prism is`; why = `${x} × ${y} = ${x * y}; × ${z}.`; }
+      else if (kd === 'boxV') { const x = r.int(15, 60), y = r.int(15, 60), z = r.int(15, 60); pr.xs = [x, y, z]; v = x * y * z; p = `The volume of ${NS.an(x)} ${x} by ${y} by ${z} rectangular prism is`; why = `${x} × ${y} = ${x * y}; × ${z}.`; }
       else if (kd === 'pyrV') { const x = r.int(8, 30), y = r.int(8, 40); pr.x = x; pr.y = y; v = x * x * y / 3; p = `The volume of a square pyramid with base edge ${x} and height ${y} is`; why = `${x}² × ${y} ÷ 3.`; }
       else if (kd === 'acres') { const x = r.int(20, 900); pr.x = x; v = 640 * x; p = `${x} square miles =`; pr.suf = 'acres'; why = `640 acres in a square mile: ${x} × 640.`; }
       else if (kd === 'galIn3') { const x = r.int(12, 300); pr.x = x; v = 231 * x; p = `${x} gallons =`; pr.suf = 'cubic inches'; why = `231 cubic inches in a gallon: ${x} × 231.`; }

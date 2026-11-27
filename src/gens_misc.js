@@ -35,9 +35,8 @@
   G({
     id: 'roman', trick: 'roman', col: { ms: 1, hs: 1 },
     gen(r) {
-      const kd = r.pick(['toArabic', 'toRoman', 'arith']);
-      if (kd === 'toArabic') { const n = r.int(40, 3999); const s = toRoman(n); return { p: H.cat(`${s} =`), suffix: '(Arabic numeral)', a: A.num(n), params: { s }, steps: [`Split into place values: ${romanParts(n)}.`, `Total: ${hl(n)}`] }; }
-      if (kd === 'toRoman') { const n = r.int(40, 2999); const s = toRoman(n); return { p: H.cat(`${n} =`), suffix: '(Roman numeral)', a: A.text(s, 'roman'), params: { n }, steps: [`Convert each place: ${romanParts(n)}.`, `${hl(s)}`] }; }
+      const kd = r.pick(['toArabic', 'toArabic', 'arith']);
+      if (kd === 'toArabic') { let n; do { n = r.int(40, 3999); } while (toRoman(n).length < 5); const s = toRoman(n); return { p: H.cat(`${s} =`), suffix: '(Arabic numeral)', a: A.num(n), params: { s }, steps: [`Split into place values: ${romanParts(n)}.`, `Total: ${hl(n)}`] }; }
       const x = r.int(500, 2500), y = r.int(40, 900); const plus = r.chance(0.5); const v = plus ? x + y : x - y;
       return { p: H.cat(`${toRoman(x)} ${plus ? '+' : '−'} ${toRoman(y)} =`), suffix: '(Arabic numeral)', a: A.num(v), params: { x, y, plus }, steps: [`${toRoman(x)} = ${x}, ${toRoman(y)} = ${y}.`, `${x} ${plus ? '+' : '−'} ${y} = ${hl(v)}`] };
     },
@@ -95,7 +94,7 @@
       const w = r.pick(['BOOK', 'LEVEL', 'APPLE', 'TEXAS', 'BANANA', 'COOKIE', 'STATS', 'RADAR', 'SENSE', 'NUMBER', 'LETTER', 'GEESE', 'PEPPER', 'TOOTH']);
       const cnt = {}; for (const ch of w) cnt[ch] = (cnt[ch] || 0) + 1; const reps = Object.entries(cnt).filter(([, c]) => c > 1);
       const v = reps.reduce((acc, [, c]) => acc / M.fact(c), M.fact(w.length));
-      return { p: H.cat(`How many distinct ways can the letters of ${w} be arranged?`), a: A.num(v), params: { kd, w }, steps: [`${w.length}! = ${M.fact(w.length)}${reps.length ? `, divided by ${reps.map(([ch, c]) => `${c}! for the ${ch}s`).join(' and ')}` : ''}.`, `= ${hl(v)}`] };
+      return { p: H.cat(`How many distinct ${w.length}-letter arrangements can be made from the letters of the word ${w}?`), a: A.num(v), params: { kd, w }, steps: [`${w.length}! = ${M.fact(w.length)}${reps.length ? `, divided by ${reps.map(([ch, c]) => `${c}! for the ${ch}s`).join(' and ')}` : ''}.`, `= ${hl(v)}`] };
     },
   });
 

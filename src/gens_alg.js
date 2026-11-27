@@ -39,12 +39,12 @@
       const x = r.int(-9, 15) || 4;
       if (r.chance(0.5)) {
         const a = r.int(2, 9), c = r.int(1, a - 1) || 1; const b = r.int(-15, 15), d = a * x + b - c * x;
-        return { p: H.cat(`If ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${c === 1 ? '' : c}x ${d < 0 ? '−' : '+'} ${Math.abs(d)}, then x =`), a: A.num(x), params: { a, b, c, d },
+        return { p: H.cat(`If ${a}x${b ? ` ${b < 0 ? '−' : '+'} ${Math.abs(b)}` : ''} = ${c === 1 ? '' : c}x${d ? ` ${d < 0 ? '−' : '+'} ${Math.abs(d)}` : ''}, then x =`), a: A.num(x), params: { a, b, c, d },
           steps: [`Move x terms left, numbers right: ${a - c}x = ${d - b}.`, `x = ${hl(x)}`] };
       }
       const den = r.pick([2, 3, 4, 5]); const num = r.int(1, den - 1) || 1; if (M.gcd(num, den) !== 1) return this.gen(r, lv);
       const X = den * r.int(-6, 9); const b = r.int(-12, 12); const rhs = num * X / den + b;
-      return { p: H.cat('If ', H.frac(num, den), `x ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${rhs}, then x =`), a: A.num(X), params: { num, den, b, rhs },
+      return { p: H.cat('If ', H.frac(num, den), `x${b ? ` ${b < 0 ? '−' : '+'} ${Math.abs(b)}` : ''} = ${rhs}, then x =`), a: A.num(X), params: { num, den, b, rhs },
         steps: [`${num}/${den} x = ${rhs - b}.`, `x = ${rhs - b} × ${den}/${num} = ${hl(X)}`] };
     },
   });
@@ -176,7 +176,7 @@
       const n = r.int(4, 7), a = r.int(1, 3), b = r.int(1, 4) * r.sign();
       const bt = `(${a === 1 ? '' : a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)})`;
       if (kd === 'coef') { const k = r.int(1, n - 1); const v = M.C(n, k) * a ** k * b ** (n - k);
-        return { p: H.cat('The coefficient of ', H.pow('x', k), ' in the expansion of ', H.pow(bt, n), ' is'), a: A.num(v), params: { n, a, b, k }, steps: [`The term is ${NS.m(`\\binom{${n}}{${k}}(${a}x)^{${k}}(${b})^{${n - k}}`)}.`, `${M.C(n, k)} × ${a ** k} × ${b ** (n - k)} = ${hl(fm(v))}`] }; }
+        return { p: H.cat('The coefficient of the ', k === 1 ? H.L('x') : H.pow('x', k), ' term in the expansion of ', H.pow(bt, n), ' is'), a: A.num(v), params: { n, a, b, k }, steps: [`The term is ${NS.m(`\\binom{${n}}{${k}}(${a}x)^{${k}}(${b})^{${n - k}}`)}.`, `${M.C(n, k)} × ${a ** k} × ${b ** (n - k)} = ${hl(fm(v))}`] }; }
       if (kd === 'sum') { const v = (a + b) ** n; return { p: H.cat('The sum of the coefficients of ', H.pow(bt, n), ' is'), a: A.num(v), params: { n, a, b }, steps: [`Set x = 1: (${a} ${b < 0 ? '−' : '+'} ${Math.abs(b)})^${n}.`, `${a + b}^${n} = ${hl(fm(v))}`] }; }
       return { p: H.cat('The number of terms in the expansion of ', H.pow(bt, n + 3), ' is'), a: A.num(n + 4), params: { n }, steps: [`(x + y)^n has n + 1 terms.`, `${n + 3} + 1 = ${hl(n + 4)}`] };
     },
@@ -199,7 +199,7 @@
     gen(r) {
       if (r.chance(0.5)) { const a = r.int(2, 9), b = r.int(1, 12) * r.sign(), c = r.int(-10, 40); const lim = q(c - b, a);
         const largest = lim.isInt() ? Number(lim.n) - 1 : Math.floor(lim.num());
-        return { p: H.cat(`The largest integer x with ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)} < ${c} is`), a: A.num(largest), params: { a, b, c }, steps: [`${a}x < ${c - b}, so x < ${H.Qf(lim).h}.`, `Largest integer: ${hl(largest)}`] }; }
+        return { p: H.cat(`The largest integer x such that ${a}x ${b < 0 ? '−' : '+'} ${Math.abs(b)} < ${c} is`), a: A.num(largest), params: { a, b, c }, steps: [`${a}x < ${c - b}, so x < ${H.Qf(lim).h}.`, `Largest integer: ${hl(largest)}`] }; }
       let h = r.int(-5, 8); if (!h) h = 3; const k = r.int(2, 9); const strict = r.chance(0.5); const n = strict ? 2 * k - 1 : 2 * k + 1;
       return { p: H.cat(`How many integers satisfy |x ${h < 0 ? '+' : '−'} ${Math.abs(h)}| ${strict ? '<' : '≤'} ${k}?`), a: A.num(n), params: { h, k, strict }, steps: [`${h - k} ${strict ? '<' : '≤'} x ${strict ? '<' : '≤'} ${h + k}.`, `Count: ${hl(n)}`] };
     },
@@ -210,9 +210,9 @@
     id: 'functions', trick: 'functions', col: { ms: 4, hs: 4 }, w: 0.6,
     gen(r) {
       const a = r.int(2, 6), b = r.int(-9, 9), c = r.int(1, 3), d = r.int(-5, 5); const x = r.int(-3, 4);
-      const f = H.L(`f(x) = ${a}x ${b < 0 ? '-' : '+'} ${Math.abs(b)}`);
+      const tail = (n) => (n ? ` ${n < 0 ? '-' : '+'} ${Math.abs(n)}` : ''); const f = H.L(`f(x) = ${a}x${tail(b)}`);
       if (r.chance(0.5)) { const g = c * x * x + d; const v = a * g + b;
-        return { p: H.cat(f, ' and ', H.L(`g(x) = ${c === 1 ? '' : c}x^2 ${d < 0 ? '-' : '+'} ${Math.abs(d)}`), '. Then ', H.L(`f(g(${x})) =`)), a: A.num(v), params: { a, b, c, d, x }, steps: [`Inside first: g(${x}) = ${g}.`, `f(${g}) = ${a}(${g}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${hl(v)}`] }; }
+        return { p: H.cat('If ', f, ' and ', H.L(`g(x) = ${c === 1 ? '' : c}x^2${tail(d)}`), ', then ', H.L(`f(g(${x})) =`)), a: A.num(v), params: { a, b, c, d, x }, steps: [`Inside first: g(${x}) = ${g}.`, `f(${g}) = ${a}(${g}) ${b < 0 ? '−' : '+'} ${Math.abs(b)} = ${hl(v)}`] }; }
       if (r.chance(0.3)) { const m = r.int(2, 6), k = r.int(1, 12) * m + r.pick([0, 0, 1, 2]); const v = q(k, m);
         return { p: H.cat('The domain of f(x) = ', H.sqrt(`${k} − ${m}x`), ' is x ≤ k. k ='), a: A.num(v), params: { m, k, dom: 1 }, steps: [`The inside of a square root can't be negative: ${k} − ${m}x ≥ 0.`, `x ≤ ${k}/${m}, so k = ${hl(H.Qf(v).h)}`] }; }
       const y = a * x + b;

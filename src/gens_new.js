@@ -75,7 +75,7 @@
       if (kd === 'pow') {
         const p = r.pick([5, 7, 11, 13]); let a; do { a = r.int(2, x >= 2 ? 30 : 12); } while (a % p === 0);
         const e = r.int(x >= 2 ? 50 : 20, x >= 2 ? 999 : 120); const v = modPow(a, e, p); const ar = a % p; const er = e % (p - 1);
-        return { p: H.cat(H.pow(a, e), ` ≡ k (mod ${p}), where 0 ≤ k < ${p}. k =`), a: A.num(v), params: { kd, a, e, p },
+        return { p: H.cat(`Find k, 0 ≤ k ≤ ${p - 1}, if `, H.pow(a, e), ` ≡ k (mod ${p}). k =`), a: A.num(v), params: { kd, a, e, p },
           steps: [`${p} is prime, so ${m(`n^{${p - 1}} \\equiv 1 \\pmod{${p}}`)} for any n it doesn't divide (Fermat).${ar !== a ? ` First, ${a} ≡ ${ar}.` : ''} Only the exponent's remainder mod ${p - 1} matters: ${e} ÷ ${p - 1} leaves ${er}.`, `${m(`${ar}^{${er}}`)}${ar ** er <= 2000 ? ` = ${fm(ar ** er)}` : ''} ≡ ${hl(v)} (mod ${p})`] };
       }
       for (let t = 0; t < 200; t++) {
@@ -109,7 +109,7 @@
         const e = form === 'k' ? 1 : form === 'kx' ? 2 : 3; // f = (k/e) x^e + C
         const co = q(k, e); const C0 = q(b).sub(co.mul(q(a).pow(e))); const v = co.mul(q(c).pow(e)).add(C0);
         const fp = form === 'k' ? `${k}` : form === 'kx' ? `${k}x` : `${k}x^2`; const F = form === 'k' ? `${k}x` : form === 'kx' ? `${k / 2}x^2` : `${k / 3}x^3`;
-        return { p: H.cat(H.L(`f'(x) = ${fp}`), `, f(${a}) = ${fm(b)}. Find f(${c}).`), a: A.num(v), params: { kd, form, k, a, b, c },
+        return { p: H.cat('If ', H.L(`f'(x) = ${fp}`), ` and f(${a}) = ${fm(b)}, then f(${c}) =`), a: A.num(v), params: { kd, form, k, a, b, c },
           steps: [`Undo the derivative: f(x) = ${m(F.replace(/^1x/, 'x').replace(/^-1x/, '-x'))} + C.`, `f(${a}) = ${fm(b)} gives C = ${Qs(C0)}.`, `f(${c}) = ${hl(Qs(v))}`] };
       }
       if (kd === 'trig') {
@@ -118,7 +118,7 @@
         const tbl = f === 'sin' ? (second ? S : C) : (second ? C : S); const sign = f === 'sin' ? (second ? -1 : 1) : -1;
         const ang = r.pick(Object.keys(tbl).map(Number).filter(z => z > 0)); const v = tbl[ang].mul(sign * k);
         const dname = second ? "f''" : "f'"; const d1 = f === 'sin' ? (second ? `-${k === 1 ? '' : k}\\sin x` : `${k === 1 ? '' : k}\\cos x`) : (second ? `-${k === 1 ? '' : k}\\cos x` : `-${k === 1 ? '' : k}\\sin x`);
-        return { p: H.cat(H.L(`f(x) = ${k === 1 ? '' : k}\\${f} x`), ', ', H.L(`${dname}(${ang}^\\circ)`), ' ='), a: A.num(v), params: { kd, f, k, second, ang },
+        return { p: H.cat('If ', H.L(`f(x) = ${k === 1 ? '' : k}\\${f} x`), ', then ', H.L(`${dname}(${ang}^\\circ)`), ' ='), a: A.num(v), params: { kd, f, k, second, ang },
           steps: [`(sin x)′ = cos x and (cos x)′ = −sin x, so ${m(`${dname}(x) = ${d1}`)}.`, `At ${ang}°: ${hl(Qs(v))}`] };
       }
       // chain rule
@@ -144,7 +144,7 @@
   G({
     id: 'perfectNum', trick: 'perfectNumbers', col: { ms: 0, hs: 4 }, w: 0.25,
     gen(r, lv, x = 1) {
-      const kd = r.pick(['sum', 'nth', 'proper', 'proper', 'classify', 'classify', 'next']);
+      const kd = r.pick(['sum', 'sum', 'nth', 'proper', 'proper', 'proper']);
       if (kd === 'sum') { const k = r.pick([2, 3, 4]); const v = PERF.slice(0, k).reduce((s, n) => s + n, 0);
         return { p: H.cat(`The sum of the first ${['', '', 'two', 'three', 'four'][k]} perfect numbers is`), a: A.num(v), params: { kd, k }, steps: [`The perfect numbers start 6, 28, 496, 8128.`, `${PERF.slice(0, k).join(' + ')} = ${hl(fm(v))}`] }; }
       if (kd === 'nth') { const k = r.int(2, 4); const v = PERF[k - 1];
@@ -171,7 +171,7 @@
         const e = kd === 'cube' ? 3 : 2; const v = f.pow(e).sub(1).mul(100).abs(); const fig = kd === 'cube' ? 'each edge of a cube' : r.pick(['the perimeter of a square', 'the side of a square', 'the radius of a circle', 'the circumference of a circle']);
         const what = kd === 'cube' ? 'volume' : 'area'; const word = up ? 'increases' : 'decreases';
         return { p: H.cat(`If ${fig} ${up ? 'increases' : 'decreases'} by ${p}%, the ${what} ${word} by`), suffix: '%', a: A.num(v, 'dec'), params: { kd, p, up, e },
-          steps: [`Lengths scale by ${Q.from(f).toDecStr()}, so the ${what} scales by ${Q.from(f).toDecStr()}${e === 3 ? '³' : '²'} = ${f.pow(e).toDecStr()}.`, `That's a ${hl(v.toDecStr())}% ${up ? 'increase' : 'decrease'}`] };
+          steps: [`Lengths scale by ${Q.from(f).toDecStr()}, so the ${what} scales by ${Q.from(f).toDecStr()}${e === 3 ? '³' : '²'} = ${f.pow(e).toDecStr()}.`, `That's ${/^(8|1[18](?!\d))/.test(v.toDecStr()) ? 'an' : 'a'} ${hl(v.toDecStr())}% ${up ? 'increase' : 'decrease'}`] };
       }
       if (kd === 'circle') {
         let c1, c2; do { c1 = 2 * r.int(2, 12); c2 = 2 * r.int(2, 12); } while (c1 === c2);

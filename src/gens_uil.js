@@ -308,7 +308,7 @@
       else { f = NS.SEQFAM.sq(); why = () => `These are the squares.`; }
       const n = kd === 'prime' ? r.int(9, 20) : kd === 'geo' ? r.int(6, d === 2 ? 11 : 8) : r.int(10, 18);
       const back = kd === 'arith' && r.chance(0.5) ? r.pick([-3, -2, 2, 3, 5]) : -1; const t = n + back;
-      const first = [1, 2, 3, 4].map(f); const v = f(t);
+      const first = [1, 2, 3, 4, 5].map(f); const v = f(t);
       const gap = back === -1 ? (kd === 'tri' ? `${fm(f(n))} − ${n} = ${hl(fm(v))}` : kd === 'plus' ? `${fm(f(n))} − ${n - 1} = ${hl(fm(v))}` : kd === 'geo' ? `${fm(f(n))} ÷ ${d} = ${hl(fm(v))}` : kd === 'arith' ? `${fm(f(n))} − ${d} = ${hl(fm(v))}` : `It's term ${t}: ${hl(fm(v))}`) : `${back > 0 ? 'Go up' : 'Go down'} ${Math.abs(back)} steps of ${d}: ${fm(f(n))} ${back > 0 ? '+' : '−'} ${Math.abs(back) * d} = ${hl(fm(v))}`;
       return { p: H.cat(`The ${NS.ord(n)} term of ${first.map(fm).join(', ')}, … is ${fm(f(n))}. The ${NS.ord(t)} term is`), a: A.num(v), params: { kd, a, d, n, t }, steps: [why(n), gap] };
     },
@@ -373,11 +373,11 @@
       const d = r.pick([3, 4, 6, 6, 8, 9, 11, 12, 15, 18]);
       for (let tries = 0; tries < 200; tries++) {
         const len = r.int(4, 5); const digs = Array.from({ length: len - 1 }, (_, i) => i === 0 ? r.int(1, 9) : r.int(0, 9)); const pos = r.chance(0.7) ? len - 1 : r.int(1, len - 1);
-        const ok = []; for (let k = 1; k <= 9; k++) { const ds = digs.slice(); ds.splice(pos, 0, k); if (Number(ds.join('')) % d === 0) ok.push(k); }
+        const ok = []; for (let k = 0; k <= 9; k++) { const ds = digs.slice(); ds.splice(pos, 0, k); if (Number(ds.join('')) % d === 0) ok.push(k); }
         if (ok.length !== 1) continue; const k = ok[0]; const shown = digs.slice(); shown.splice(pos, 0, 'k');
         const rule = { 3: 'digit sum divisible by 3', 4: 'last two digits divisible by 4', 6: 'even and digit sum divisible by 3', 8: 'last three digits divisible by 8', 9: 'digit sum divisible by 9', 11: 'alternating digit sum divisible by 11', 12: 'divisible by both 3 and 4', 15: 'divisible by both 3 and 5', 18: 'even and digit sum divisible by 9' }[d];
-        return { p: H.cat(`The ${len}-digit number ${shown.join('')} is divisible by ${d}. Find the digit k, k ≠ 0.`), a: A.num(k), params: { digs, pos, d },
-          steps: [`Divisible by ${d} means: ${rule}.`, `Only one nonzero digit works: k = ${hl(k)}`] };
+        return { p: H.cat(`The ${len}-digit number ${shown.join('')} is divisible by ${d}. k =`), a: A.num(k), params: { digs, pos, d },
+          steps: [`Divisible by ${d} means: ${rule}.`, `Only one digit works: k = ${hl(k)}`] };
       }
       return this.gen(r);
     },
@@ -389,7 +389,7 @@
     gen(r) {
       const kd = r.pick(['laws', 'factor', 'solve']);
       if (kd === 'laws') { const a = r.int(2, 9), b = -r.int(1, 5), c = r.int(1, 9); const v = a + b - c;
-        return { p: H.cat(H.L(`A^{${a}} \\times A^{${b}} \\div A^{${c}} = A^k`), ' and A ≠ 1. Then k ='), a: A.num(v), params: { kd, a, b, c }, steps: [`Multiplying adds exponents, dividing subtracts them.`, `${a} + (${b}) − ${c} = ${hl(fm(v))}`] }; }
+        return { p: H.cat('If ', H.L(`A^{${a}} \\times A^{${b}} \\div A^{${c}} = A^k`), ' and A ≠ 1, then k ='), a: A.num(v), params: { kd, a, b, c }, steps: [`Multiplying adds exponents, dividing subtracts them.`, `${a} + (${b}) − ${c} = ${hl(fm(v))}`] }; }
       if (kd === 'factor') { const b = r.pick([3, 4, 5, 6, 7]); const e = r.int(4, 9); const k = b - 1;
         return { p: H.cat(H.L(`${b}^{${e}} - ${b}^{${e - 1}} = ${k} \\times ${b}^{n}`), '. n ='), a: A.num(e - 1), params: { kd, b, e }, steps: [`Factor out ${b}^${e - 1}: ${b}^${e - 1}(${b} − 1) = ${k} × ${b}^${e - 1}.`, `n = ${hl(e - 1)}`] }; }
       const b = r.pick([2, 3, 4, 5]); const x = r.int(2, b === 2 ? 10 : 5); const t = b ** x; const pw = r.pick([[1, 0], [2, 0], [1, 1], [1, -1]]); const v = pw[0] === 2 ? x * x : x + pw[1];
@@ -413,7 +413,7 @@
       if (kd === 'coefProd') { let v = 1; for (let k = 0; k <= n; k++) v *= co(k); if (Math.abs(v) > 60000) return this.gen(r);
         return { p: H.cat('The product of the coefficients of the terms in the expansion of ', H.L(binL), ' is'), a: A.num(v), params: { kd, a, b, n }, steps: [`The coefficients are ${Array.from({ length: n + 1 }, (_, k) => co(k)).join(', ')}.`, `Their product is ${hl(fm(v))}`] }; }
       if (kd === 'termCoef') { const t = r.int(2, n); const v = co(t - 1);
-        return { p: H.cat(`The coefficient of the ${NS.ord(t)} term of `, H.L(binL), ' is'), a: A.num(v), params: { kd, a, b, n, t }, steps: [`Term ${t} uses ${m(`\\binom{${n}}{${t - 1}}`)} = ${M.C(n, t - 1)}, with x to the ${n - t + 1} and y to the ${t - 1}.`, `${M.C(n, t - 1)} × ${a}^${n - t + 1} × (${b})^${t - 1} = ${hl(fm(v))}`] }; }
+        return { p: H.cat(`The coefficient of the ${NS.ord(t)} term in the expansion of `, H.L(binL), ' is'), a: A.num(v), params: { kd, a, b, n, t }, steps: [`Term ${t} uses ${m(`\\binom{${n}}{${t - 1}}`)} = ${M.C(n, t - 1)}, with x to the ${n - t + 1} and y to the ${t - 1}.`, `${M.C(n, t - 1)} × ${a}^${n - t + 1} × (${b})^${t - 1} = ${hl(fm(v))}`] }; }
       const v = co(1) + co(n - 1);
       return { p: H.cat('In the expansion of ', H.L(binL), ', the sum of the coefficients of the ', H.L(`x^{${n - 1}}y`), ' and ', H.L(`xy^{${n - 1}}`), ' terms is'), a: A.num(v), params: { kd, a, b, n }, steps: [`x^${n - 1}y: ${n} × ${a}^${n - 1} × ${b} = ${co(1)}. xy^${n - 1}: ${n} × ${a} × (${b})^${n - 1} = ${co(n - 1)}.`, `${co(1)} + ${co(n - 1)} = ${hl(fm(v))}`] };
     },
@@ -440,7 +440,7 @@
     id: 'similarity', trick: 'geoFacts', col: { ms: 2, hs: 2 },
     gen(r) {
       const a = r.int(2, 6), b = r.int(a + 1, 9), k = r.pick([2, 3, 4, 5]); const what = r.pick(['perimeter', 'area']); const v = what === 'area' ? k * k : k;
-      return { p: H.cat(`A ${a}" by ${b}" picture is enlarged to ${a * k}" by ${b * k}". Its ${what} is multiplied by`), a: A.num(v), params: { a, b, k, what }, steps: [`Every length is multiplied by ${k}.`, what === 'area' ? `Area grows by the square: ${k}² = ${hl(v)}` : `Perimeter is a length: ${hl(v)}`] };
+      return { p: H.cat(`${NS.An(a)} ${a}" by ${b}" picture is enlarged to ${a * k}" by ${b * k}". Its ${what} is multiplied by`), a: A.num(v), params: { a, b, k, what }, steps: [`Every length is multiplied by ${k}.`, what === 'area' ? `Area grows by the square: ${k}² = ${hl(v)}` : `Perimeter is a length: ${hl(v)}`] };
     },
   });
 

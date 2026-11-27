@@ -734,7 +734,8 @@
     const LB = '\u0001\\underline{\\phantom{0000}}\u0002'; let h = p.p.h; let tail = true;
     if (h.includes(LB)) { const t = h.trimEnd(); if (t.endsWith(LB)) h = t.slice(0, -LB.length); else { tail = false; h = h.split(LB).join('\u0001\\underline{\\phantom{00000000}}\u0002'); } }
     const blank = tail ? `<span class="ub">${p.pre ? `<span>${esc(p.pre)}</span>` : ''}<i></i>${p.suffix ? `<span class="sx">${esc(p.suffix)}</span>` : ''}${p.form ? `<span class="sx">${esc(p.form)}</span>` : ''}</span>` : '';
-    return `<div class="uq"><span class="un">${p.est ? '*' : ''}(${p.n})</span><div class="ut"><span class="up">${R(h)}</span>${blank}</div></div>`;
+    const plain = esc(`${p.est ? '*' : ''}(${p.n}) ${NS.plainProblem(p)}`);
+    return `<div class="uq" data-txt="${plain}"><span class="un">${p.est ? '*' : ''}(${p.n})</span><div class="ut"><span class="up">${R(h)}</span>${blank}</div></div>`;
   }
   // an absolutely placed line of the header: x and y are the real sheet's text positions in points
   const at = (x, y, cls, html, extra = '') => `<div class="ua2 ${cls}" style="left:${(x - PG.left).toFixed(1)}pt;top:${(y - PG.top).toFixed(1)}pt;${extra}">${html}</div>`;
@@ -784,7 +785,7 @@
     // pieces with no space between them stay together, as in normal text ("(" + math, math + ".")
     const push = (node, breakable) => { if (glue && last && !breakable) { last.appendChild(node); } else { const a = document.createElement('span'); a.className = 'ua'; a.appendChild(node); atoms.push(a); last = a; } glue = true; };
     [...up.childNodes].forEach(n => {
-      if (n.nodeType === 3) { n.textContent.split(/(\s+)/).forEach(ch => { if (!ch) return; if (/^\s+$/.test(ch)) { if (last) last.classList.add('sp'); glue = false; } else push(document.createTextNode(ch)); }); return; }
+      if (n.nodeType === 3) { n.textContent.split(/(\s+)/).forEach(ch => { if (!ch) return; if (/^\s+$/.test(ch)) { if (last) last.appendChild(document.createTextNode(' ')); glue = false; } else push(document.createTextNode(ch)); }); return; }
       if (n.classList && n.classList.contains('katex')) {
         // long math can wrap between its pieces, as KaTeX allows
         const bases = [...n.querySelectorAll(':scope > .katex-html > .base')];
@@ -806,7 +807,7 @@
     const probs = state.printProbs, full = state.printFull;
     const nodes = probs.map(p => { const d = document.createElement('div'); d.innerHTML = uilProb(p); return d.firstElementChild; });
     nodes.forEach(n => { atomize(n.querySelector('.up')); printGlyphs(n); });
-    const keyNodes = probs.map(p => { const d = document.createElement('div'); d.className = 'uk'; d.innerHTML = `<span class="un">${p.est ? '*' : ''}(${p.n})</span><span class="ukv">${keyRange(p).split('<span class="or"> or </span>').join(', ')}</span>`; printGlyphs(d); return d; });
+    const keyNodes = probs.map(p => { const d = document.createElement('div'); d.className = 'uk'; d.dataset.txt = `${p.est ? '*' : ''}(${p.n}) ${p.est ? keyRange(p) : NS.keyText(p.a)}`; d.innerHTML = `<span class="un">${p.est ? '*' : ''}(${p.n})</span><span class="ukv">${keyRange(p).split('<span class="or"> or </span>').join(', ')}</span>`; printGlyphs(d); return d; });
     const pgs = $$('.upage', paper); const tests = pgs.filter(p => !p.classList.contains('ukey'));
     const cols = tests.map(p => [$('.ucl', p), $('.ucr', p)]);
     let cut = null;
@@ -821,6 +822,8 @@
       cols[1][0].replaceChildren(...back.slice(0, best)); cols[1][1].replaceChildren(...back.slice(best));
       cut = [l1, front, front + best, probs.length];
     };
+    // copying from the sheet gives each problem as one line of plain text
+    if (!paper.dataset.copy) { paper.dataset.copy = 1; paper.addEventListener('copy', e => { const sel = getSelection(); if (!sel.rangeCount) return; const r = sel.getRangeAt(0); const items = [...paper.querySelectorAll('.uq, .uk, .ua2')].filter(el => r.intersectsNode(el)); if (!items.length || !e.clipboardData) return; e.preventDefault(); e.clipboardData.setData('text/plain', items.map(el => el.dataset.txt || el.innerText.replace(/\s+/g, ' ').trim()).join('\n')); }); }
     const fit = () => {
       paper.style.setProperty('--uk', 1);
       const set = (fs, g) => pgs.forEach(pg => { pg.style.setProperty('--ufs', fs + 'pt'); pg.style.setProperty('--ugap', g + 'em'); });

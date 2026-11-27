@@ -78,7 +78,7 @@ module.exports = function (NS) {
       for (let x = -60; x <= 60; x++) { const y = x - p.D; if (x * y === p.P && (p.kd === 'pq' || (x > 0 && y > 0))) return Math.abs(x + y); } return 'none';
     },
     numWords: p => words(p.text),
-    divisibility: p => { const ok = []; for (let k = 1; k <= 9; k++) { const d = p.digs.slice(); d.splice(p.pos, 0, k); if (Number(d.join('')) % p.d === 0) ok.push(k); } return ok.length === 1 ? ok[0] : 'not unique'; },
+    divisibility: p => { const ok = []; for (let k = 0; k <= 9; k++) { const d = p.digs.slice(); d.splice(p.pos, 0, k); if (Number(d.join('')) % p.d === 0) ok.push(k); } return ok.length === 1 ? ok[0] : 'not unique'; },
     expRules: p => ({ laws: () => p.a + p.b - p.c, factor: () => { const lhs = p.b ** p.e - p.b ** (p.e - 1); for (let n = 0; n < 12; n++) if ((p.b - 1) * p.b ** n === lhs) return n; return 'none'; }, solve: () => { let x = 0; while (p.b ** x < p.t) x++; return p.pw[0] === 2 ? x * x : x + p.pw[1]; } })[p.kd](),
     expandSum: p => {
       const mul = (A, B) => { const R = Array(A.length + B.length - 1).fill(0); A.forEach((a, i) => B.forEach((b, j) => { R[i + j] += a * b; })); return R; };

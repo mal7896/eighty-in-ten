@@ -178,9 +178,9 @@
       <div class="sect"><div class="sect-h" style="border-bottom:0;padding-bottom:0"><h2>Other ways to practice</h2></div>
         <div class="list">
           <button class="li" data-act="quickSprint"><span><b>Two-minute sprint</b><span class="muted">Problems 1–20 against the clock. Right answers move on by themselves.</span></span><span class="arr">→</span></button>
-          <button class="li" data-act="quickArith"><span><b>Arithmetic warm-up</b><span class="muted">Two minutes of plain + − × ÷. A good start to team practice.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickArith"><span><b>Arithmetic warm-up</b><span class="muted">Two minutes of addition, subtraction, multiplication and division.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickEst"><span><b>Estimation drill</b><span class="muted">Ten starred problems. Anything within 5% counts.</span></span><span class="arr">→</span></button>
-          <button class="li" data-act="quickWeak"><span><b>${weak.length ? 'Weak spots' : misses ? 'Problems you missed' : 'Weak spots'}</b><span class="muted">${weak.length ? `${weak.length} trick${weak.length > 1 ? 's' : ''} under 85%, starting with ${NS.rich(trickName(weak[0]))}.` : misses ? `${misses} problem${misses > 1 ? 's' : ''} waiting to be redone.` : 'Nothing here yet. Tricks you miss will collect here.'}</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickWeak"><span><b>${weak.length ? 'Weak spots' : misses ? 'Problems you missed' : 'Weak spots'}</b><span class="muted">${weak.length ? `${weak.length} trick${weak.length > 1 ? 's' : ''} under 85%, starting with ${NS.rich(trickName(weak[0]))}.` : misses ? `${misses} problem${misses > 1 ? 's' : ''} waiting to be redone.` : 'Nothing yet. Tricks you miss will be listed here.'}</span></span><span class="arr">→</span></button>
           <button class="li" data-act="memoMix"><span><b>Facts drill</b><span class="muted">Twenty quick cards: squares, cubes, fractions, triples and more.</span></span><span class="arr">→</span></button>
           <button class="li" data-go="test"><span><b>Full practice test</b><span class="muted">80 problems, 10 minutes, scored like a contest.</span></span><span class="arr">→</span></button>
         </div></div>
@@ -188,7 +188,7 @@
         <div class="sect"><div class="sect-h"><h2>Your tricks</h2><button class="btn link" data-go="tricks">All ${ids.length} →</button></div>
           <div>${statusBar(cnt, ids.length)}</div></div>
         <div class="sect"><div class="sect-h"><h2>Full tests</h2><button class="btn link" data-go="${fulls.length >= 2 ? 'progress' : 'test'}">${fulls.length >= 2 ? 'Progress' : 'Take one'} →</button></div>
-          ${fulls.length >= 2 ? chartSvg(fulls.slice(-12).map(t => t.score), 400) : `<p class="muted">${fulls.length ? `One so far: ${fulls[0].score} out of 400. Your scores show up here as a chart after the second.` : 'No full tests yet. One a week is a good rhythm, with single columns in between.'}</p>`}</div>
+          ${fulls.length >= 2 ? chartSvg(fulls.slice(-12).map(t => t.score), 400) : `<p class="muted">${fulls.length ? `One so far: ${fulls[0].score} out of 400. Your scores show up here as a chart after the second.` : 'No full tests yet. Try one full test a week, with single columns in between.'}</p>`}</div>
       </div>
       ${footer()}`;
   }
@@ -256,7 +256,7 @@
       const t = S.trick(id); t.lesson = true; S.save();
       const ids = NS.tricksFor(l); const nextId = ids[ids.indexOf(id) + 1];
       box.innerHTML = `<p class="eyebrow">Try it</p><h3 style="margin:4px 0 10px">${T.right} of 5 right</h3>
-        <p class="muted small">${T.right === 5 ? 'You’ve got the idea. A round of 20 is what makes it automatic.' : T.right >= 3 ? 'Close. In a practice round, every miss shows you the shortcut for that exact problem.' : 'Read the steps once more, then try a round. Every miss shows the shortcut for that problem.'}</p>
+        <p class="muted small">${T.right === 5 ? 'All five right. A round of 20 will help you get faster.' : T.right >= 3 ? 'In a practice round, each miss shows the shortcut for that problem.' : 'Read the steps once more, then try a round. Every miss shows the shortcut for that problem.'}</p>
         <div class="stack" style="margin-top:14px;gap:8px"><button class="btn" data-act="drillTrick" data-id="${id}">Practice 20 of these</button>${nextId ? `<button class="btn ghost" data-go="t" data-arg="${nextId}">Next trick: ${NS.rich(trickName(nextId))}</button>` : ''}<button class="btn link" data-act="tryAgain">Try 5 more</button></div>`;
       return;
     }
@@ -292,7 +292,7 @@
   const BEH = {
     normal: ['Normal', 'Press Enter to check each answer.'],
     noenter: ['No Enter', 'Right answers move on by themselves. Press Enter only to give up on one.'],
-    hardcore: ['Hardcore', 'One miss ends the run. See how long a streak you can build.'],
+    hardcore: ['Hardcore', 'One miss ends the run. Your longest streak is saved.'],
     test: ['Test', 'No right or wrong until the end, like a real test. Press Enter to move on.'],
   };
   const exCache = new Map();
@@ -326,7 +326,7 @@
     const behKeys = mode === 'sprint' ? ['normal', 'hardcore', 'test'] : ['normal', 'noenter', 'hardcore', 'test'];
     const beh = behKeys.includes(state.pickBeh) ? state.pickBeh : 'normal';
     const best = (L().best || {}).hc || 0;
-    const modeHint = mode === 'sprint' ? 'As many as you can before time runs out. Right answers move on by themselves.' : arith ? 'Plain arithmetic against the clock, for warming up. Right answers move on by themselves.' : `${beh === 'hardcore' ? 'No set length' : `${state.pickLen} problems`}, no clock. Miss one and you see how to do that exact problem fast.`;
+    const modeHint = mode === 'sprint' ? 'As many as you can before time runs out. Right answers move on by themselves.' : arith ? 'Addition, subtraction, multiplication and division against the clock. Right answers move on by themselves.' : `${beh === 'hardcore' ? 'No set length' : `${state.pickLen} problems`}, no clock. Miss one and you see how to do that exact problem fast.`;
     const behNote = mode === 'sprint' && beh === 'normal' ? 'Right answers move on by themselves.' : BEH[beh][1] + (beh === 'hardcore' && best ? ` Your best streak: <b>${best}</b>.` : '');
     main.innerHTML = `<div class="setup"><header class="pagehead"><p class="eyebrow">${LV[l]}</p><h1>Practice</h1></header>
       <div class="cfg">
@@ -419,12 +419,12 @@
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (s.state === 'ask') ACT.sSubmit(); else if (s.state === 'shown') nextProblem(); } });
     inp.addEventListener('input', () => { $('#spv').innerHTML = previewOf(inp.value); if (autoNext && s.beh !== 'test' && s.state === 'ask' && NS.check(p.a, inp.value).ok) ACT.sSubmit(); });
     if (!touch) inp.focus({ preventScroll: true }); else activeInput = inp;
-    if (s.moved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = s.moved > 0 ? `Nice run. Moving up to ${NS.DIFFS[s.di].name}.` : `Stepping back to ${NS.DIFFS[s.di].name} for a few.`; s.moved = 0; }
+    if (s.moved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = s.moved > 0 ? `Four quick right answers in a row. Moving up to ${NS.DIFFS[s.di].name}.` : `Two misses in the last three. Moving down to ${NS.DIFFS[s.di].name}.`; s.moved = 0; }
     else if (s.flash != null) {
       // the last answer was right: say so on the new problem, where it stays readable, then fade
       const fb = $('#sfb'); fb.className = 'feedback ok fadeout'; fb.textContent = `✓ Right · ${(s.flash / 1000).toFixed(1)}s`;
       $('#stage').classList.add('pulse'); const g = $('.tally .g'); if (g) g.classList.add('bump'); s.flash = null;
-    } else if (s.saved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = 'Saved. Next one.'; s.saved = false; }
+    } else if (s.saved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = 'Answer saved.'; s.saved = false; }
     tickLive();
   }
   // one timer for the clock, the elapsed time and the pace
@@ -469,10 +469,10 @@
     const misses = s.results.filter(x => !x.ok); const arith = s.mode === 'arith'; const hc = s.beh === 'hardcore';
     const total = (s.results.reduce((t, x) => t + x.ms, 0) / 1000);
     const headline = hc ? `A streak of ${right}` : timed(s) ? `${right} right in ${fmtTime(s.dur)}` : `${right} of ${n} right`;
-    const best = hc || arith ? (right > (s.prevBest || 0) && right > 0 ? (s.prevBest ? `A new best (your old one was ${s.prevBest}).` : 'Your first score here; now beat it.') : s.prevBest ? `Your best is ${s.prevBest}.` : '') : '';
+    const best = hc || arith ? (right > (s.prevBest || 0) && right > 0 ? (s.prevBest ? `New best. Your previous best was ${s.prevBest}.` : 'This is your first score with these settings.') : s.prevBest ? `Your best is ${s.prevBest}.` : '') : '';
     const opn = arith ? s.arith.ops.split('').map(c => ({ '+': 'addition', '-': 'subtraction', x: 'multiplication', '/': 'division' })[c]).join(', ') : '';
     const dline = arith ? `${opn[0].toUpperCase()}${opn.slice(1)}.` : s.auto ? (s.diMax > s.di0 ? `Auto difficulty: started at ${NS.DIFFS[s.di0].name}, reached ${NS.DIFFS[s.diMax].name}.` : `Auto difficulty: stayed at ${NS.DIFFS[s.di0].name}${s.di < s.di0 ? ` and stepped back to ${NS.DIFFS[s.di].name}` : ''}.`) : `Difficulty: ${NS.DIFFS[s.di].name}.`;
-    const msg = hc ? (best || 'One miss ends a run. Read the shortcut for the one that got you, then go again.') : arith ? (best || 'Steady beats fast and sloppy.') : acc === 1 ? 'Every one right.' : acc >= 0.85 ? 'Accurate. Next round, push the pace a little.' : acc >= 0.6 ? 'Read through the misses below, then run it again.' : 'Go back over the lesson, then try another round.';
+    const msg = hc ? (best || 'The shortcut for the problem that ended the run is below.') : arith ? (best || (misses.length ? 'Your misses are listed below.' : 'No misses.')) : acc === 1 ? 'You got every problem right.' : acc >= 0.85 ? '85% or better. Next round, try to answer faster.' : acc >= 0.6 ? 'Read the shortcuts for the misses below, then try another round.' : 'Go back over the lesson, then try another round.';
     main.innerHTML = `<div class="session stack">
       <div class="card"><p class="eyebrow">${NS.rich(s.label)}</p><div class="res-top" style="margin-top:8px"><div class="big">${hc || arith ? right : Math.round(acc * 100) + '%'}</div>
         <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><p class="small faint">${dline}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div><div><b>${(total / n).toFixed(1)}s</b><span>average</span></div>${timed(s) ? '' : `<div><b>${fmtTime(total)}</b><span>total time</span></div>`}</div></div></div>
@@ -495,7 +495,7 @@
     state.memoSetId = null;
     const tot = NS.MEMO.reduce((a, s) => { const c = NS.memoCount(l, s.id); a.k += c.known; a.t += c.total; return a; }, { k: 0, t: 0 });
     main.innerHTML = `<header class="pagehead" style="margin-bottom:0"><p class="eyebrow">${LV[l]}</p><h1>Memorize</h1>
-      <p class="lede">Some answers you don’t work out; you just know them. Look over a table, then drill it until every answer comes without thinking.</p></header>
+      <p class="lede">Some answers are faster to know by heart than to work out. Study a table, then drill it until you can answer every card right away.</p></header>
       <div class="row" style="margin-top:20px"><button class="btn" data-act="memoMix">Drill a mix</button><span class="faint small">20 cards from every set, mostly ones you don’t know yet. ${tot.k} of ${tot.t} facts known.</span></div>
       <div class="msets">${NS.MEMO.map(s => { const c = NS.memoCount(l, s.id); return `<button class="mset" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.title, true)}</b><span class="muted small">${NS.rich(s.blurb[l], true)}</span><span class="mprog">${memoBar(c)}</span></button>`; }).join('')}</div>
       ${footer()}`;
@@ -581,13 +581,13 @@
     const seen = new Set(); const missed = m.results.filter(x => !x.ok && !seen.has(x.item.k) && seen.add(x.item.k));
     const slow = m.results.filter(x => x.ok && x.ms > NS.memoFast(x.set) && !seen.has(x.item.k) && seen.add(x.item.k));
     const times = m.results.filter(x => x.ok).map(x => x.ms).sort((a, b) => a - b); const med = times.length ? (times[Math.floor(times.length / 2)] / 1000).toFixed(1) + 's' : '—';
-    const msg = right === n ? (slow.length ? 'Every card right. A few were slow.' : 'Every card right.') : right / n >= 0.8 ? 'Nearly there. Look over the misses below.' : 'Read the table once more, then go again.';
+    const msg = right === n ? (slow.length ? 'Every card right. A few were slow.' : 'Every card right.') : right / n >= 0.8 ? '80% or more right. Look over the misses below.' : 'Read the table once more, then go again.';
     main.innerHTML = `<div class="session stack">
       <div class="card"><p class="eyebrow">${NS.rich(m.title, true)}</p><div class="res-top" style="margin-top:8px"><div class="big">${Math.round(right / n * 100)}%</div>
         <div class="stack" style="gap:8px"><h2>${right} of ${n} right</h2><p class="muted">${msg}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med}</b><span>typical time</span></div></div></div></div>
         <div class="row" style="margin-top:20px"><button class="btn hi" data-act="memoAgain">Go again <span class="kbd">Enter</span></button><button class="btn ghost" data-act="memoBack">${m.ids.length === 1 ? 'Back to the table' : 'Back to Memorize'}</button></div></div>
       ${missed.length ? `<div class="card"><h3>Look these over</h3><div class="mlist">${missed.map(x => `<div>${R(x.card.show, true)}</div>`).join('')}</div></div>` : ''}
-      ${slow.length ? `<div class="card"><h3>Right, but slow</h3><p class="muted small" style="margin-top:4px">These should come instantly. They’ll keep showing up until they do.</p><div class="mlist">${slow.map(x => `<div>${R(x.card.show, true)} <span class="faint small mono">${(x.ms / 1000).toFixed(1)}s</span></div>`).join('')}</div></div>` : ''}
+      ${slow.length ? `<div class="card"><h3>Right, but slow</h3><p class="muted small" style="margin-top:4px">They’ll come up more often until you answer them quickly.</p><div class="mlist">${slow.map(x => `<div>${R(x.card.show, true)} <span class="faint small mono">${(x.ms / 1000).toFixed(1)}s</span></div>`).join('')}</div></div>` : ''}
     </div>`;
     $('[data-act="memoAgain"]').focus();
   }
@@ -606,7 +606,7 @@
           <p class="note-s">${state.testKind === 'full' ? '80 problems in 10 minutes.' : `Problems ${COLR[state.testCol]}: 20 problems in 2 minutes 30 seconds.`}</p></div></div>
         <div class="cfg-row"><span class="cfg-l">Difficulty</span><div class="cfg-v">${diffSeg('tdiff', state.testDiff, false)}</div></div>
       </div>
-      <div class="row startbar"><button class="btn" data-act="startTest">Start the clock</button><button class="btn ghost" data-act="printTest">Print a paper copy</button><span class="faint small">Enter moves to the next blank. Don’t sit on a hard one; a skip costs the same as a miss.</span></div>
+      <div class="row startbar"><button class="btn" data-act="startTest">Start the clock</button><button class="btn ghost" data-act="printTest">Print a paper copy</button><span class="faint small">Enter moves to the next blank. If a problem is taking too long, guess and move on: a skip costs the same as a miss.</span></div>
       <div class="codes">
         <div class="codebox"><label for="tcode"><b>Got a test code?</b> <span class="muted">Everyone who enters the same code gets the same test, so a team can take one together and compare.</span></label>
           <div class="row" style="margin-top:10px"><input id="tcode" class="field" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. ${l === 'ms' ? 'MF' : 'HF'}-7K2M" maxlength="10" aria-describedby="tcodemsg"><button class="btn ghost" data-act="codeStart">Start this test</button></div>
@@ -618,7 +618,7 @@
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept anything within 5% of the exact answer.</li></ul>
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Every right answer is +5 and every wrong or skipped one is −4, so a skip is never free.</li><li>Stop when the clock stops. Answers you haven’t reached don’t count against you.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
         </div></details>
-      <div class="sect"><div class="sect-h"><h2>Recent tests</h2></div>${hist.length ? `<div class="tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm, with single columns in between.</div>'}</div>
+      <div class="sect"><div class="sect-h"><h2>Recent tests</h2></div>${hist.length ? `<div class="tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. Try one full test a week, with single columns in between.</div>'}</div>
     </div>${footer()}`;
     const tc = $('#tcode'); if (tc) { tc.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ACT.codeStart(); } }); tc.addEventListener('input', () => { tc.removeAttribute('aria-invalid'); $('#tcodemsg').textContent = ''; }); }
   }
@@ -689,14 +689,14 @@
     const prev = L().tests.filter(t => t.kind === (full ? 'full' : 'col') && (full || t.col === T.cols[0])); const pb = prev.length > 1 && r.score >= Math.max(...prev.slice(0, -1).map(t => t.score));
     // a nudge to the next level when this one went well (90% right through at least 3/4 of the test), or back when it didn't
     const tdi = NS.diffIdx(T.diff); const reach = r.last / T.probs.length; const acc = r.correct / Math.max(1, r.correct + r.wrong + r.skipped);
-    const nextUp = tdi < 3 && reach >= 0.75 && acc >= 0.9 ? `Strong test. Try the next one at ${NS.DIFFS[tdi + 1].name}.` : tdi > 1 && acc < 0.6 ? `That one was rough. A ${NS.DIFFS[1].name} test is the real-contest level, and a good place to build back up.` : '';
+    const nextUp = tdi < 3 && reach >= 0.75 && acc >= 0.9 ? `90% or more right through most of the test. Try your next one at ${NS.DIFFS[tdi + 1].name}.` : tdi > 1 && acc < 0.6 ? `Under 60% right. ${NS.DIFFS[1].name} level matches a real test; try your next one there.` : '';
     main.innerHTML = `<div class="stack">
       <div class="card"><p class="eyebrow">${full ? 'Full test' : `Problems ${COLR[T.cols[0]]}`} · ${NS.DIFFS[NS.diffIdx(T.diff)].name} · ${T.timeUp ? 'time' : `finished at ${fmtTime(T.used)}`}</p>
         <div class="res-top" style="margin-top:10px"><div><div class="big">${r.score}</div><p class="faint small">out of ${max}${pb ? ' · <b style="color:var(--ok)">personal best</b>' : ''}</p></div>
           <div class="stack" style="gap:10px"><div class="kv"><div><b>${r.correct}</b><span>right (+${5 * r.correct})</span></div><div><b>${r.wrong}</b><span>wrong (−${4 * r.wrong})</span></div><div><b>${r.skipped}</b><span>skipped (−${4 * r.skipped})</span></div><div><b>${r.last}</b><span>last problem tried</span></div></div>
           ${full ? `<div class="cols4">${byCol.map(b => `<div><span class="faint small">${COLR[b.c]}</span><br><b>${b.ok}</b><span class="faint small">/${b.tried || 0} tried</span></div>`).join('')}</div>` : ''}</div></div>
         ${nextUp ? `<p class="small" style="margin-top:14px"><b>${nextUp}</b></p>` : ''}
-        ${r.skipped ? `<p class="small" style="margin-top:14px">Skips cost as much as wrong answers. ${r.skipped} skip${r.skipped > 1 ? 's' : ''} took ${4 * r.skipped} points. If you can’t do one, an honest guess beats a blank.</p>` : ''}
+        ${r.skipped ? `<p class="small" style="margin-top:14px">Skips cost as much as wrong answers. ${r.skipped} skip${r.skipped > 1 ? 's' : ''} took ${4 * r.skipped} points. If you can’t solve one, a guess is better than a blank.</p>` : ''}
         <p class="small muted" style="margin-top:14px">Test code <b class="mono" style="color:var(--ink)">${T.code}</b>. Share it and teammates get this same test. <button class="btn link small" data-act="copyCode">Copy</button> · <button class="btn link small" data-act="printCode">Print it</button></p>
         <div class="row" style="margin-top:12px"><button class="btn hi" data-act="testAgain">New test</button><button class="btn ghost" data-act="testMenu">Test options</button>${missTricks.length ? `<button class="btn ghost" data-act="drillMissed">Drill what I missed</button>` : ''}</div></div>
       ${missTricks.length ? `<div class="card"><h3 style="margin-bottom:10px">Review these tricks</h3><div class="row">${missTricks.map(id => `<button class="btn small ghost" data-go="t" data-arg="${id}">${NS.rich(trickName(id))}</button>`).join('')}</div></div>` : ''}
@@ -712,7 +712,7 @@
   function keyRange(p) {
     if (!p.est) return R(NS.keyHtml(p.a));
     const v = p.a.v.num(); const lo = Math.ceil(Math.min(v * 0.95, v * 1.05) - 1e-9), hi = Math.floor(Math.max(v * 0.95, v * 1.05) + 1e-9);
-    return `${NS.fmtn(lo)} – ${NS.fmtn(hi)}`;
+    return `${NS.fmtn(lo)} — ${NS.fmtn(hi)}`;
   }
   // UIL layout on letter paper: problems 1–33 on the front, 34–80 on the back, two columns each; key on its own page
   const SPLIT = { full: [[0, 17, 33], [33, 57, 80]], col: [[0, 10, 20]] };
@@ -733,29 +733,34 @@
       <div class="ubox"><div class="ucn">Contestant’s Number <i></i></div>
         <table class="uscore" aria-label="Score box"><tr><td>Final</td><td><i></i></td><td><i></i></td></tr><tr><td>2nd</td><td><i></i></td><td><i></i></td></tr><tr><td>1st</td><td><i></i></td><td><i></i></td></tr><tr class="ul"><td></td><td>Score</td><td>Initials</td></tr></table></div>
       <div class="uwarn"><span>Read directions carefully<br>before beginning test</span><span>DO NOT UNFOLD THIS SHEET<br>UNTIL TOLD TO BEGIN</span><span></span></div>
-      <p class="udir"><b>Directions:</b> Do not turn this page until the person giving the test says to begin. This is a ${full ? 'ten-minute' : 'two-and-a-half-minute'} test with ${probs.length} problems. Solve as many as you can, accurately and quickly, in the order they appear. Work every problem mentally: no calculations on paper. Write only the answer in the space at the end of each problem. Problems marked with a ( * ) need an approximate whole-number answer, and any answer within five percent of the exact answer is scored correct; all other problems need exact answers.</p>
-      <p class="uconduct">The person giving this test should explain these directions to the contestants.</p>
-      <p class="ustop">STOP — WAIT FOR SIGNAL!</p>`;
+      <p class="udir"><b>Directions:</b> Do not turn this page until the person conducting this test gives the signal to begin. This is a ${full ? 'ten-minute' : 'two-and-a-half-minute'} test. There are ${probs.length} problems. Solve accurately and quickly as many as you can in the order in which they appear. ALL PROBLEMS ARE TO BE SOLVED MENTALLY. Make no calculations with paper and pencil. Write only the answer in the space provided at the end of each problem. Problems marked with a ( * ) require approximate integral answers; any answer to a starred problem that is within five percent of the exact answer will be scored correct; all other problems require exact answers.</p>
+      <p class="uconduct">The person conducting this contest should explain these directions to the contestants.</p>
+      <p class="ustop">STOP -- WAIT FOR SIGNAL!</p>`;
     const split = full ? SPLIT.full : SPLIT.col;
     const pages = split.map(([a, b, c], i) => `<section class="upage">${i === 0 ? front : ''}<div class="ucols"><div>${probs.slice(a, b).map(uilProb).join('')}</div><div>${probs.slice(b, c).map(uilProb).join('')}</div></div><p class="ufoot">Eighty in Ten · ${tc} · page ${i + 1} of ${split.length}</p></section>`);
     const kcols = full ? [[0, 17], [17, 33], [33, 57], [57, 80]] : [[0, 10], [10, 20]];
-    const key = `<section class="upage ukey"><p class="unot">DO NOT GIVE TO STUDENTS BEFORE OR DURING THE TEST</p><h2>Answer key · ${lvShort} · ${dn} · ${tc}</h2>
-      <p class="unote">*(n) a – b means any whole number from a to b. Fractions are fine in any equivalent lowest-terms form unless the problem names one.</p>
+    const key = `<section class="upage ukey"><p class="unot">DO NOT DISTRIBUTE TO STUDENTS BEFORE OR DURING THE CONTEST</p><h2>Number Sense Answer Key ${lvShort} • ${dn} • ${tc}</h2>
+      <p class="unote">*number) x — y means an integer between x and y inclusive<br>NOTE: If an answer is of the type like ${R('\u0001\\tfrac23\u0002')} it cannot be written as a repeating decimal</p>
       <div class="ukcols k${kcols.length}">${kcols.map(([a, b]) => `<div>${probs.slice(a, b).map(p => `<div class="uk"><span class="un">${p.est ? '*' : ''}(${p.n})</span><span>${keyRange(p)}</span></div>`).join('')}</div>`).join('')}</div></section>`;
     main.innerHTML = `<div class="noprint"><button class="back" data-go="test">${IC.left} Tests</button>
       <header class="pagehead" style="margin-top:10px"><h1>Print a test</h1><p class="lede">${what}, laid out like a UIL test on letter paper: problems 1–33 on the front, the rest on the back. Test code <b class="mono">${tc}</b>: students can also take this exact test on the site by entering the code.</p></header>
       <div class="row" style="margin-bottom:8px"><button class="btn" data-act="doPrint">Print</button><button class="btn ghost" data-act="printNew">A different test</button></div>
-      <p class="faint small" id="printmsg">Print double-sided for the real feel. The answer key is the last page, so you can keep it back. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac), with margins set to Default or None.</p></div>
+      <p class="faint small" id="printmsg">Print double-sided so it matches a real test sheet. The answer key is the last page, so you can keep it back. If the Print button does nothing, use your browser’s Print command (Ctrl+P, or ⌘P on a Mac), with margins set to Default or None.</p></div>
       <div class="paper" id="paper">${pages.join('')}${key}</div>`;
     state.printSpec = spec;
     fitPaper();
   }
   // shrink the type on any page whose problems run past the bottom, so each page prints as one sheet
+  // one type size for every page: tighten the space between problems first, then step the type down
+  // until every page fits on its own sheet
   function fitPaper() {
     const paper = $('#paper'); if (!paper) return;
     const fit = () => {
-      $$('.upage', paper).forEach(pg => { let fs = 11; pg.style.setProperty('--ufs', fs + 'pt'); while (!pageFits(pg) && fs > 8) { fs -= 0.25; pg.style.setProperty('--ufs', fs + 'pt'); } });
-      scalePaper();
+      paper.style.setProperty('--uk', 1);
+      const pgs = $$('.upage', paper); const GAPS = [0.48, 0.4, 0.33, 0.27, 0.22];
+      const tryAt = fs => pgs.every(pg => { pg.style.setProperty('--ufs', fs + 'pt'); for (const g of GAPS) { pg.style.setProperty('--ugap', g + 'em'); if (pageFits(pg)) return true; } return false; });
+      let fs = 11; while (fs > 8 && !tryAt(fs)) fs -= 0.25;
+      paper.dataset.fs = fs; scalePaper();
     };
     (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fit);
   }

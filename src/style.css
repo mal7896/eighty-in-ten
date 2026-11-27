@@ -577,7 +577,7 @@ body.nolevel main { padding-bottom: 48px; }
 .uconduct, .ustop { font-family: var(--f-body); font-weight: 700; font-size: .82em; margin: 0 0 12px; }
 .ustop { text-align: center; margin-bottom: 22px; }
 .ucols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 .3in; }
-.uq { display: grid; grid-template-columns: 3.1em minmax(0, 1fr); gap: 0 .35em; align-items: baseline; padding: .48em 0; break-inside: avoid; }
+.uq { display: grid; grid-template-columns: 3.1em minmax(0, 1fr); gap: 0 .35em; align-items: baseline; padding: var(--ugap, .48em) 0; break-inside: avoid; }
 .un { text-align: right; white-space: nowrap; }
 .ut { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 .3em; min-width: 0; }
 .up { min-width: 0; overflow-wrap: anywhere; }
@@ -585,9 +585,9 @@ body.nolevel main { padding-bottom: 48px; }
 .ub i { flex: 1; height: 1em; border-bottom: 1px solid #111; }
 .ub .sx { white-space: nowrap; }
 .ufoot { position: absolute; left: .55in; right: .55in; bottom: .22in; margin: 0; text-align: center; font-family: var(--f-body); font-weight: 400; font-size: 7.5pt; color: #666; }
-.ukey h2 { font-size: 1.15em; margin: 4px 0 2px; }
-.unot { font-family: var(--f-body); font-weight: 700; font-size: .82em; margin: 0 0 8px; }
-.unote { font-weight: 400; font-size: .85em; margin: 0 0 14px; }
+.ukey h2 { font-size: 1.2em; margin: 10px 0 2px; }
+.unot { font-weight: 700; font-size: 1.05em; margin: 0 0 8px; }
+.unote { font-weight: 700; font-size: .9em; line-height: 1.35; margin: 0 0 14px; }
 .ukcols { display: grid; gap: 0 .25in; }
 .ukcols.k4 { grid-template-columns: repeat(4, 1fr); }
 .ukcols.k2 { grid-template-columns: repeat(2, 1fr); max-width: 4.5in; }

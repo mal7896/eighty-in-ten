@@ -17,7 +17,7 @@
     { id: 'warmup', code: 'W', name: 'Warm-up', blurb: 'Friendlier numbers and the most common version of each problem. Good for learning a trick.' },
     { id: 'contest', code: '', name: 'Contest', blurb: 'Matches a typical TMSCA or UIL invitational test.' },
     { id: 'hard', code: 'H', name: 'Hard', blurb: 'Matches Regional and State tests: bigger numbers, and the harder topics come sooner.' },
-    { id: 'super', code: 'X', name: 'Super-hard', blurb: 'Tougher than any real test. For a real stretch.' },
+    { id: 'super', code: 'X', name: 'Super-hard', blurb: 'Harder than any real test: the biggest numbers and the hardest version of each problem.' },
   ];
   NS.diffIdx = id => { const i = NS.DIFFS.findIndex(d => d.id === id); return i < 0 ? 1 : i; };
   const K = 8;                                  // candidates per problem

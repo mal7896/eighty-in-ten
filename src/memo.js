@@ -62,7 +62,7 @@
   /* ---------- powers ---------- */
   def({
     id: 'powers', title: 'Powers', blurb: { ms: R`Powers of 2, 3 and 5.`, hs: R`Powers of 2, 3, 5 and 11.` },
-    note: R`Anchor on $2^{10} = 1024$. Everything near it is a double or a half: $2^{11} = 2048$, $2^9 = 512$.`,
+    note: R`Start from $2^{10} = 1024$. The powers next to it are a double or a half: $2^{11} = 2048$, $2^9 = 512$.`,
     build(lv) {
       const top = lv === 'ms' ? { 2: 12, 3: 6, 5: 5 } : { 2: 16, 3: 8, 5: 6, 11: 4 }; const groups = [];
       for (const b of Object.keys(top).map(Number)) {
@@ -79,7 +79,7 @@
   def({
     id: 'fractions', title: 'Fractions as decimals and percents', short: 'Fractions', fast: 5000,
     blurb: { ms: R`Halves through twelfths.`, hs: R`Halves through twelfths, plus sixteenths.` },
-    note: R`Learn $\frac17 = 0.\overline{142857}$ and the rest of the sevenths come free: they use the same six digits in the same circle, just starting somewhere else. $\frac27 = 0.\overline{285714}$. Ninths repeat their numerator ($\frac49 = 0.\overline{4}$), and elevenths repeat $9 \times$ the numerator ($\frac{3}{11} = 0.\overline{27}$).`,
+    note: R`Once you know $\frac17 = 0.\overline{142857}$, you know the rest of the sevenths: they use the same six digits in the same circle, just starting somewhere else. $\frac27 = 0.\overline{285714}$. Ninths repeat their numerator ($\frac49 = 0.\overline{4}$), and elevenths repeat $9 \times$ the numerator ($\frac{3}{11} = 0.\overline{27}$).`,
     build(lv) {
       const dens = lv === 'ms' ? [2, 3, 4, 5, 6, 7, 8, 9, 11, 12] : [2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 16]; const groups = [];
       for (const n of dens) {
@@ -140,7 +140,7 @@
   def({
     id: 'primes', title: 'Primes', fast: 6000,
     blurb: { ms: R`Primes under 100, and spotting the ones that only look prime.`, hs: R`Primes under 200, and spotting the ones that only look prime.` },
-    note: R`To check a number, divide by primes up to its square root. For 221 that means up to 13, since $15^2 = 225$ is already too big: $221 = 13 \times 17$. The usual impostors: $91 = 7 \times 13$, $119 = 7 \times 17$, $133 = 7 \times 19$, $143 = 11 \times 13$, $187 = 11 \times 17$, $209 = 11 \times 19$.`,
+    note: R`To check a number, divide by primes up to its square root. For 221 that means up to 13, since $15^2 = 225$ is already too big: $221 = 13 \times 17$. Numbers that look prime but aren’t: $91 = 7 \times 13$, $119 = 7 \times 17$, $133 = 7 \times 19$, $143 = 11 \times 13$, $187 = 11 \times 17$, $209 = 11 \times 19$.`,
     build(lv) {
       const N = lv === 'ms' ? 100 : 200; const cells = [];
       for (let n = 2; n < N; n++) if (isPrime(n)) cells.push({ t: String(n), b: '', n });

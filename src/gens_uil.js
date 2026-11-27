@@ -35,8 +35,9 @@
   /* ---------- decimal adding and subtracting ---------- */
   G({
     id: 'decAS', trick: 'addSub', col: { ms: 1, hs: 1 }, lead: true, eval: true,
-    gen(r) {
-      const d = () => { const p = r.pick([1, 2, 3]); return Q.from(q(r.int(10 ** p * 10, 10 ** p * 999), 10 ** p)); };
+    gen(r, lv, x = 1) {
+      // real tests use small decimals here (12.4 − 8.55); the 3-digit, 3-place ones are for Hard and up
+      const d = x >= 2 ? () => { const p = r.pick([1, 2, 3]); return Q.from(q(r.int(10 ** p * 10, 10 ** p * 999), 10 ** p)); } : () => { const p = r.pick([1, 2, 2]); return Q.from(q(r.int(10 ** p, 10 ** p * (r.chance(0.7) ? 99 : 199)), 10 ** p)); };
       const kd = r.pick(['add', 'sub', 'three']);
       let xs = kd === 'three' ? [d(), d(), d()] : [d(), d()];
       if (kd !== 'add' && xs[0].cmp(xs[1]) < 0) [xs[0], xs[1]] = [xs[1], xs[0]];
@@ -122,7 +123,7 @@
 
   /* ---------- a² − b² = c × ___ ---------- */
   G({
-    id: 'dsqBlank', trick: 'diffsq', col: { ms: 1, hs: 1 },
+    id: 'dsqBlank', trick: 'diffsq', col: { ms: 2, hs: 1 },
     gen(r) {
       let a, b; do { a = r.int(11, 39); b = r.int(5, a + 9); } while (a === b || Math.abs(a - b) > 12);
       const v0 = a * a - b * b; const choices = [a + b, Math.abs(a - b), 9].filter(c => c > 1 && v0 % c === 0);
@@ -134,7 +135,7 @@
 
   /* ---------- GCD and LCM combinations ---------- */
   G({
-    id: 'gcdLcm2', trick: 'gcdLcm', col: { ms: 1, hs: 1 },
+    id: 'gcdLcm2', trick: 'gcdLcm', col: { ms: 2, hs: 1 },
     gen(r) {
       const g = r.pick([2, 3, 4, 6, 7, 8, 12, 13, 14, 17]); let x, y; do { x = r.int(2, 7); y = r.int(2, 8); } while (x === y || M.gcd(x, y) !== 1);
       const a = g * x, b = g * y; const L = a * b / g; const kd = r.pick(['sum', 'diff', 'times']);
@@ -146,7 +147,7 @@
 
   /* ---------- more divisor questions ---------- */
   G({
-    id: 'divisors2', trick: 'divisors', col: { ms: 1, hs: 1 },
+    id: 'divisors2', trick: 'divisors', col: { ms: 3, hs: 1 },
     gen(r) {
       const kd = r.pick(['sum', 'properSum', 'properProd', 'primeSum', 'bigPrime', 'countProd']);
       if (kd === 'sum' || kd === 'properSum') { const n = r.pick([12, 16, 18, 20, 24, 25, 26, 28, 30, 32, 36, 40, 45, 49, 50, 64, 81, 100]); const f = M.factor(n);
@@ -187,7 +188,7 @@
 
   /* ---------- shopping, tax and pay ---------- */
   G({
-    id: 'consumer2', trick: 'consumer', col: { ms: 1, hs: 1 },
+    id: 'consumer2', trick: 'consumer', col: { ms: 2, hs: 1 },
     gen(r) {
       const kd = r.pick(['unitCost', 'gallons', 'perUnit', 'tax', 'salary', 'salary2', 'pctMoney']);
       if (kd === 'unitCost') { const n = r.pick([3, 4, 5, 6]); const each = r.int(8, 45); const c = n * each; const k = r.pick([10, 12, 15, 20, 24]); const v = each * k;
@@ -211,7 +212,7 @@
 
   /* ---------- conversions with a given rate ---------- */
   G({
-    id: 'rateConv', trick: 'units', col: { ms: 1, hs: 1 },
+    id: 'rateConv', trick: 'units', col: { ms: 2, hs: 1 },
     gen(r) {
       const kd = r.pick(['gram', 'gram2', 'deka']);
       if (kd === 'gram') { const oz = r.pick([2, 4, 6, 8, 12, 1.6, 3.2, 0.8, 9.6]); const v = Q.from(String(oz)).div(decQ('0.04'));
@@ -228,7 +229,7 @@
   const pl = u => ({ foot: 'feet', inch: 'inches', 'fluid ounce': 'fluid ounces', pint: 'pints', quart: 'quarts', cup: 'cups', gallon: 'gallons', yard: 'yards', peck: 'pecks', bushel: 'bushels', fathom: 'fathoms', minute: 'minutes', second: 'seconds', hour: 'hours', pound: 'pounds', ounce: 'ounces' })[u];
   NS.UCONV = U;
   G({
-    id: 'unitsMore', trick: 'units', col: { ms: 1, hs: 1 },
+    id: 'unitsMore', trick: 'units', col: { ms: 2, hs: 1 },
     gen(r) {
       const kd = r.pick(['fracOf', 'pctOf', 'down', 'up']);
       if (kd === 'fracOf') { const [big, small] = r.pick([['gallon', 'quart'], ['gallon', 'pint'], ['foot', 'inch'], ['yard', 'foot'], ['pound', 'ounce'], ['hour', 'minute']]); const f = U[big][small];
@@ -315,7 +316,7 @@
 
   /* ---------- more sums ---------- */
   G({
-    id: 'sumsMore', trick: 'sums', col: { ms: 2, hs: 2 },
+    id: 'sumsMore', trick: 'sums', col: { ms: 2, hs: 2 }, series: true,
     gen(r) {
       const kd = r.pick(['tri', 'oddCount', 'sigma', 'cubeRoot']);
       if (kd === 'tri') { const n = r.int(5, 11); const ts = Array.from({ length: n }, (_, i) => (i + 1) * (i + 2) / 2); const v = n * (n + 1) * (n + 2) / 6;
@@ -445,7 +446,7 @@
 
   /* ---------- special right triangles ---------- */
   G({
-    id: 'specialTri', trick: 'rightTri', col: { ms: 3, hs: 2 },
+    id: 'specialTri', trick: 'rightTri', col: { ms: 3, hs: 3 },
     gen(r) {
       const kd = r.pick(['t45', 't45x', 't30', 't30ft']);
       if (kd === 't45') { const a = r.int(2, 12); const h2 = 2 * a * a;

@@ -12,7 +12,7 @@
     ['inches', 'centimeters', q(254, 100)], ['meters', 'centimeters', q(100)], ['kilometers', 'meters', q(1000)], ['liters', 'milliliters', q(1000)], ['kilograms', 'grams', q(1000)],
   ];
   G({
-    id: 'units', trick: 'units', col: { ms: 1, hs: 1 },
+    id: 'units', trick: 'units', col: { ms: 2, hs: 1 },
     gen(r, lv) {
       const [from, to, f] = r.pick(CONV); const one = from === 'feet' ? 'foot' : from === 'square feet' ? 'square foot' : from === 'cubic feet' ? 'cubic foot' : from.replace(/s$/, ''); const flip = r.chance(0.35) && !['inches'].includes(from);
       if (!flip) {
@@ -72,7 +72,7 @@
 
   /* ---------- sets ---------- */
   G({
-    id: 'sets', trick: 'sets', col: { ms: 2, hs: 2 },
+    id: 'sets', trick: 'sets', col: { ms: 3, hs: 2 },
     gen(r) {
       const kd = r.pick(['subsets', 'proper', 'venn', 'union']);
       if (kd === 'subsets' || kd === 'proper') { const n = r.int(3, 7); const letters = 'MATHSUPER'.slice(0, n).split('').join(', '); const v = 2 ** n - (kd === 'proper' ? 1 : 0);
@@ -101,7 +101,7 @@
 
   /* ---------- probability & odds ---------- */
   G({
-    id: 'prob', trick: 'probability', col: { ms: 3, hs: 3 },
+    id: 'prob', trick: 'probability', col: { ms: 4, hs: 3 },
     gen(r) {
       const kd = r.pick(['dice', 'coins', 'marbles', 'odds']);
       if (kd === 'dice') { const s = r.int(2, 12); const ways = 6 - Math.abs(7 - s); const v = q(ways, 36); return { p: H.cat(`Two fair dice are rolled. The probability their sum is ${s} is`), a: A.num(v), params: { s }, steps: [`Ways to make ${s}: ${ways} out of 36.`, `${ways}/36 = ${hl(H.Qi(v).h)}`] }; }

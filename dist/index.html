@@ -461,6 +461,20 @@ h1 .katex, h2 .katex, h3 .katex { font-size: 1em; }
 .teamcode { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 12px 0 8px; }
 .teamcode .mono { font-size: 1.9rem; font-weight: 700; letter-spacing: .08em; color: var(--ink); user-select: all; }
 
+/* ---------- difficulty ---------- */
+.diffnote { margin: 8px 0 0; max-width: 62ch; min-height: 1.5em; }
+.dchip { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); background: var(--surface); white-space: nowrap; flex: none; }
+.dchip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
+.dchip.d-warmup::before { background: var(--ok); }
+.dchip.d-contest::before { background: var(--blue); }
+.dchip.d-hard::before { background: var(--hi); box-shadow: 0 0 0 1px var(--hi-ink); }
+.dchip.d-super { border-color: var(--bad); color: var(--bad); }
+.dchip.d-super::before { background: var(--bad); }
+.pill.hardok { margin-left: 6px; background: var(--hi-soft); color: var(--hi-ink); border-color: var(--hi); }
+.pill.hardok::before { display: none; }
+.feedback.lvl { color: var(--blue); }
+@media (max-width: 520px) { .sbar .dchip { font-size: .72rem; padding: 2px 7px; } .sbar .dauto { display: none; } .sbar { gap: 8px; } }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script>
@@ -1393,7 +1407,7 @@ NS.G({
 
   /* ---------- consumer problems ---------- */
   G({
-    id: 'consumer', trick: 'consumer', col: { ms: 1, hs: 1 },
+    id: 'consumer', trick: 'consumer', col: { ms: 2, hs: 1 },
     gen(r, lv) {
       const kd = r.pick(['unit', 'unit', 'discount', 'tip', lv === 'hs' ? 'interest' : 'discount']);
       if (kd === 'unit') {
@@ -1439,9 +1453,9 @@ NS.G({
   /* ---------- mean, median, mode ---------- */
   G({
     id: 'mean', trick: 'meanMedian', col: { ms: 1, hs: 1 },
-    gen(r, lv) {
+    gen(r, lv, x = 1) {
       const kd = r.pick(['mean', 'missing', 'median']);
-      if (kd === 'mean') { const xs = Array.from({ length: r.int(4, 5) }, () => r.int(8, 60)); const s = xs.reduce((x, y) => x + y, 0); const v = q(s, xs.length);
+      if (kd === 'mean') { const xs = Array.from({ length: x >= 2 ? r.int(4, 5) : r.int(3, 4) }, () => r.int(8, 60)); const s = xs.reduce((x, y) => x + y, 0); const v = q(s, xs.length);
         return { p: H.cat(`The mean of ${xs.join(', ')} is`), a: A.num(v), params: { xs }, steps: [`Sum: ${s}. Divide by ${xs.length}.`, `Answer: ${hl(H.Qf(v).h)}`] }; }
       if (kd === 'missing') { const n = r.int(4, 6), m = r.int(10, 40); const xs = Array.from({ length: n - 1 }, () => r.int(m - 9, m + 9)); const last = n * m - xs.reduce((x, y) => x + y, 0);
         if (last <= 0) return this.gen(r, lv);
@@ -1488,7 +1502,7 @@ NS.G({
 
   /* ---------- remainder of an expression ---------- */
   G({
-    id: 'remExpr', trick: 'remExpr', col: { ms: 2, hs: 2 },
+    id: 'remExpr', trick: 'remExpr', col: { ms: 3, hs: 2 },
     gen(r, lv) {
       const m = r.pick([4, 5, 6, 7, 8, 9]);
       if (lv === 'hs' && r.chance(0.4)) { // power
@@ -1509,7 +1523,7 @@ NS.G({
 
   /* ---------- GCD and LCM ---------- */
   G({
-    id: 'gcdLcm', trick: 'gcdLcm', col: { ms: 1, hs: 1 },
+    id: 'gcdLcm', trick: 'gcdLcm', col: { ms: 2, hs: 1 },
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['g', 'l', 'l3'] : ['g', 'l', 'l3', 'gl']);
       const g = r.pick([2, 3, 4, 5, 6, 7, 8, 9, 12, 14, 15, 18]);
@@ -1526,7 +1540,7 @@ NS.G({
 
   /* ---------- divisors ---------- */
   G({
-    id: 'divisors', trick: 'divisors', col: { ms: 2, hs: 1 },
+    id: 'divisors', trick: 'divisors', col: { ms: 4, hs: 1 },
     gen(r, lv) {
       const n = r.pick([24, 36, 48, 60, 72, 84, 90, 96, 100, 108, 120, 144, 180, 200, 210, 225, 240, 252, 360, 400, 500]);
       const f = M.factor(n); const fs = NS.m(f.map(([p, e]) => e > 1 ? `${p}^{${e}}` : `${p}`).join(' \\cdot '));
@@ -1557,7 +1571,7 @@ NS.G({
 
   /* ---------- units digit of a power ---------- */
   G({
-    id: 'unitsDigit', trick: 'unitsDigit', col: { ms: 3, hs: 2 },
+    id: 'unitsDigit', trick: 'unitsDigit', col: { ms: 3, hs: 3 },
     gen(r) {
       const b = r.pick([2, 3, 7, 8, 12, 13, 17, 23, 27, 4, 9, 14]); const e = r.int(11, 99);
       const u = Number(BigInt(b) ** BigInt(e) % 10n);
@@ -1584,7 +1598,7 @@ NS.G({
 
   /* ---------- sums of series ---------- */
   G({
-    id: 'sums', trick: 'sums', col: { ms: 1, hs: 1 },
+    id: 'sums', trick: 'sums', col: { ms: 2, hs: 1 }, series: true,
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['n', 'odd', 'even', 'arith', 'sq', 'cube'] : ['n', 'odd', 'even', 'arith', 'sq', 'cube', 'alt']);
       if (kd === 'n') { const n = r.int(12, 40); return { p: H.cat(`1 + 2 + 3 + … + ${n} =`), a: A.num(n * (n + 1) / 2), params: { kd, n }, steps: [`n(n + 1)/2 = ${n} × ${n + 1} / 2.`, `= ${hl(n * (n + 1) / 2)}`] }; }
@@ -1628,7 +1642,7 @@ NS.G({
 
   /* ---------- telescoping 1/(n(n+1)) ---------- */
   G({
-    id: 'telescope', trick: 'telescope', col: { ms: 3, hs: 2 }, eval: true,
+    id: 'telescope', trick: 'telescope', col: { ms: 3, hs: 2 }, eval: true, series: true,
     gen(r, lv) {
       const s = r.int(1, lv === 'ms' ? 5 : 8), k = r.int(3, 5); const top = r.pick([1, 1, 2, 3]);
       let v = q(0); const parts = [];
@@ -1641,7 +1655,7 @@ NS.G({
 
   /* ---------- consecutive integers ---------- */
   G({
-    id: 'consec', trick: 'consecutive', col: { ms: 2, hs: 2 },
+    id: 'consec', trick: 'consecutive', col: { ms: 3, hs: 2 },
     gen(r) {
       const kd = r.pick(['odd3', 'even4', 'int5']);
       if (kd === 'odd3') { const m = 2 * r.int(5, 60) + 1; const s = 3 * m; return { p: H.cat(`The sum of three consecutive odd integers is ${s}. The largest is`), a: A.num(m + 2), params: { m }, steps: [`Middle = ${s} ÷ 3 = ${m}.`, `Largest = ${m} + 2 = ${hl(m + 2)}`] }; }
@@ -1790,7 +1804,7 @@ NS.G({
 
   /* ---------- quadratic roots: sum, product, discriminant ---------- */
   G({
-    id: 'roots', trick: 'roots', col: { ms: 4, hs: 3 },
+    id: 'roots', trick: 'roots', col: { ms: 4, hs: 2 },
     gen(r, lv) {
       if (lv === 'ms' || r.chance(0.3)) { // factorable, larger root
         const p1 = r.int(-9, 9), p2 = r.int(-9, 12); if (p1 === p2) return this.gen(r, lv);
@@ -1810,7 +1824,7 @@ NS.G({
 
   /* ---------- vertex of a parabola ---------- */
   G({
-    id: 'vertex', trick: 'vertex', col: { ms: 4, hs: 3 },
+    id: 'vertex', trick: 'vertex', col: { ms: 4, hs: 4 },
     gen(r) {
       const a = r.int(1, 4) * r.sign(), h = r.int(-6, 6), k = r.int(-15, 15);
       const b = -2 * a * h, c = a * h * h + k; const kd = r.pick(['h', 'k', 'ext']);
@@ -1918,7 +1932,7 @@ NS.G({
 
   /* ---------- functions: composite & inverse ---------- */
   G({
-    id: 'functions', trick: 'functions', col: { ms: 0, hs: 4 },
+    id: 'functions', trick: 'functions', col: { ms: 4, hs: 4 }, w: 0.6,
     gen(r) {
       const a = r.int(2, 6), b = r.int(-9, 9), c = r.int(1, 3), d = r.int(-5, 5); const x = r.int(-3, 4);
       const f = H.L(`f(x) = ${a}x ${b < 0 ? '-' : '+'} ${Math.abs(b)}`);
@@ -1940,7 +1954,7 @@ NS.G({
 
   /* ---------- polygons ---------- */
   G({
-    id: 'polygon', trick: 'polygons', col: { ms: 2, hs: 2 },
+    id: 'polygon', trick: 'polygons', col: { ms: 3, hs: 3 },
     gen(r, lv) {
       const kd = r.pick(['interior', 'sum', 'diag', 'sides', 'exterior']);
       const n = r.pick([5, 6, 8, 9, 10, 12, 15, 18, 20, 24, 30, 36]);
@@ -1954,7 +1968,7 @@ NS.G({
 
   /* ---------- right triangles ---------- */
   G({
-    id: 'rightTri', trick: 'rightTri', col: { ms: 2, hs: 2 },
+    id: 'rightTri', trick: 'rightTri', col: { ms: 2, hs: 3 },
     gen(r, lv) {
       const t = r.pick(lv === 'ms' ? TRIPLES.slice(0, 4) : TRIPLES); const k = r.pick([1, 1, 2, 3, 4]); const [a, b, c] = t.map(x => x * k);
       const kd = lv === 'ms' ? r.pick(['hyp', 'leg', 'area']) : r.pick(['hyp', 'leg', 'alt', 'area']);
@@ -1968,7 +1982,7 @@ NS.G({
 
   /* ---------- area and perimeter ---------- */
   G({
-    id: 'area', trick: 'area', col: { ms: 2, hs: 2 },
+    id: 'area', trick: 'area', col: { ms: 3, hs: 3 },
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['rectP', 'trap', 'rhombus', 'circle', 'circum', 'triangle', 'sqdiag', 'sqdiag'] : ['trap', 'rhombus', 'circle', 'equi', 'sqdiag', 'circum', 'sector']);
       if (kd === 'rectP') { const w = r.int(3, 20), P = 2 * (w + r.int(w + 1, 30)); const l = P / 2 - w; return { p: H.cat(`A rectangle has perimeter ${P} and width ${w}. Its area is`), a: A.num(l * w), params: { kd, P, w }, steps: [`Length = ${P}/2 − ${w} = ${l}.`, `Area = ${l} × ${w} = ${hl(l * w)}`] }; }
@@ -2053,7 +2067,7 @@ NS.G({
 (function () {
   const { H, M, ans: A, q, G } = NS; const hl = NS.hl;
   G({
-    id: 'geofacts', trick: 'geoFacts', col: { ms: 2, hs: 2 },
+    id: 'geofacts', trick: 'geoFacts', col: { ms: 3, hs: 2 },
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['third', 'ext', 'comp', 'similar', 'isos'] : ['third', 'ext', 'inscribed', 'similar', 'isos', 'comp']);
       if (kd === 'third') { const a = r.int(25, 95), b = r.int(20, 150 - a); return { p: H.cat(`Two angles of a triangle measure ${a}° and ${b}°. The third angle measures`), suffix: '°', a: A.num(180 - a - b), params: { kd, a, b }, steps: [`Angles in a triangle add to 180°.`, `180 − ${a} − ${b} = ${hl(180 - a - b)}°`] }; }
@@ -2081,7 +2095,7 @@ NS.G({
     ['inches', 'centimeters', q(254, 100)], ['meters', 'centimeters', q(100)], ['kilometers', 'meters', q(1000)], ['liters', 'milliliters', q(1000)], ['kilograms', 'grams', q(1000)],
   ];
   G({
-    id: 'units', trick: 'units', col: { ms: 1, hs: 1 },
+    id: 'units', trick: 'units', col: { ms: 2, hs: 1 },
     gen(r, lv) {
       const [from, to, f] = r.pick(CONV); const one = from === 'feet' ? 'foot' : from === 'square feet' ? 'square foot' : from === 'cubic feet' ? 'cubic foot' : from.replace(/s$/, ''); const flip = r.chance(0.35) && !['inches'].includes(from);
       if (!flip) {
@@ -2141,7 +2155,7 @@ NS.G({
 
   /* ---------- sets ---------- */
   G({
-    id: 'sets', trick: 'sets', col: { ms: 2, hs: 2 },
+    id: 'sets', trick: 'sets', col: { ms: 3, hs: 2 },
     gen(r) {
       const kd = r.pick(['subsets', 'proper', 'venn', 'union']);
       if (kd === 'subsets' || kd === 'proper') { const n = r.int(3, 7); const letters = 'MATHSUPER'.slice(0, n).split('').join(', '); const v = 2 ** n - (kd === 'proper' ? 1 : 0);
@@ -2170,7 +2184,7 @@ NS.G({
 
   /* ---------- probability & odds ---------- */
   G({
-    id: 'prob', trick: 'probability', col: { ms: 3, hs: 3 },
+    id: 'prob', trick: 'probability', col: { ms: 4, hs: 3 },
     gen(r) {
       const kd = r.pick(['dice', 'coins', 'marbles', 'odds']);
       if (kd === 'dice') { const s = r.int(2, 12); const ways = 6 - Math.abs(7 - s); const v = q(ways, 36); return { p: H.cat(`Two fair dice are rolled. The probability their sum is ${s} is`), a: A.num(v), params: { s }, steps: [`Ways to make ${s}: ${ways} out of 36.`, `${ways}/36 = ${hl(H.Qi(v).h)}`] }; }
@@ -2479,8 +2493,8 @@ NS.G({
   /* ---------- relatively prime count (Euler's phi) ---------- */
   G({
     id: 'relprime', trick: 'relPrime', col: { ms: 4, hs: 3 }, w: 1.4,
-    gen(r) {
-      const n = r.pick([12, 15, 18, 20, 21, 24, 28, 30, 36, 40, 42, 45, 48, 50, 54, 60, 63, 72, 75, 80, 84, 90, 96, 100]);
+    gen(r, lv, x = 1) {
+      const n = r.pick(x >= 2 ? [84, 90, 96, 100, 105, 120, 126, 135, 140, 150, 168, 180, 210, 225, 240, 252, 300, 315, 360] : [12, 15, 18, 20, 21, 24, 28, 30, 36, 40, 42, 45, 48, 50, 54, 60, 63, 72, 75, 80, 84, 90, 96, 100]);
       const ps = M.factor(n).map(([p]) => p); let phi = n; ps.forEach(p => { phi = phi / p * (p - 1); });
       const wd = r.pick(['less than', 'less than', 'less than or equal to']);
       return { p: H.cat(`How many positive integers ${wd} ${n} are relatively prime to ${n}?`), a: A.num(phi), params: { n },
@@ -2549,8 +2563,9 @@ NS.G({
   /* ---------- decimal adding and subtracting ---------- */
   G({
     id: 'decAS', trick: 'addSub', col: { ms: 1, hs: 1 }, lead: true, eval: true,
-    gen(r) {
-      const d = () => { const p = r.pick([1, 2, 3]); return Q.from(q(r.int(10 ** p * 10, 10 ** p * 999), 10 ** p)); };
+    gen(r, lv, x = 1) {
+      // real tests use small decimals here (12.4 − 8.55); the 3-digit, 3-place ones are for Hard and up
+      const d = x >= 2 ? () => { const p = r.pick([1, 2, 3]); return Q.from(q(r.int(10 ** p * 10, 10 ** p * 999), 10 ** p)); } : () => { const p = r.pick([1, 2, 2]); return Q.from(q(r.int(10 ** p, 10 ** p * (r.chance(0.7) ? 99 : 199)), 10 ** p)); };
       const kd = r.pick(['add', 'sub', 'three']);
       let xs = kd === 'three' ? [d(), d(), d()] : [d(), d()];
       if (kd !== 'add' && xs[0].cmp(xs[1]) < 0) [xs[0], xs[1]] = [xs[1], xs[0]];
@@ -2636,7 +2651,7 @@ NS.G({
 
   /* ---------- a² − b² = c × ___ ---------- */
   G({
-    id: 'dsqBlank', trick: 'diffsq', col: { ms: 1, hs: 1 },
+    id: 'dsqBlank', trick: 'diffsq', col: { ms: 2, hs: 1 },
     gen(r) {
       let a, b; do { a = r.int(11, 39); b = r.int(5, a + 9); } while (a === b || Math.abs(a - b) > 12);
       const v0 = a * a - b * b; const choices = [a + b, Math.abs(a - b), 9].filter(c => c > 1 && v0 % c === 0);
@@ -2648,7 +2663,7 @@ NS.G({
 
   /* ---------- GCD and LCM combinations ---------- */
   G({
-    id: 'gcdLcm2', trick: 'gcdLcm', col: { ms: 1, hs: 1 },
+    id: 'gcdLcm2', trick: 'gcdLcm', col: { ms: 2, hs: 1 },
     gen(r) {
       const g = r.pick([2, 3, 4, 6, 7, 8, 12, 13, 14, 17]); let x, y; do { x = r.int(2, 7); y = r.int(2, 8); } while (x === y || M.gcd(x, y) !== 1);
       const a = g * x, b = g * y; const L = a * b / g; const kd = r.pick(['sum', 'diff', 'times']);
@@ -2660,7 +2675,7 @@ NS.G({
 
   /* ---------- more divisor questions ---------- */
   G({
-    id: 'divisors2', trick: 'divisors', col: { ms: 1, hs: 1 },
+    id: 'divisors2', trick: 'divisors', col: { ms: 3, hs: 1 },
     gen(r) {
       const kd = r.pick(['sum', 'properSum', 'properProd', 'primeSum', 'bigPrime', 'countProd']);
       if (kd === 'sum' || kd === 'properSum') { const n = r.pick([12, 16, 18, 20, 24, 25, 26, 28, 30, 32, 36, 40, 45, 49, 50, 64, 81, 100]); const f = M.factor(n);
@@ -2701,7 +2716,7 @@ NS.G({
 
   /* ---------- shopping, tax and pay ---------- */
   G({
-    id: 'consumer2', trick: 'consumer', col: { ms: 1, hs: 1 },
+    id: 'consumer2', trick: 'consumer', col: { ms: 2, hs: 1 },
     gen(r) {
       const kd = r.pick(['unitCost', 'gallons', 'perUnit', 'tax', 'salary', 'salary2', 'pctMoney']);
       if (kd === 'unitCost') { const n = r.pick([3, 4, 5, 6]); const each = r.int(8, 45); const c = n * each; const k = r.pick([10, 12, 15, 20, 24]); const v = each * k;
@@ -2725,7 +2740,7 @@ NS.G({
 
   /* ---------- conversions with a given rate ---------- */
   G({
-    id: 'rateConv', trick: 'units', col: { ms: 1, hs: 1 },
+    id: 'rateConv', trick: 'units', col: { ms: 2, hs: 1 },
     gen(r) {
       const kd = r.pick(['gram', 'gram2', 'deka']);
       if (kd === 'gram') { const oz = r.pick([2, 4, 6, 8, 12, 1.6, 3.2, 0.8, 9.6]); const v = Q.from(String(oz)).div(decQ('0.04'));
@@ -2742,7 +2757,7 @@ NS.G({
   const pl = u => ({ foot: 'feet', inch: 'inches', 'fluid ounce': 'fluid ounces', pint: 'pints', quart: 'quarts', cup: 'cups', gallon: 'gallons', yard: 'yards', peck: 'pecks', bushel: 'bushels', fathom: 'fathoms', minute: 'minutes', second: 'seconds', hour: 'hours', pound: 'pounds', ounce: 'ounces' })[u];
   NS.UCONV = U;
   G({
-    id: 'unitsMore', trick: 'units', col: { ms: 1, hs: 1 },
+    id: 'unitsMore', trick: 'units', col: { ms: 2, hs: 1 },
     gen(r) {
       const kd = r.pick(['fracOf', 'pctOf', 'down', 'up']);
       if (kd === 'fracOf') { const [big, small] = r.pick([['gallon', 'quart'], ['gallon', 'pint'], ['foot', 'inch'], ['yard', 'foot'], ['pound', 'ounce'], ['hour', 'minute']]); const f = U[big][small];
@@ -2829,7 +2844,7 @@ NS.G({
 
   /* ---------- more sums ---------- */
   G({
-    id: 'sumsMore', trick: 'sums', col: { ms: 2, hs: 2 },
+    id: 'sumsMore', trick: 'sums', col: { ms: 2, hs: 2 }, series: true,
     gen(r) {
       const kd = r.pick(['tri', 'oddCount', 'sigma', 'cubeRoot']);
       if (kd === 'tri') { const n = r.int(5, 11); const ts = Array.from({ length: n }, (_, i) => (i + 1) * (i + 2) / 2); const v = n * (n + 1) * (n + 2) / 6;
@@ -2959,7 +2974,7 @@ NS.G({
 
   /* ---------- special right triangles ---------- */
   G({
-    id: 'specialTri', trick: 'rightTri', col: { ms: 3, hs: 2 },
+    id: 'specialTri', trick: 'rightTri', col: { ms: 3, hs: 3 },
     gen(r) {
       const kd = r.pick(['t45', 't45x', 't30', 't30ft']);
       if (kd === 't45') { const a = r.int(2, 12); const h2 = 2 * a * a;
@@ -3039,9 +3054,9 @@ NS.G({
   /* ---------- sums of Fibonacci-like sequences ---------- */
   const fibSeq = (a, b, n) => { const t = [a, b]; while (t.length < n) t.push(t[t.length - 1] + t[t.length - 2]); return t; };
   G({
-    id: 'fibSum', trick: 'fibonacciSums', col: { ms: 3, hs: 3 }, w: 0.3,
-    gen(r) {
-      const a = r.int(1, 9), b = r.int(1, 9); const kd = r.pick(['ten', 'ten', 'n', 'find7']);
+    id: 'fibSum', trick: 'fibonacciSums', col: { ms: 4, hs: 3 }, w: 1.4, series: true,
+    gen(r, lv, x = 1) {
+      const a = r.int(1, x >= 2 ? 25 : 9), b = r.int(1, x >= 2 ? 25 : 9); const kd = r.pick(['ten', 'ten', 'n', 'find7']);
       if (kd === 'ten') { const t = fibSeq(a, b, 10); const v = t.reduce((x, y) => x + y);
         return { p: H.cat(t.join(' + '), ' ='), a: A.num(v), params: { kd, a, b }, steps: [`Each term is the sum of the two before it, and there are 10 terms. The sum of 10 such terms is 11 times the 7th term.`, `11 × ${t[6]} = ${hl(fm(v))}`] }; }
       if (kd === 'n') { const n = r.int(7, 12); const t = fibSeq(a, b, n + 2); const v = t.slice(0, n).reduce((x, y) => x + y);
@@ -3115,8 +3130,13 @@ NS.G({
 
   /* ---------- finite geometric sums ---------- */
   G({
-    id: 'geoFinite', trick: 'geoSeries', col: { ms: 0, hs: 3 },
-    gen(r) {
+    id: 'geoFinite', trick: 'geoSeries', col: { ms: 4, hs: 3 }, series: true,
+    gen(r, lv, x = 1) {
+      // growing sums (5 + 25 + 125 + …) are the middle school favorite; shrinking ones are more high school
+      if (r.chance(lv === 'ms' ? 0.6 : 0.3)) { const R0 = r.pick([2, 3, 4, 5]); const a0 = r.pick([1, 2, 3, 4, 5, 6, 8, 9, 12, 16]); let k = r.int(4, x >= 2 ? 8 : 6); while (k > 4 && a0 * R0 ** (k - 1) > (x >= 2 ? 40000 : 3000)) k--;
+        const t = Array.from({ length: k }, (_, i) => a0 * R0 ** i); const v = t.reduce((s, y) => s + y, 0); const last = t[k - 1];
+        return { p: H.cat(`${t.slice(0, Math.min(4, k - 1)).map(y => fm(y)).join(' + ')} + ${k > 5 ? '… + ' : ''}${fm(last)} =`), a: A.num(v), params: { a: String(a0), rat: String(R0), k },
+          steps: [`Each term is ${R0} times the one before. For a growing geometric sum, ${m('S = \\tfrac{r\\ell - a}{r - 1}')}.`, `(${R0} × ${fm(last)} − ${a0}) ÷ ${R0 - 1} = ${hl(fm(v))}`] }; }
       const rat = r.pick([q(1, 2), q(1, 2), q(1, 3), q(-1, 2)]); const k = r.int(5, 8); const a = Q.from(r.pick([2, 3, 5, 7, 13, 26, 11]) * Number(rat.d) ** (r.int(1, 3)));
       const t = [a]; for (let i = 1; i < k; i++) t.push(t[i - 1].mul(rat)); const last = t[k - 1]; let v = Q.from(0); t.forEach(x => { v = v.add(x); });
       const shw = x => x.terminates() ? H.dec(x).h : H.Qf(x).h;
@@ -3243,7 +3263,7 @@ NS.G({
 
   /* ---------- directrix and focus of a parabola ---------- */
   G({
-    id: 'directrix', trick: 'conics', col: { ms: 0, hs: 4 },
+    id: 'directrix', trick: 'conics', col: { ms: 0, hs: 3 },
     gen(r) {
       const kd = r.pick(['xy2', 'yx2', 'focus']);
       if (kd === 'xy2' || kd === 'focus') { const a = r.pick([q(1), q(1, 4), q(2), q(1, 8), q(-1), q(1, 2)]); const c = r.int(-4, 4); const p = Q.from(1).div(a.mul(4));
@@ -3276,7 +3296,7 @@ NS.G({
     ['a queen or a spade', c => c.rk === 'Q' || c.s === 'spades'], ['a red face card', c => c.red && c.face], ['an ace or a club', c => c.rk === 'A' || c.s === 'clubs'], ['a black card or a jack', c => !c.red || c.rk === 'J'],
   ];
   G({
-    id: 'prob2', trick: 'probability', col: { ms: 3, hs: 3 },
+    id: 'prob2', trick: 'probability', col: { ms: 4, hs: 3 },
     gen(r) {
       const kd = r.pick(['cond', 'cards', 'dice', 'coins']);
       if (kd === 'cond') { const a = r.int(3, 10), b = r.int(3, 10); const [ca, cb] = r.pick([['white', 'brown'], ['blue', 'red'], ['black', 'gray']]); const same = r.chance(0.6); const v = same ? q(b - 1, a + b - 1) : q(a, a + b - 1);
@@ -3383,8 +3403,8 @@ NS.G({
   NS.decExpand = expand;
   G({
     id: 'decDigits', trick: 'decimalDigits', col: { ms: 4, hs: 0 }, w: 1.6,
-    gen(r) {
-      const d = r.pick([7, 11, 12, 13, 15, 18, 22, 27, 33, 36, 37, 44, 45, 55, 66, 74, 90, 99, 111, 135, 165, 198]);
+    gen(r, lv, x = 1) {
+      const d = r.pick(x >= 2 ? [27, 37, 54, 74, 111, 135, 148, 165, 185, 198, 222, 270, 297, 333, 370, 495, 555, 999] : [7, 11, 12, 13, 15, 18, 22, 27, 33, 36, 37, 44, 45, 55, 66, 74, 90, 99, 111, 135, 165, 198]);
       let a, rd; do { a = r.int(1, d - 1); rd = d / M.gcd(a, d); let t = rd; while (t % 2 === 0) t /= 2; while (t % 5 === 0) t /= 5; if (t > 1) break; } while (true);
       const g = M.gcd(a, d), rn = a / g; const digits = String(Math.floor(a * 10000 / d)).padStart(4, '0');
       const { pre, rep } = expand(rn, rd); let shown = pre; while (shown.length < 7) shown += rep;
@@ -3454,7 +3474,8 @@ NS.G({
   /* ---------- absolute value inequalities ---------- */
   G({
     id: 'absIneq', trick: 'absSolutions', col: { ms: 4, hs: 0 }, w: 1.4,
-    gen(r) {
+    gen(r, lv, x = 1) {
+      const big = x >= 2;
       const kd = r.pick(['sumH', 'sumH', 'sumGen', 'count', 'chain']); const strict = r.chance(0.3); const rel = strict ? '<' : '\\le';
       let a, b, c, lo, hi, p, setup;
       if (kd === 'chain') {
@@ -3463,8 +3484,8 @@ NS.G({
         p = H.cat('If ', H.L(`${L} ${rel} ${lin(a, b)} ${rel} ${U}`), ', how many integers x make it true?');
         return { p, a: A.num(xs.length), params: { kd, a, b, L, U, strict }, steps: [`Take ${fm(b)} from each part and divide by ${a}: x runs from ${Qs(q(L - b, a))} to ${Qs(q(U - b, a))}${strict ? ', ends not included' : ''}.`, `Integers ${fm(lo)} through ${fm(hi)}: ${hl(xs.length)}`] };
       }
-      if (kd === 'sumH') { a = 1; b = -r.int(-12, 15) || 7; c = r.int(2, 12); }
-      else { a = r.int(2, 5); do { b = r.int(-12, 12); } while (!b || b % a === 0); c = r.int(a + 1, 30); }
+      if (kd === 'sumH') { a = 1; b = -r.int(-12, big ? 45 : 15) || 7; c = r.int(2, big ? 30 : 12); }
+      else { a = r.int(2, big ? 9 : 5); do { b = r.int(big ? -40 : -12, big ? 40 : 12); } while (!b || b % a === 0); c = r.int(a + 1, big ? 75 : 30); }
       const xs = []; for (let x = -100; x <= 100; x++) { const y = Math.abs(a * x + b); if (strict ? y < c : y <= c) xs.push(x); }
       lo = xs[0]; hi = xs[xs.length - 1]; const n = xs.length, sum = xs.reduce((s, x) => s + x, 0);
       const ineq = H.L(`\\left|${lin(a, b)}\\right| ${rel} ${c}`);
@@ -3713,10 +3734,11 @@ NS.G({
   /* ---------- sum and product of roots, more ways ---------- */
   G({
     id: 'rootsMore', trick: 'roots', col: { ms: 4, hs: 0 }, w: 1.5,
-    gen(r) {
+    gen(r, lv, x = 1) {
+      const B = x >= 2 ? 45 : 20;
       const kd = r.pick(['sum', 'prod', 'sumsq', 'plus1', 'pqpq', 'mean', 'mix', 'harm', 'findB', 'findA', 'cubicSum', 'cubicCombo', 'sqRoot', 'pq', 'shiftProd']);
       const nz = (lo, hi) => { let x; do { x = r.int(lo, hi); } while (!x); return x; };
-      if (kd === 'cubicSum' || kd === 'cubicCombo') { const a = r.int(1, 9), b = nz(-20, 20), c = r.int(-20, 20), d = nz(-20, 20); const S = q(-b, a), Pr = q(-d, a); const v = kd === 'cubicSum' ? S : S.add(Pr);
+      if (kd === 'cubicSum' || kd === 'cubicCombo') { const a = r.int(1, x >= 2 ? 15 : 9), b = nz(-B, B), c = r.int(-B, B), d = nz(-B, B); const S = q(-b, a), Pr = q(-d, a); const v = kd === 'cubicSum' ? S : S.add(Pr);
         return { p: H.cat('If P, Q and R are the roots of ', H.L(`${NS.poly([a, b, c, d]).l} = 0`), ', then ', H.L(kd === 'cubicSum' ? 'P + Q + R' : 'PQR + P + Q + R'), ' ='), a: A.num(v), params: { kd, a, b, d },
           steps: [`For ${m('ax^3 + bx^2 + cx + d')}: ${m('P + Q + R = -\\frac ba')} = ${Qs(S)}${kd === 'cubicCombo' ? `, ${m('PQR = -\\frac da')} = ${Qs(Pr)}` : ''}.`, kd === 'cubicSum' ? `${hl(Qs(v))}` : `${Qs(Pr)} + ${Qp(S)} = ${hl(Qs(v))}`] }; }
       if (kd === 'sqRoot') { const a = r.pick([1, 4, 9, 2, 3]), s = r.int(1, 9), b = r.int(1, 6); let c; do { c = r.int(-9, 9); } while (!c); const d = a * s * s; const big = r.chance(0.5);
@@ -3732,7 +3754,7 @@ NS.G({
         return { p: H.cat('If P and Q are the roots of ', H.L(`${a === 1 ? '' : a}x^2 + bx ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0`), ' and ', H.L(`P + Q = ${s}`), ', then ', H.L('b'), ' ='), a: A.num(v), params: { kd, a, s }, steps: [`${m('P + Q = -\\frac ba')}, so b = −${a} × ${s < 0 ? `(${s})` : s}.`, `b = ${hl(fm(v))}`] }; }
       if (kd === 'findA') { let a0, c, Pr; do { a0 = nz(-9, 9); Pr = nz(-9, 9); c = a0 * Pr; } while (Math.abs(c) < 4 || Math.abs(c) > 60); const b = nz(-15, 15);
         return { p: H.cat('If the product of the roots of ', H.L(`ax^2${term(b, 'x')} ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0`), ` is ${fm(Pr)}, then `, H.L('a'), ' ='), a: A.num(a0), params: { kd, c, Pr }, steps: [`Product of roots = ${m('\\frac ca')}, so ${m(`\\frac{${c}}{a} = ${Pr}`)}.`, `a = ${c} ÷ ${Pr < 0 ? `(${Pr})` : Pr} = ${hl(fm(a0))}`] }; }
-      const a = r.int(1, 9), b = nz(-20, 20), c = nz(-20, 20); const S = q(-b, a), Pr = q(c, a); const eq = H.L(`${NS.poly([a, b, c]).l} = 0`);
+      const a = r.int(1, x >= 2 ? 15 : 9), b = nz(-B, B), c = nz(-B, B); const S = q(-b, a), Pr = q(c, a); const eq = H.L(`${NS.poly([a, b, c]).l} = 0`);
       const base = `${m('P + Q = -\\frac ba')} = ${Qs(S)} and ${m('PQ = \\frac ca')} = ${Qs(Pr)}.`;
       if (kd === 'mix') { const k = r.pick([2, 3, 4, 5, 7]); const v = S.mul(S).add(Pr.mul(k - 2));
         return { p: H.cat('If P and Q are the roots of ', eq, ', then ', H.L(`P^2 + ${k}PQ + Q^2`), ' ='), a: A.num(v), params: { kd, a, b, c, k }, steps: [base, `${m(`P^2 + ${k}PQ + Q^2 = (P + Q)^2 + ${k - 2 === 1 ? '' : k - 2}PQ`)} = ${Qs(S.mul(S))} + ${k - 2} × ${Qp(Pr)} = ${hl(Qs(v))}`] }; }
@@ -3746,8 +3768,8 @@ NS.G({
   /* ---------- x(x − k) < N ---------- */
   G({
     id: 'quadIneq', trick: 'inequalities', col: { ms: 4, hs: 0 },
-    gen(r) {
-      const kd = r.pick(['largest', 'largest', 'smallest', 'countPos']); const k = r.int(-6, 6), N = r.int(30, 220); const f = x => x * (x - k);
+    gen(r, lv, xd = 1) {
+      const kd = r.pick(['largest', 'largest', 'smallest', 'countPos']); const k = r.int(xd >= 2 ? -15 : -6, xd >= 2 ? 15 : 6), N = r.int(30, xd >= 2 ? 900 : 220); const f = x => x * (x - k);
       const expr = k === 0 ? 'x^2' : `x(x ${k > 0 ? '-' : '+'} ${Math.abs(k)})`; const rt = Math.sqrt(N);
       if (kd === 'smallest') { let x = 1; while (f(x) <= N) x++; return { p: H.cat('The smallest positive integer x with ', H.L(`${expr} > ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x - 1}: ${f(x - 1)} (not more than ${N}); ${x}: ${f(x)}. Answer ${hl(x)}`] }; }
       let x = 300; while (f(x) >= N) x--;
@@ -3760,12 +3782,12 @@ NS.G({
   /* ---------- whole-number solutions ---------- */
   G({
     id: 'intPairs', trick: 'integerPairs', col: { ms: 4, hs: 0 },
-    gen(r) {
+    gen(r, lv, xd = 1) {
       if (r.chance(0.5)) { // x² + y² = N with a single answer
-        for (;;) { const x = r.int(3, 14), y = r.int(1, x - 1); const N = x * x + y * y; const reps = []; for (let a = 1; a * a < N; a++) { const b2 = N - a * a; const b = Math.round(Math.sqrt(b2)); if (b * b === b2 && a > b) reps.push([a, b]); } if (reps.length !== 1) continue;
+        for (;;) { const x = r.int(3, xd >= 2 ? 30 : 14), y = r.int(1, x - 1); const N = x * x + y * y; const reps = []; for (let a = 1; a * a < N; a++) { const b2 = N - a * a; const b = Math.round(Math.sqrt(b2)); if (b * b === b2 && a > b) reps.push([a, b]); } if (reps.length !== 1) continue;
           return { p: H.cat(`If ${m('x')} and ${m('y')} are positive integers with `, H.L(`x^2 + y^2 = ${N}`), ' and ', H.L('x > y'), ', then ', H.L('x + y'), ' ='), a: A.num(x + y), params: { kd: 'sq', N },
             steps: [`Take squares below ${N} and look for a partner square: ${N} − ${x * x} = ${y * y}.`, `${m(`x = ${x}`)}, ${m(`y = ${y}`)}: ${hl(x + y)}`] }; } }
-      let a, b; do { a = r.int(2, 9); b = r.int(2, 11); } while (M.gcd(a, b) !== 1 || a >= b); const N = a * b * r.int(1, 5) + r.int(0, a * b - 1);
+      let a, b; do { a = r.int(2, 9); b = r.int(2, xd >= 2 ? 17 : 11); } while (M.gcd(a, b) !== 1 || a >= b); const N = a * b * r.int(1, xd >= 2 ? 9 : 5) + r.int(0, a * b - 1);
       let cnt = 0, first = null, last = null; for (let y = 0; b * y <= N; y++) if ((N - b * y) % a === 0) { cnt++; if (first === null) first = y; last = y; }
       if (cnt < 2) return this.gen(r);
       return { p: H.cat('How many ordered pairs of nonnegative integers (x, y) solve ', H.L(`${a}x + ${b}y = ${N}`), '?'), a: A.num(cnt), params: { kd: 'lin', a, b, N },
@@ -3839,7 +3861,7 @@ NS.G({
 
   /* ---------- alternating sums of squares ---------- */
   G({
-    id: 'altSq', trick: 'diffsq', col: { ms: 2, hs: 0 }, eval: true,
+    id: 'altSq', trick: 'diffsq', col: { ms: 2, hs: 0 }, eval: true, series: true,
     gen(r) {
       const half = r.chance(0.35); const d = half ? 1 : r.int(1, 4); const a0 = r.int(Math.max(8, 3 * d + 2), 30) + (half ? 0.5 : 0); const xs = [0, 1, 2, 3].map(i => a0 - i * d);
       const pieces = []; xs.forEach((x, i) => { if (i) pieces.push(i % 2 ? ' − ' : ' + '); pieces.push(H.pow(String(x), 2)); });
@@ -3876,8 +3898,8 @@ NS.G({
   /* ---------- consecutive integers from a product ---------- */
   G({
     id: 'consecProd', trick: 'consecutive', col: { ms: 4, hs: 0 },
-    gen(r) {
-      const n = r.int(12, 80);
+    gen(r, lv, x = 1) {
+      const n = x >= 2 ? r.int(40, 160) : r.int(12, 80);
       if (r.chance(0.5)) { const P = (n - 1) * n * (n + 1); return { p: H.cat(`Three consecutive integers have a product of ${fm(P)}. The middle integer is`), a: A.num(n), params: { kd: 'three', P }, steps: [`The product is close to the middle number cubed: ${m(`\\sqrt[3]{${P}}`)} is just under ${n}.`, `Check: ${n - 1} × ${n} × ${n + 1} = ${fm(P)}. Middle: ${hl(n)}`] }; }
       const P = n * (n + 1); return { p: H.cat(`Two consecutive positive integers have a product of ${fm(P)}. Their sum is`), a: A.num(2 * n + 1), params: { kd: 'two', P }, steps: [`√${fm(P)} is just over ${n}, so try ${n} × ${n + 1} = ${fm(P)}.`, `${n} + ${n + 1} = ${hl(2 * n + 1)}`] };
     },
@@ -3920,6 +3942,31 @@ NS.G({
       return { p: H.cat(p), ...(pr.suf ? { suffix: pr.suf } : {}), ...(kd === 'interest' ? { pre: '$' } : {}), a: A.est(ap(v)), params: pr, steps: [why, `≈ ${fm(Math.round(v))}`] };
     },
   });
+
+  /* ---------- sum of the reciprocals of the divisors (UIL high school, columns 3–4) ---------- */
+  G({
+    id: 'divRecip', trick: 'divisors', col: { ms: 0, hs: 3 },
+    gen(r) {
+      const sig = n => M.divisors(n).reduce((s, d) => s + d, 0);
+      if (r.chance(0.7)) { const n = r.pick([6, 8, 10, 12, 14, 15, 18, 20, 21, 24, 28, 30, 35, 36, 40, 45, 48, 50, 60]); const ds = M.divisors(n); const v = q(sig(n), n);
+        return { p: H.cat(`The sum of the reciprocals of all the positive divisors of ${n} is`), a: A.num(v), params: { kd: 'sum', n }, steps: [`Over a common denominator of ${n}, the reciprocals of the divisors become the divisors themselves: ${m(`\\frac{${ds.slice().reverse().join(' + ')}}{${n}}`)}.`, `So it's (sum of divisors) ÷ ${n} = ${m(`\\frac{${sig(n)}}{${n}}`)} = ${hl(Qs(v))}`] }; }
+      // reverse: the value is given, find the number (only values that pick out one number up to 100)
+      for (;;) { const n = r.int(4, 60); const v = q(sig(n), n); const hits = []; for (let k = 2; k <= 100; k++) if (q(sig(k), k).eq(v)) hits.push(k); if (hits.length !== 1) continue;
+        return { p: H.cat('The sum of the reciprocals of all the positive divisors of ', H.L('R'), ' is ', H.Qi(v), '. ', H.L('R'), ' ='), a: A.num(n), params: { kd: 'rev', v: [Number(v.n), Number(v.d)] }, steps: [`The sum of the reciprocals is (sum of the divisors of R) ÷ R. Try R = ${v.d} or a multiple of it.`, `${m(`\\frac{${sig(n)}}{${n}} = ${H.Qi(v).l}`)}, so R = ${hl(n)}`] }; }
+    },
+  });
+
+  /* ---------- (3)(7)(13)(k) = 40404: hidden 10101, 1001, 111 and 1111 (middle school, problems 61–80) ---------- */
+  G({
+    id: 'hiddenK', trick: 'special', col: { ms: 4, hs: 0 },
+    gen(r) {
+      const [B, fs] = r.pick([[10101, [3, 7, 13, 37]], [10101, [3, 7, 13, 37]], [1001, [7, 11, 13]], [111, [3, 37]], [1111, [11, 101]]]);
+      const dd = r.int(2, 9); const N = dd * B; const hide = r.int(0, fs.length - 1); const shown = fs.filter((_, i) => i !== hide);
+      const k = N / shown.reduce((a, b) => a * b, 1);
+      return { p: H.cat('If ', H.L(`${shown.map(f => `(${f})`).join('')}(k) = ${N}`), ', then ', H.L('k'), ' ='), a: A.num(k), params: { shown, N },
+        steps: [`${N} = ${dd} × ${B}, and ${B} = ${fs.join(' × ')}.`, `The missing factor is ${fs[hide]}, so k = ${dd} × ${fs[hide]} = ${hl(k)}`] };
+    },
+  });
 })();
 
 /* ===== the trick library =====
@@ -3955,7 +4002,7 @@ NS.G({
       why: R`$101 = 100 + 1$, so you're adding the number to a shifted copy of itself.`,
       watch: R`Three digits times 101 overlap: $438 \times 101 = 43800 + 438 = 44238$.` },
     special: { unit: 'mult', title: 'Hidden 1001, 111 and 10101', s: R`You see 143, 77, 91, 37, 259, 429, 1443 or 3367 next to a number that shares a factor with it.`,
-      how: [R`Know these: $7 \cdot 11 \cdot 13 = 1001$, $3 \cdot 37 = 111$, $3 \cdot 259 = 777$, $7 \cdot 429 = 3003$, $3 \cdot 3367 = 7 \cdot 1443 = 10101$.`, R`Pull the missing factor out of the other number.`, R`$143 \times 56 = 143 \times 7 \times 8 = 1001 \times 8 = 8008$.`],
+      how: [R`Know these: $7 \cdot 11 \cdot 13 = 1001$, $3 \cdot 37 = 111$, $3 \cdot 259 = 777$, $7 \cdot 429 = 3003$, $3 \cdot 3367 = 7 \cdot 1443 = 10101$.`, R`Pull the missing factor out of the other number.`, R`$143 \times 56 = 143 \times 7 \times 8 = 1001 \times 8 = 8008$.`, R`Backwards: if $(3)(7)(13)(k) = 40404$, see $40404 = 4 \times 10101$ and $10101 = 3 \cdot 7 \cdot 13 \cdot 37$, so $k = 4 \cdot 37 = 148$. Also $1001 = 7 \cdot 11 \cdot 13$, $111 = 3 \cdot 37$, $1111 = 11 \cdot 101$.`],
       why: R`Test writers pick the second number on purpose so the product lands on a repeating number.`,
       watch: R`Match the partner: 143 needs 7, 77 needs 13, 91 needs 11, 37 and 259 need 3, 429 and 1443 need 7, 3367 needs 3.` },
     distrib: { unit: 'mult', title: 'Pull out the common factor', s: R`Two products that share a number, like $17 \times 23 + 17 \times 77$, or $n^2 + n$.`,
@@ -4085,7 +4132,7 @@ NS.G({
       why: R`Every prime factor lands once in the GCD and once in the LCM.`,
       watch: R`For three numbers, take the highest power of each prime.` },
     divisors: { unit: 'nt', title: 'Counting and adding divisors', s: R`How many divisors does 72 have? What's their sum?`,
-      how: [R`Prime-factor: $72 = 2^3 \cdot 3^2$.`, R`Count: add 1 to each exponent and multiply, $4 \times 3 = 12$.`, R`Sum: $(1 + 2 + 4 + 8)(1 + 3 + 9) = 15 \times 13 = 195$.`, R`Proper divisors leave out the number itself: 16 has proper divisors 1, 2, 4, 8, with sum 15 and product 64.`, R`Sum of the prime divisors: each prime once. $135 = 3^3 \cdot 5$, so 8.`],
+      how: [R`Prime-factor: $72 = 2^3 \cdot 3^2$.`, R`Count: add 1 to each exponent and multiply, $4 \times 3 = 12$.`, R`Sum: $(1 + 2 + 4 + 8)(1 + 3 + 9) = 15 \times 13 = 195$.`, R`Proper divisors leave out the number itself: 16 has proper divisors 1, 2, 4, 8, with sum 15 and product 64.`, R`Sum of the prime divisors: each prime once. $135 = 3^3 \cdot 5$, so 8.`, R`The sum of the reciprocals of the divisors is (sum of the divisors) ÷ $n$. For 20: $\tfrac{42}{20} = 2\tfrac1{10}$.`],
       why: R`Each divisor picks an exponent for every prime on its own.`,
       watch: R`For odd divisors only, ignore the 2s.` },
     relPrime: { unit: 'nt', title: 'Counting relatively prime numbers', s: R`How many numbers below $n$ share no factor with $n$?`,
@@ -4425,26 +4472,90 @@ NS.G({
   NS.trickCol = (trick, lv) => Math.min(...NS.gensFor(trick, lv).map(g => g.col[lv]));
   NS.TARGET = { 1: 8, 2: 12, 3: 16, 4: 20 };
 
-  NS.makeProblem = function (genId, lv, seed) {
-    const g = GBY[genId]; const r = new NS.Rng(seed);
-    const out = g.gen(r, lv);
-    return { gid: genId, trick: g.trick, lv, seed, est: !!g.est, col: g.col[lv], ...out };
+  /* ---------- difficulty ----------
+     Every problem type can make easier and harder versions of itself. To make one problem at a
+     given difficulty we generate several candidates from the same seed, rank them by how much
+     work they take (size of the numbers, fractions and negatives in the answer), and take one
+     from the band for that difficulty. Every candidate comes from the same checked generator,
+     so the answer key is exactly as reliable at every level. */
+  NS.DIFFS = [
+    { id: 'warmup', code: 'W', name: 'Warm-up', blurb: 'Friendlier numbers and the most common version of each problem. Good for learning a trick.' },
+    { id: 'contest', code: '', name: 'Contest', blurb: 'Matches a typical TMSCA or UIL invitational test.' },
+    { id: 'hard', code: 'H', name: 'Hard', blurb: 'Matches Regional and State tests: bigger numbers, and the harder topics come sooner.' },
+    { id: 'super', code: 'X', name: 'Super-hard', blurb: 'Tougher than any real test. For a real stretch.' },
+  ];
+  NS.diffIdx = id => { const i = NS.DIFFS.findIndex(d => d.id === id); return i < 0 ? 1 : i; };
+  const K = 8;                                  // candidates per problem
+  // ranks (0 = easiest of the 8) that each difficulty draws from, by level and by the problem's column.
+  // Tuned against real tests (see test/real_profile.json and test/difficulty.js): Contest matches typical
+  // invitational and TMSCA tests, Hard matches Regional and State. Middle school Regional/State tests are
+  // no heavier than usual early on; what changes is that harder topics come sooner (see buildTest).
+  const BAND = {
+    ms: [
+      [[0, 1], [0, 2], [0, 2], [0, 2]],   // Warm-up
+      [[0, 4], [1, 5], [2, 7], [3, 7]],   // Contest
+      [[1, 5], [3, 7], [4, 7], [6, 7]],   // Hard
+      [[5, 7], [6, 7], [7, 7], [7, 7]],   // Super-hard
+    ],
+    hs: [
+      [[0, 1], [0, 2], [0, 2], [0, 2]],
+      [[0, 4], [2, 7], [3, 7], [1, 6]],
+      [[2, 6], [4, 7], [5, 7], [4, 7]],
+      [[5, 7], [6, 7], [7, 7], [7, 7]],
+    ],
   };
-  NS.problemForTrick = function (trick, lv, seed, avoidGid) {
+  NS.DIFF_BAND = BAND;
+  // how much work a problem takes: digits in the prompt, digits in the answer, fractions, negatives
+  NS.workScore = function (p) {
+    const l = p.p.h.replace(/\u0001([^\u0002]*)\u0002/g, (m0, x) => ' ' + x + ' ').replace(/<[^>]+>/g, ' ').replace(/\\[a-zA-Z]+/g, ' ').replace(/(\d),(?=\d{3})/g, '$1');
+    const runs = l.match(/\d+(\.\d+)?/g) || [];
+    const pd = runs.reduce((t, x) => t + x.replace('.', '').replace(/^0+(?=\d)/, '').length, 0);
+    let ad = 0, extra = 0; const a = p.a;
+    if (a.type === 'num' && !a.est) {
+      const v = a.v;
+      if ((a.form === 'money' || a.form === 'dec') && v.terminates()) { ad = v.toDecStr().replace(/[-.]/g, '').length; if (!v.isInt()) extra += 0.5; }
+      else { ad = (v.n < 0n ? -v.n : v.n).toString().length + (v.isInt() ? 0 : v.d.toString().length); if (!v.isInt()) extra += v.terminates() ? 1 : 2; }
+      if (v.cmp(0) < 0) extra += 1;
+    } else if (a.type === 'text') ad = String(a.v).replace(/[^0-9A-Za-z]/g, '').length;
+    return pd + 1.2 * ad + 1.5 * extra + 0.4 * Math.max(0, runs.length - 2);
+  };
+  const mix = (a, b) => { let h = (a ^ Math.imul(b + 0x9e3779b9, 0x85ebca6b)) >>> 0; h = Math.imul(h ^ (h >>> 16), 0x7feb352d) >>> 0; h = Math.imul(h ^ (h >>> 15), 0x846ca68b) >>> 0; return (h ^ (h >>> 16)) >>> 0; };
+  // col: the column the problem sits in on a test (a type placed later than usual gets a weightier version)
+  NS.makeProblem = function (genId, lv, seed, diff = 'contest', col) {
+    const g = GBY[genId]; const di = NS.diffIdx(diff);
+    const pick = new NS.Rng(mix(seed, 777));
+    // Super-hard middle school sometimes uses the high school version of the same problem type
+    const glv = di === 3 && lv === 'ms' && g.col.hs && pick.chance(0.5) ? 'hs' : lv;
+    const cands = [];
+    for (let i = 0; i < K; i++) { const out = g.gen(new NS.Rng(mix(seed, i)), glv, di); cands.push({ out, w: NS.workScore(out), i }); }
+    cands.sort((x, y) => x.w - y.w || x.i - y.i);
+    const [lo, hi] = BAND[lv][di][Math.min(4, Math.max(1, col || g.col[lv] || g.col.hs || 1)) - 1]; const c = cands[lo + pick.int(0, hi - lo)];
+    return { gid: genId, trick: g.trick, lv, seed, diff: NS.DIFFS[di].id, ...(col ? { at: col } : {}), est: !!g.est, col: g.col[lv], ...c.out };
+  };
+  NS.problemForTrick = function (trick, lv, seed, avoidGid, diff = 'contest') {
     const gs = NS.gensFor(trick, lv); const r = new NS.Rng(seed ^ 0x9e3779b9);
     let g = r.pick(gs); if (gs.length > 1 && avoidGid && g.id === avoidGid) g = r.pick(gs.filter(x => x.id !== avoidGid));
-    return NS.makeProblem(g.id, lv, seed);
+    return NS.makeProblem(g.id, lv, seed, diff);
   };
 
   /* ---------- contest test: 80 problems, every 10th an estimate ---------- */
-  NS.buildTest = function (lv, seed, cols = [1, 2, 3, 4]) {
+  NS.buildTest = function (lv, seed, cols = [1, 2, 3, 4], diff = 'contest') {
+    const di = NS.diffIdx(diff);
+    // how strongly each column draws on problem types from other columns (d = this column − the type's usual column)
+    // Hard pulls later topics earlier, as Regional and State tests do; Warm-up keeps to earlier ones.
+    // Middle school Regional/State tests also fill problems 61–80 with weightier versions of earlier arithmetic.
+    const W = [{ 0: 3, 1: 2, 2: 0.8 }, { 0: 3, 1: 1.4, 2: 0.5 }, lv === 'ms' ? { 0: 3, 1: 1.4, 2: 1.0, '-1': 0.3 } : { 0: 3, 1: 1.2, 2: 0.4, '-1': 0.5 }, { 0: 3, 1: 1.2, 2: 0.6, '-1': 1.6, '-2': 0.5 }][di];
     const r = new NS.Rng(seed); const probs = [];
     for (const c of cols) {
       const estG = NS.GENS.filter(g => g.est && g.col[lv] === c);
       const pool = [];
       NS.GENS.forEach(g => {
         if (g.est || !g.col[lv]) return; const d = c - g.col[lv];
-        const w = (d === 0 ? 3 : d === 1 ? 1.4 : d === 2 && c >= 3 ? 0.5 : 0) * (g.w || 1);
+        // Middle school Regional and State tests put several long sums (5 + 2 + 7 + 9 + … + 173, 1 − 4 + 9 − …) in 61–80
+        const champ = lv === 'ms' && di >= 2 && c === 4 && g.series ? 2.8 : 1;
+        // …and bring the problems-61–80 topics forward into 41–60 (Regional/State: first one near #48, not #60)
+        const fwd = lv === 'ms' && di === 2 && c === 3 && d === -1 ? 10 : 1;
+        const w = (d === 2 && c < 3 ? 0 : W[d] || 0) * (g.w || 1) * champ * fwd;
         if (w) pool.push({ g, w });
       });
       // weighted sample without replacement
@@ -4462,9 +4573,9 @@ NS.G({
       let i = 0;
       for (let pos = 1; pos <= 20; pos++) {
         const s = r.int(1, 2 ** 31);
-        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s));
-        else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s));
-        else probs.push(NS.makeProblem(chosen[i++].id, lv, s));
+        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s, diff, c));
+        else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s, diff, c));
+        else probs.push(NS.makeProblem(chosen[i++].id, lv, s, diff, c));
       }
     }
     probs.forEach((p, i) => { p.n = (cols[0] - 1) * 20 + i + 1; });
@@ -4475,17 +4586,19 @@ NS.G({
      format: level letter (M/H), F for full or the column number, dash, 4 characters of seed */
   const ALPH = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
   NS.testSeed = () => NS.newSeed() & 0xFFFFF;
-  NS.testCode = function (lv, cols, seed) {
+  NS.testCode = function (lv, cols, seed, diff = 'contest') {
     let s = ''; for (let i = 0; i < 4; i++) s = ALPH[(seed >> (5 * i)) & 31] + s;
-    return (lv === 'ms' ? 'M' : 'H') + (cols.length === 4 ? 'F' : String(cols[0])) + '-' + s;
+    const dc = NS.DIFFS[NS.diffIdx(diff)].code;   // Contest has no suffix, so older codes still read as Contest
+    return (lv === 'ms' ? 'M' : 'H') + (cols.length === 4 ? 'F' : String(cols[0])) + '-' + s + (dc ? '-' + dc : '');
   };
   NS.readTestCode = function (str) {
     const c = String(str || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (c.length !== 6) return null;
+    if (c.length !== 6 && c.length !== 7) return null;
+    let diff = 'contest'; if (c.length === 7) { const d = NS.DIFFS.find(x => x.code && x.code === c[6]); if (!d) return null; diff = d.id; }
     const lv = c[0] === 'M' ? 'ms' : c[0] === 'H' ? 'hs' : null; if (!lv) return null;
     const cols = c[1] === 'F' ? [1, 2, 3, 4] : /[1-4]/.test(c[1]) ? [+c[1]] : null; if (!cols) return null;
-    let seed = 0; for (const ch of c.slice(2)) { const k = ALPH.indexOf(ch); if (k < 0) return null; seed = seed * 32 + k; }
-    return { lv, cols, seed };
+    let seed = 0; for (const ch of c.slice(2, 6)) { const k = ALPH.indexOf(ch); if (k < 0) return null; seed = seed * 32 + k; }
+    return { lv, cols, seed, diff };
   };
 
   /* official-style scoring: through the last attempted problem, +5 right, −4 wrong or skipped */
@@ -4515,10 +4628,11 @@ NS.G({
     lv() { return this.data.levels[this.data.level]; },
     trick(id) { const L = this.lv(); return L.tricks[id] || (L.tricks[id] = { att: [], n: 0, ok: 0, lesson: false }); },
     record(p, ok, ms) {
-      const t = this.trick(p.trick); t.att.push([ok ? 1 : 0, Math.round(ms)]); if (t.att.length > 30) t.att.shift(); t.n++; if (ok) t.ok++;
-      const L = this.lv(); const day = NS.today(); L.days[day] = (L.days[day] || 0) + 1;
-      if (!ok) { L.misses.push({ g: p.gid, s: p.seed, t: Date.now() }); if (L.misses.length > 60) L.misses.shift(); }
-      else { const k = L.misses.findIndex(m => m.g === p.gid && m.s === p.seed); if (k >= 0) L.misses.splice(k, 1); }
+      // each attempt: [right?, ms, difficulty index]; Contest (1) is left off to keep old records valid
+      const di = NS.diffIdx(p.diff); const t = this.trick(p.trick); t.att.push(di === 1 ? [ok ? 1 : 0, Math.round(ms)] : [ok ? 1 : 0, Math.round(ms), di]); if (t.att.length > 30) t.att.shift(); t.n++; if (ok) t.ok++;
+      const L = this.lv(); const day = NS.today(); L.days[day] = (L.days[day] || 0) + 1; const d = NS.DIFFS[di].id;
+      if (!ok) { L.misses.push({ g: p.gid, s: p.seed, t: Date.now(), ...(di === 1 ? {} : { d }), ...(p.at ? { at: p.at } : {}) }); if (L.misses.length > 60) L.misses.shift(); }
+      else { const k = L.misses.findIndex(m => m.g === p.gid && m.s === p.seed && (m.d || 'contest') === d && (m.at || 0) === (p.at || 0)); if (k >= 0) L.misses.splice(k, 1); }
       this.save();
     },
     reset(level) { this.data.levels[level] = blank(); this.save(); },
@@ -4532,7 +4646,7 @@ NS.G({
   NS.trimProgress = function (data) {
     const d = JSON.parse(JSON.stringify(data)); const cut = Date.now() - 400 * 864e5;
     for (const lv of ['ms', 'hs']) { const L = d.levels[lv]; if (!L) continue;
-      Object.values(L.tricks || {}).forEach(t => { t.att = (t.att || []).slice(-12).map(([ok, ms]) => [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms]); });
+      Object.values(L.tricks || {}).forEach(t => { t.att = (t.att || []).slice(-12).map(([ok, ms, di]) => di === undefined ? [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms] : [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms, di]); });
       Object.keys(L.memo || {}).forEach(k => { L.memo[k] = L.memo[k].slice(-3).map(([ok, ms]) => [ok, Math.ceil(ms / 100) * 100]); });
       const days = {}; Object.keys(L.days || {}).sort().slice(-120).forEach(k => { days[k] = L.days[k]; }); L.days = days;
       L.tests = (L.tests || []).filter(t => t.t > cut || t.kind === 'full').slice(-100);
@@ -4550,13 +4664,15 @@ NS.G({
     const num = x => (typeof x === 'number' && isFinite(x) ? x : 0); const obj = x => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
     const out = { v: 1, level: d.level === 'ms' || d.level === 'hs' ? d.level : null, settings: {}, levels: {} };
     const st = obj(d.settings); if (['system', 'light', 'dark'].includes(st.theme)) out.settings.theme = st.theme; if (typeof st.names === 'boolean') out.settings.names = st.names;
+    const dids = NS.DIFFS.map(x => x.id); if (st.pdiff === 'auto' || dids.includes(st.pdiff)) out.settings.pdiff = st.pdiff; if (dids.includes(st.tdiff)) out.settings.tdiff = st.tdiff;
     const pair = a => Array.isArray(a) && a.length === 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
+    const att = a => Array.isArray(a) && a.length === 3 && [0, 2, 3].includes(a[2]) ? [a[0] ? 1 : 0, num(a[1]), a[2]] : Array.isArray(a) && a.length >= 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
     for (const lv of ['ms', 'hs']) {
       const L = obj(d.levels[lv]); const tricks = {};
-      for (const [id, t] of Object.entries(obj(L.tricks))) { if (!NS.TRICKS[id]) continue; const tt = obj(t); tricks[id] = { att: (Array.isArray(tt.att) ? tt.att : []).map(pair).filter(Boolean).slice(-30), n: num(tt.n), ok: num(tt.ok), lesson: !!tt.lesson }; }
+      for (const [id, t] of Object.entries(obj(L.tricks))) { if (!NS.TRICKS[id]) continue; const tt = obj(t); tricks[id] = { att: (Array.isArray(tt.att) ? tt.att : []).map(att).filter(Boolean).slice(-30), n: num(tt.n), ok: num(tt.ok), lesson: !!tt.lesson }; }
       const tests = (Array.isArray(L.tests) ? L.tests : []).filter(t => t && typeof t === 'object').map(t => ({ t: num(t.t), kind: t.kind === 'col' ? 'col' : 'full', col: num(t.col) || 1, score: num(t.score), correct: num(t.correct), wrong: num(t.wrong), skipped: num(t.skipped), last: num(t.last), ...(typeof t.code === 'string' && NS.readTestCode(t.code) ? { code: t.code } : {}) })).slice(-200);
       const days = {}; for (const [k, v] of Object.entries(obj(L.days))) if (/^\d{4}-\d\d-\d\d$/.test(k)) days[k] = num(v);
-      const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t) })).slice(-60);
+      const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t), ...(dids.includes(m.d) && m.d !== 'contest' ? { d: m.d } : {}), ...([1, 2, 3, 4].includes(m.at) ? { at: m.at } : {}) })).slice(-60);
       const memo = {}; for (const [k, v] of Object.entries(obj(L.memo))) if (Array.isArray(v) && /^[a-z]{2}[\w.]*$/.test(k)) memo[k] = v.map(pair).filter(Boolean).slice(-6);
       out.levels[lv] = { tricks, tests, days, misses, memo };
     }
@@ -4578,14 +4694,18 @@ NS.G({
 
   NS.trickStatus = function (id, lv) {
     const t = NS.store.data.levels[lv].tricks[id]; if (!t || (!t.att.length && !t.lesson)) return { key: 'new', label: 'Not started', acc: null, med: null };
-    const recent = t.att.slice(-12); const acc = recent.length ? recent.reduce((s, a) => s + a[0], 0) / recent.length : null;
+    // only Contest-level work and harder can mark a trick Accurate or Fast; Warm-up is for learning
+    const dOf = a => (a[2] === undefined ? 1 : a[2]);
+    const real = t.att.filter(a => dOf(a) >= 1); const hd = t.att.filter(a => dOf(a) >= 2).slice(-8);
+    const hard = hd.length >= 6 && hd.filter(a => a[0]).length / hd.length >= 0.8;
+    const recent = (real.length >= 3 ? real : t.att).slice(-12); const acc = recent.length ? recent.reduce((s, a) => s + a[0], 0) / recent.length : null;
     const times = recent.filter(a => a[0] && a[1] > 0).map(a => a[1]).sort((a, b) => a - b); const med = times.length ? times[Math.floor(times.length / 2)] / 1000 : null;
     const target = NS.TARGET[Math.min(4, NS.trickCol(id, lv))] + (id === 'estimate' ? 6 : 0);
     if (recent.length >= 8 && acc >= 0.85) {
-      if (med !== null && med <= target) return { key: 'fast', label: 'Fast', acc, med, target };
-      return { key: 'solid', label: 'Accurate', acc, med, target };
+      if (real.length >= 8 && med !== null && med <= target) return { key: 'fast', label: 'Fast', acc, med, target, hard };
+      if (real.length >= 8) return { key: 'solid', label: 'Accurate', acc, med, target, hard };
     }
-    return { key: 'learning', label: 'Learning', acc, med, target };
+    return { key: 'learning', label: 'Learning', acc, med, target, hard };
   };
 
   NS.streak = function (lv) {
@@ -4907,7 +5027,12 @@ NS.G({
   }
   const fmtTime = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   const trickName = id => NS.TRICKS[id].title;
-  const pillFor = (st, quiet) => quiet && st.key === 'new' ? '' : `<span class="pill ${st.key}">${st.label}${st.acc !== null && st.key !== 'new' ? ` · ${Math.round(st.acc * 100)}%` : ''}</span>`;
+  const pillFor = (st, quiet) => (quiet && st.key === 'new' ? '' : `<span class="pill ${st.key}">${st.label}${st.acc !== null && st.key !== 'new' ? ` · ${Math.round(st.acc * 100)}%` : ''}</span>`) + (st.hard ? '<span class="pill hardok" title="80% or better on Hard problems">Hard ✓</span>' : '');
+  /* ---------- difficulty ---------- */
+  const DIFF_AUTO = { id: 'auto', name: 'Auto', blurb: 'Starts at Contest and adjusts as you go: four quick right answers in a row move you up a level, misses move you down.' };
+  const diffOf = id => (id === 'auto' ? DIFF_AUTO : NS.DIFFS[NS.diffIdx(id)]);
+  const diffSeg = (act, cur, withAuto) => `<div class="seg diffseg" role="group" aria-label="Difficulty">${(withAuto ? [DIFF_AUTO, ...NS.DIFFS] : NS.DIFFS).map(d => `<button data-act="${act}" data-d="${d.id}" aria-pressed="${cur === d.id}">${d.name}</button>`).join('')}</div><p class="small muted diffnote">${diffOf(cur).blurb}</p>`;
+  const diffChip = (id, extra = '') => `<span class="dchip d-${id}">${diffOf(id).name}${extra}</span>`;
   function newSeed() { return NS.newSeed(); }
 
   /* keypad: extra keys depend on the kind of answer */
@@ -5100,9 +5225,9 @@ NS.G({
         <div class="stack" style="margin-top:14px;gap:8px"><button class="btn" data-act="drillTrick" data-id="${id}">Practice 20 of these</button>${nextId ? `<button class="btn ghost" data-go="t" data-arg="${nextId}">Next trick: ${NS.rich(trickName(nextId))}</button>` : ''}<button class="btn link" data-act="tryAgain">Try 5 more</button></div>`;
       return;
     }
-    if (!T.p) { T.p = NS.problemForTrick(id, l, T.seed + T.i * 7919, T.lastG); T.lastG = T.p.gid; T.start = performance.now(); T.wrong = false; T.hint = false; }
+    if (!T.p) { T.p = NS.problemForTrick(id, l, T.seed + T.i * 7919, T.lastG, T.i < 2 ? 'warmup' : 'contest'); T.lastG = T.p.gid; T.start = performance.now(); T.wrong = false; T.hint = false; }
     const p = T.p;
-    box.innerHTML = `<div class="row" style="justify-content:space-between"><p class="eyebrow">Try it · ${T.i + 1} of 5</p><span class="tally"><span class="g">✓ ${T.right}</span></span></div>
+    box.innerHTML = `<div class="row" style="justify-content:space-between"><p class="eyebrow">Try it · ${T.i + 1} of 5 · ${T.i < 2 ? 'Warm-up' : 'Contest'}</p><span class="tally"><span class="g">✓ ${T.right}</span></span></div>
       <div class="prob ${isLong(p) ? 'long' : ''}" style="text-align:center;font-size:1.5rem;margin:18px 0 14px">${R(p.p.h, true)}</div>
       <div style="text-align:center;font-size:1.4rem">${blankHtml(p, 'id="tryin"')}</div>
       <div class="preview" id="trypv" style="text-align:center"></div>
@@ -5131,7 +5256,7 @@ NS.G({
   function viewPractice() {
     if (state.session && !state.session.done) return renderSession();
     if (state.session && state.session.done && state.session.showSummary) return renderSummary();
-    const l = lv(); const sets = practiceSets(l);
+    const l = lv(); const sets = practiceSets(l); if (!state.pickDiff) state.pickDiff = S.data.settings.pdiff || 'auto';
     if (!state.pickSet || !sets.find(s => s.k === state.pickSet)) state.pickSet = sets[0].k;
     const cur = sets.find(s => s.k === state.pickSet);
     const ids = NS.tricksFor(l);
@@ -5142,6 +5267,8 @@ NS.G({
         <button class="opt" data-act="pmode" data-m="sprint" aria-pressed="${state.pickMode === 'sprint'}"><b>Sprint</b><span>As many as you can before time runs out. Right answers move on by themselves.</span></button>
       </div>
       ${state.pickMode === 'sprint' ? `<div class="seg" style="margin-top:12px" role="group" aria-label="Sprint length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([s, n]) => `<button data-act="plen" data-s="${s}" aria-pressed="${state.sprintLen === s}">${n}</button>`).join('')}</div>` : ''}
+      <span class="label">Difficulty</span>
+      ${diffSeg('pdiff', state.pickDiff, true)}
       <span class="label">Problems from</span>
       <div class="opts">${sets.map(s => `<button class="opt" data-act="pset" data-k="${s.k}" aria-pressed="${s.k === state.pickSet}"><b>${NS.rich(s.name)}</b><span>${NS.rich(s.d)}</span></button>`).join('')}</div>
       ${state.pickSet === 'custom' ? `<div class="picker" id="picker">${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<h4>Problems ${COLR[c]}</h4>${arr.map(id => `<label><input type="checkbox" data-trick="${id}" ${state.custom.has(id) ? 'checked' : ''}>${NS.rich(trickName(id))}</label>`).join('')}` : ''; }).join('')}</div>` : ''}
@@ -5154,7 +5281,10 @@ NS.G({
   /* ---------- practice session ---------- */
   function startSession(opts) {
     const l = lv();
-    state.session = { mode: opts.mode, tricks: opts.tricks, label: opts.label, lv: l, total: opts.mode === 'practice' ? 20 : null, dur: opts.dur || 120, results: [], r: new NS.Rng(newSeed()), queue: opts.queue || [], startAt: performance.now(), done: false, state: 'ask', last: null };
+    const dsel = opts.diff || state.pickDiff || 'auto'; const auto = dsel === 'auto';
+    // Auto starts at Contest, or at Warm-up when every trick in the round is still new
+    const startDi = auto ? (opts.tricks.length && opts.tricks.every(id => NS.trickStatus(id, l).key === 'new') ? 0 : 1) : NS.diffIdx(dsel);
+    state.session = { mode: opts.mode, tricks: opts.tricks, label: opts.label, lv: l, total: opts.mode === 'practice' ? 20 : null, dur: opts.dur || 120, results: [], r: new NS.Rng(newSeed()), queue: opts.queue || [], startAt: performance.now(), done: false, state: 'ask', last: null, auto, di: startDi, di0: startDi, diMax: startDi, hist: [], moved: 0 };
     if (location.hash.slice(1) !== 'practice') { state.silent = true; location.hash = 'practice'; }
     setNav('practice'); nextProblem();
   }
@@ -5164,9 +5294,10 @@ NS.G({
     let p;
     while (s.queue.length && !NS.GBY[s.queue[0].g]) s.queue.shift();
     const due = (s.retry || []).findIndex(x => s.results.length >= x.due);
-    if (!s.queue.length && due >= 0) { const tr = s.retry.splice(due, 1)[0].trick; p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid); }
-    else if (s.queue.length) { const m = s.queue.shift(); p = NS.makeProblem(m.g, s.lv, m.s); }
-    else { const tr = NS.pickTrick(s.tricks, s.lv, s.r, s.last && s.last.trick); p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid); }
+    const dname = NS.DIFFS[s.di].id;
+    if (!s.queue.length && due >= 0) { const tr = s.retry.splice(due, 1)[0].trick; p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
+    else if (s.queue.length) { const m = s.queue.shift(); p = NS.makeProblem(m.g, s.lv, m.s, m.d || 'contest', m.at); }
+    else { const tr = NS.pickTrick(s.tricks, s.lv, s.r, s.last && s.last.trick); p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
     s.cur = p; s.state = 'ask'; s.t0 = performance.now(); s.last = p;
     renderSession();
   }
@@ -5175,7 +5306,7 @@ NS.G({
     const right = s.results.filter(x => x.ok).length, wrong = s.results.length - right;
     const pct = s.mode === 'practice' ? s.results.length / s.total * 100 : 0;
     main.innerHTML = `<div class="session">
-      <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>
+      <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>${diffChip(p.diff || 'contest', s.auto ? '<span class="dauto"> · auto</span>' : '')}
         <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span>${s.mode === 'sprint' ? `<span class="clock" id="clock">${fmtTime(s.dur)}</span>` : `<span class="faint mono small">${s.results.length + 1}/${s.total}</span>`}</div>
       <div class="prog"><span id="progbar" style="width:${pct}%"></span></div>
       <div class="stage" id="stage">
@@ -5193,7 +5324,8 @@ NS.G({
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (s.state === 'ask') ACT.sSubmit(); else if (s.state === 'shown') nextProblem(); } });
     inp.addEventListener('input', () => { $('#spv').innerHTML = previewOf(inp.value); if (s.mode === 'sprint' && s.state === 'ask' && NS.check(p.a, inp.value).ok) ACT.sSubmit(); });
     if (!touch) inp.focus({ preventScroll: true }); else activeInput = inp;
-    if (s.mode === 'sprint' && s.flash != null) {
+    if (s.moved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = s.moved > 0 ? `Nice run. Moving up to ${NS.DIFFS[s.di].name}.` : `Stepping back to ${NS.DIFFS[s.di].name} for a few.`; s.moved = 0; }
+    else if (s.mode === 'sprint' && s.flash != null) {
       // the last answer was right: say so on the new problem, where it stays readable, then fade
       const fb = $('#sfb'); fb.className = 'feedback ok fadeout'; fb.textContent = `✓ Right · ${(s.flash / 1000).toFixed(1)}s`;
       $('#stage').classList.add('pulse'); $('.tally .g').classList.add('bump'); s.flash = null;
@@ -5210,6 +5342,16 @@ NS.G({
   function showShortcut(p, container, given, note) {
     container.innerHTML = `<div class="shortcut"><p class="eyebrow">The answer</p><div class="key">${R(NS.keyHtml(p.a), true)}${p.suffix ? ` <span class="suffix">${esc(p.suffix)}</span>` : ''}</div>${note ? `<p class="small" style="color:var(--bad);margin-bottom:8px">${esc(note)}</p>` : ''}<p class="eyebrow" style="margin-bottom:8px">How to get it fast</p><ol class="steps">${p.steps.map(x => `<li>${R(x, true)}</li>`).join('')}</ol></div>`;
   }
+  // Auto difficulty: four quick right answers in a row move up a level; two misses in the last three move down
+  function autoAdjust(s, ok, ms, p) {
+    if (!s.auto) return;
+    const tgt = NS.TARGET[p.col] + (p.est ? 6 : 0);
+    s.hist.push(ok ? (ms / 1000 <= tgt * 1.25 ? 2 : 1) : 0); if (s.hist.length > 6) s.hist.shift();
+    const last4 = s.hist.slice(-4), last3 = s.hist.slice(-3);
+    if (last4.length === 4 && last4.every(x => x === 2) && s.di < 3) { s.di++; s.moved = 1; s.hist = []; }
+    else if (last3.filter(x => x === 0).length >= 2 && s.di > 0) { s.di--; s.moved = -1; s.hist = []; }
+    s.diMax = Math.max(s.diMax, s.di);
+  }
   function finishSession() {
     const s = state.session; if (!s || s.done) return; s.done = true; s.showSummary = true; clearInterval(state.sprintTimer);
     if (!s.results.length) { state.session = null; return viewPractice(); }
@@ -5223,10 +5365,11 @@ NS.G({
     const by = {}; s.results.forEach(x => { const k = x.p.trick; by[k] = by[k] || { n: 0, ok: 0 }; by[k].n++; if (x.ok) by[k].ok++; });
     const misses = s.results.filter(x => !x.ok);
     const headline = s.mode === 'sprint' ? `${right} right in ${fmtTime(s.dur)}` : `${right} of ${n} right`;
+    const dline = s.auto ? (s.diMax > s.di0 ? `Auto difficulty: started at ${NS.DIFFS[s.di0].name}, reached ${NS.DIFFS[s.diMax].name}.` : `Auto difficulty: stayed at ${NS.DIFFS[s.di0].name}${s.di < s.di0 ? ` and stepped back to ${NS.DIFFS[s.di].name}` : ''}.`) : `Difficulty: ${NS.DIFFS[s.di].name}.`;
     const msg = acc === 1 ? 'Every one right.' : acc >= 0.85 ? 'Accurate. Next round, push the pace a little.' : acc >= 0.6 ? 'Read through the misses below, then run it again.' : 'Go back over the lesson, then try another round.';
     main.innerHTML = `<div class="session stack">
       <div class="card"><p class="eyebrow">${NS.rich(s.label)}</p><div class="res-top" style="margin-top:8px"><div class="big">${Math.round(acc * 100)}%</div>
-        <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div></div></div></div>
+        <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><p class="small faint">${dline}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div></div></div></div>
         <div class="row" style="margin-top:20px"><button class="btn hi" data-act="again">Go again <span class="kbd">Enter</span></button>${misses.length ? '<button class="btn ghost" data-act="redoMissed">Redo the misses</button>' : ''}<button class="btn ghost" data-act="newSetup">Change settings</button></div></div>
       ${Object.keys(by).length > 1 ? `<div class="card"><h3 style="margin-bottom:6px">By trick</h3><div class="tablewrap"><table class="t"><thead><tr><th>Trick</th><th style="text-align:right">Right</th><th></th></tr></thead><tbody>${Object.entries(by).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n).map(([k, v]) => `<tr><td>${NS.rich(trickName(k))}</td><td class="n">${v.ok}/${v.n}</td><td style="text-align:right"><button class="btn link small" data-go="t" data-arg="${k}">Lesson</button></td></tr>`).join('')}</tbody></table></div></div>` : ''}
       ${misses.length ? `<div class="card"><h3>Misses, with the shortcut</h3><div class="stack" style="margin-top:10px;gap:0">${misses.map((x, i) => `<details style="border-top:1px solid var(--line);padding:10px 0" ${i === 0 ? 'open' : ''}><summary style="cursor:pointer"><span class="m">${R(x.p.p.h)}</span> <span class="faint small">you wrote</span> <span class="m" style="color:var(--bad)">${x.given ? esc(x.given) : '—'}</span> <span class="faint small">· answer</span> <span class="m">${R(NS.keyHtml(x.p.a), true)}</span></summary><ol class="steps" style="margin-top:10px">${x.p.steps.map(t => `<li>${R(t, true)}</li>`).join('')}</ol></details>`).join('')}</div></div>` : ''}
@@ -5347,7 +5490,8 @@ NS.G({
   function viewTests() {
     if (state.test && !state.test.done) return renderTest();
     if (state.test && state.test.done) return renderResults();
-    const l = lv(); const hist = L().tests.slice().reverse().slice(0, 8);
+    const l = lv(); const hist = L().tests.slice().reverse().slice(0, 8); if (!state.testDiff) state.testDiff = S.data.settings.tdiff || 'contest';
+    const codeDiff = c => { const sp = c && NS.readTestCode(c); return sp && sp.diff !== 'contest' ? ` · ${NS.DIFFS[NS.diffIdx(sp.diff)].name}` : ''; };
     main.innerHTML = `<div class="setup"><p class="eyebrow">${LV[l]}</p><h1>Practice tests</h1>
       <p class="muted" style="margin-top:8px;max-width:62ch">Same layout and scoring as a contest test. Your graded sheet shows the shortcut for anything you miss.</p>
       <span class="label">Test</span>
@@ -5356,6 +5500,8 @@ NS.G({
         <button class="opt" data-act="tkind" data-k="col" aria-pressed="${state.testKind === 'col'}"><b>One column</b><span>20 problems · 2:30</span></button>
       </div>
       ${state.testKind === 'col' ? `<div class="seg" style="margin-top:12px" role="group" aria-label="Column">${[1, 2, 3, 4].map(c => `<button data-act="tcol" data-c="${c}" aria-pressed="${state.testCol === c}">${COLR[c]}</button>`).join('')}</div>` : ''}
+      <span class="label">Difficulty</span>
+      ${diffSeg('tdiff', state.testDiff, false)}
       <div class="row" style="margin-top:22px"><button class="btn hi" data-act="startTest">Start the clock</button><span class="faint small">Tip: press Enter to move to the next blank. Don’t stop on a hard one for long; a skip costs the same as a miss.</span></div>
       <div class="codes">
         <div class="codebox"><label for="tcode"><b>Got a test code?</b> <span class="muted">Everyone who enters the same code gets the same test, so a team can take one together and compare.</span></label>
@@ -5368,13 +5514,13 @@ NS.G({
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept anything within 5% of the exact answer.</li></ul>
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Every right answer is +5 and every wrong or skipped one is −4, so a skip is never free.</li><li>Stop when the clock stops. Answers you haven’t reached don’t count against you.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
         </div></details>
-      <div class="sect"><h2>Recent tests</h2>${hist.length ? `<div class="card tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm; columns in between.</div>'}</div>
+      <div class="sect"><h2>Recent tests</h2>${hist.length ? `<div class="card tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm; columns in between.</div>'}</div>
     </div>${footer()}`;
     const tc = $('#tcode'); if (tc) tc.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ACT.codeStart(); } });
   }
   // a fresh code for whatever test is selected above, without starting it
   function teamBox() {
-    const l = lv(); const what = state.testKind === 'full' ? 'the full test (80 problems)' : `problems ${COLR[state.testCol]}`;
+    const l = lv(); const dn = NS.DIFFS[NS.diffIdx(state.testDiff)].name; const what = (state.testKind === 'full' ? 'the full test (80 problems)' : `problems ${COLR[state.testCol]}`) + `, ${dn}`;
     const tc = state.teamCode;
     if (!tc) return `<b>Giving your team a test?</b> <span class="muted">Make a code for ${what} without starting it. Share the code, and everyone enters it in the box ${matchMedia('(max-width: 720px)').matches ? 'above' : 'beside this one'}.</span>
       <div class="row" style="margin-top:10px"><button class="btn" data-act="teamCode">Make a team code</button></div>`;
@@ -5385,16 +5531,16 @@ NS.G({
   }
   function startTest(spec) {
     const l = lv(); const cols = spec ? spec.cols : state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol];
-    const seed = spec ? spec.seed : NS.testSeed();
+    const seed = spec ? spec.seed : NS.testSeed(); const diff = spec ? spec.diff : (state.testDiff || S.data.settings.tdiff || 'contest');
     if (spec) { state.testKind = cols.length === 4 ? 'full' : 'col'; if (cols.length === 1) state.testCol = cols[0]; }
-    const probs = NS.buildTest(l, seed, cols);
-    state.test = { lv: l, cols, kind: state.testKind, col: state.testCol, probs, code: NS.testCode(l, cols, seed), answers: probs.map(() => ''), dur: cols.length === 4 ? 600 : 150, start: Date.now(), done: false, cur: 0 };
+    const probs = NS.buildTest(l, seed, cols, diff);
+    state.test = { lv: l, cols, diff, kind: state.testKind, col: state.testCol, probs, code: NS.testCode(l, cols, seed, diff), answers: probs.map(() => ''), dur: cols.length === 4 ? 600 : 150, start: Date.now(), done: false, cur: 0 };
     if (location.hash.slice(1) !== 'test') { location.hash = 'test'; } else renderTest();
   }
   function stopTest() { clearInterval(state.testTimer); state.test = null; $('.dock') && $('.dock').remove(); document.body.classList.remove('in-session'); }
   function renderTest() {
     const T = state.test; setNav('test');
-    main.innerHTML = `<div class="sheet-top"><span class="clock" id="tclock">${fmtTime(T.dur)}</span><span class="muted small" id="tdone">0 answered</span><span style="flex:1"></span><span class="faint small mono tcode" title="Test code">${T.code}</span><button class="btn small ghost" data-act="finishTest">Finish and grade</button></div>
+    main.innerHTML = `<div class="sheet-top"><span class="clock" id="tclock">${fmtTime(T.dur)}</span><span class="muted small" id="tdone">0 answered</span><span style="flex:1"></span>${T.diff !== 'contest' ? diffChip(T.diff) : ''}<span class="faint small mono tcode" title="Test code">${T.code}</span><button class="btn small ghost" data-act="finishTest">Finish and grade</button></div>
       <div id="sheet">${pages(T.probs, (p, i) => `<div class="q" data-i="${i}" id="q${i}"><span class="qn">${p.est ? '<span class="s">*</span>' : ''}(${p.n})</span><div class="qb"><span class="t ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</span>${blankHtml(p, `data-i="${i}" id="a${i}"`)}</div></div>`)}</div>
       <p class="faint small" style="margin-top:12px">${touch ? '' : 'Enter or ↓ moves to the next blank; ↑ goes back.'}</p>`;
     if (touch) { const d = document.createElement('div'); d.className = 'dock'; d.innerHTML = keypadHtml(T.probs[0], true); document.body.appendChild(d); main.style.paddingBottom = '330px'; }
@@ -5425,7 +5571,8 @@ NS.G({
     const d = $('.dock'); if (d) d.remove(); main.style.paddingBottom = '';
     T.res = NS.scoreTest(T.probs, T.answers);
     // record per-trick results (untimed) for everything up to the last attempted
-    T.probs.forEach((p, i) => { const m = T.res.marks[i]; if (m === 'ok' || m === 'bad') { const t = S.trick(p.trick); t.att.push([m === 'ok' ? 1 : 0, -1]); if (t.att.length > 30) t.att.shift(); t.n++; if (m === 'ok') t.ok++; if (m === 'bad') { L().misses.push({ g: p.gid, s: p.seed, t: Date.now() }); if (L().misses.length > 60) L().misses.shift(); } } });
+    const tdi = NS.diffIdx(T.diff);
+    T.probs.forEach((p, i) => { const m = T.res.marks[i]; if (m === 'ok' || m === 'bad') { const t = S.trick(p.trick); t.att.push(tdi === 1 ? [m === 'ok' ? 1 : 0, -1] : [m === 'ok' ? 1 : 0, -1, tdi]); if (t.att.length > 30) t.att.shift(); t.n++; if (m === 'ok') t.ok++; if (m === 'bad') { L().misses.push({ g: p.gid, s: p.seed, t: Date.now(), ...(tdi === 1 ? {} : { d: T.diff }), at: p.at }); if (L().misses.length > 60) L().misses.shift(); } } });
     L().tests.push({ t: Date.now(), kind: T.cols.length === 4 ? 'full' : 'col', col: T.cols[0], code: T.code, score: T.res.score, correct: T.res.correct, wrong: T.res.wrong, skipped: T.res.skipped, last: T.res.last });
     const day = NS.today(); L().days[day] = (L().days[day] || 0) + 1; S.save();
     window.scrollTo(0, 0); renderResults();
@@ -5436,11 +5583,15 @@ NS.G({
     const byCol = T.cols.map((c, k) => { const idx = T.probs.map((_, i) => i).filter(i => i >= k * 20 && i < k * 20 + 20); return { c, ok: idx.filter(i => r.marks[i] === 'ok').length, tried: idx.filter(i => r.marks[i] !== 'after').length }; });
     const missTricks = [...new Set(T.probs.filter((p, i) => r.marks[i] === 'bad' || r.marks[i] === 'skip').map(p => p.trick))].slice(0, 6);
     const prev = L().tests.filter(t => t.kind === (full ? 'full' : 'col') && (full || t.col === T.cols[0])); const pb = prev.length > 1 && r.score >= Math.max(...prev.slice(0, -1).map(t => t.score));
+    // a nudge to the next level when this one went well (90% right through at least 3/4 of the test), or back when it didn't
+    const tdi = NS.diffIdx(T.diff); const reach = r.last / T.probs.length; const acc = r.correct / Math.max(1, r.correct + r.wrong + r.skipped);
+    const nextUp = tdi < 3 && reach >= 0.75 && acc >= 0.9 ? `Strong test. Try the next one at ${NS.DIFFS[tdi + 1].name}.` : tdi > 1 && acc < 0.6 ? `That one was rough. A ${NS.DIFFS[1].name} test is the real-contest level, and a good place to build back up.` : '';
     main.innerHTML = `<div class="stack">
-      <div class="card"><p class="eyebrow">${full ? 'Full test' : `Problems ${COLR[T.cols[0]]}`} · ${T.timeUp ? 'time' : `finished at ${fmtTime(T.used)}`}</p>
+      <div class="card"><p class="eyebrow">${full ? 'Full test' : `Problems ${COLR[T.cols[0]]}`} · ${NS.DIFFS[NS.diffIdx(T.diff)].name} · ${T.timeUp ? 'time' : `finished at ${fmtTime(T.used)}`}</p>
         <div class="res-top" style="margin-top:10px"><div><div class="big">${r.score}</div><p class="faint small">out of ${max}${pb ? ' · <b style="color:var(--ok)">personal best</b>' : ''}</p></div>
           <div class="stack" style="gap:10px"><div class="kv"><div><b>${r.correct}</b><span>right (+${5 * r.correct})</span></div><div><b>${r.wrong}</b><span>wrong (−${4 * r.wrong})</span></div><div><b>${r.skipped}</b><span>skipped (−${4 * r.skipped})</span></div><div><b>${r.last}</b><span>last problem tried</span></div></div>
           ${full ? `<div class="cols4">${byCol.map(b => `<div><span class="faint small">${COLR[b.c]}</span><br><b>${b.ok}</b><span class="faint small">/${b.tried || 0} tried</span></div>`).join('')}</div>` : ''}</div></div>
+        ${nextUp ? `<p class="small" style="margin-top:14px"><b>${nextUp}</b></p>` : ''}
         ${r.skipped ? `<p class="small" style="margin-top:14px">Skips cost as much as wrong answers. ${r.skipped} skip${r.skipped > 1 ? 's' : ''} took ${4 * r.skipped} points. If you can’t do one, an honest guess beats a blank.</p>` : ''}
         <p class="small muted" style="margin-top:14px">Test code <b class="mono" style="color:var(--ink)">${T.code}</b>. Share it and teammates get this same test. <button class="btn link small" data-act="copyCode">Copy</button></p>
         <div class="row" style="margin-top:12px"><button class="btn hi" data-act="testAgain">New test</button><button class="btn ghost" data-act="testMenu">Test options</button>${missTricks.length ? `<button class="btn ghost" data-act="drillMissed">Drill what I missed</button>` : ''}</div></div>
@@ -5516,11 +5667,13 @@ NS.G({
     pset(d) { state.pickSet = d.k; state.keepScroll = true; viewPractice(); },
     startPractice() { const sets = practiceSets(lv()); const cur = sets.find(s => s.k === state.pickSet); if (!cur || !cur.tricks.length) return;
       startSession({ mode: state.pickMode, dur: state.sprintLen, tricks: cur.tricks, label: (state.pickMode === 'sprint' ? 'Sprint · ' : '') + cur.name.replace(/\s*\(\d+\)$/, '').replace(/^Up next: /, ''), queue: cur.misses ? L().misses.slice(-20) : [] }); },
+    pdiff(d) { state.pickDiff = d.d; S.data.settings.pdiff = d.d; S.save(); state.keepScroll = true; viewPractice(); },
+    tdiff(d) { state.testDiff = d.d; S.data.settings.tdiff = d.d; S.save(); state.teamCode = null; state.keepScroll = true; viewTests(); },
     sSubmit() {
       const s = state.session; if (!s || s.state !== 'ask') return; const inp = $('#sin'); const p = s.cur;
       if (!inp.value.trim()) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); return; }
       const res = NS.check(p.a, inp.value); const ms = performance.now() - s.t0;
-      s.results.push({ p, ok: res.ok, ms, given: inp.value }); S.record(p, res.ok, ms);
+      s.results.push({ p, ok: res.ok, ms, given: inp.value }); S.record(p, res.ok, ms); autoAdjust(s, res.ok, ms, p);
       const fb = $('#sfb'); inp.disabled = true; const stk = $('#stk'); if (stk) stk.innerHTML = NS.rich(trickName(p.trick), true);
       if (res.ok && s.mode === 'sprint') { s.flash = ms; return nextProblem(); }
       if (res.ok) {
@@ -5535,21 +5688,22 @@ NS.G({
         inp.disabled = false; inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true });
       }
     },
-    sGiveUp() { const s = state.session; if (!s || s.state !== 'ask') return; const p = s.cur; const ms = performance.now() - s.t0; s.results.push({ p, ok: false, ms, given: '' }); S.record(p, false, ms);
+    sGiveUp() { const s = state.session; if (!s || s.state !== 'ask') return; const p = s.cur; const ms = performance.now() - s.t0; s.results.push({ p, ok: false, ms, given: '' }); S.record(p, false, ms); autoAdjust(s, false, ms, p);
       s.state = 'shown'; if (s.mode === 'practice') (s.retry = s.retry || []).push({ trick: p.trick, due: s.results.length + 3 }); { const stk = $('#stk'); if (stk) stk.innerHTML = NS.rich(trickName(p.trick), true); } $('#sfb').className = 'feedback'; $('#sfb').textContent = ''; showShortcut(p, $('#sshort')); const kp = $('#stage .keypad'); if (kp) kp.remove();
       $('.tally .r').textContent = `✗ ${s.results.filter(x => !x.ok).length}`;
       $('#sunder').innerHTML = `<button class="btn" data-act="sNext">Next <span class="kbd">Enter</span></button>`; const inp = $('#sin'); inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true }); },
     sNext() { nextProblem(); },
     quitSession() { const s = state.session; if (!s) return; if (s.results.length) finishSession(); else { endSession(true); viewPractice(); setNav('practice'); } },
-    again() { const s = state.session; state.session = null; startSession({ mode: s.mode, dur: s.dur, tricks: s.tricks, label: s.label }); },
-    redoMissed() { const s = state.session; const q = s.results.filter(x => !x.ok).map(x => ({ g: x.p.gid, s: x.p.seed })); state.session = null; startSession({ mode: 'practice', tricks: s.tricks, label: s.label.replace(/^Sprint · /, ''), queue: q }); },
+    again() { const s = state.session; state.session = null; startSession({ mode: s.mode, dur: s.dur, tricks: s.tricks, label: s.label, diff: s.auto ? 'auto' : NS.DIFFS[s.di].id }); },
+    redoMissed() { const s = state.session; const q = s.results.filter(x => !x.ok).map(x => ({ g: x.p.gid, s: x.p.seed, d: x.p.diff, at: x.p.at })); state.session = null; startSession({ mode: 'practice', tricks: s.tricks, label: s.label.replace(/^Sprint · /, ''), queue: q, diff: s.auto ? 'auto' : NS.DIFFS[s.di].id }); },
     newSetup() { state.session = null; viewPractice(); },
     tkind(d) { state.testKind = d.k; state.teamCode = null; state.keepScroll = true; viewTests(); },
     tcol(d) { state.testCol = +d.c; state.teamCode = null; state.keepScroll = true; viewTests(); },
     teamCode() {
       const l = lv(); const cols = state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol];
-      let code; do { code = NS.testCode(l, cols, NS.testSeed()); } while (state.teamCode && code === state.teamCode.code);
-      state.teamCode = { code, lv: l, what: cols.length === 4 ? 'full test, 80 problems' : `problems ${COLR[cols[0]]}` };
+      const diff = state.testDiff || 'contest'; const dn = NS.DIFFS[NS.diffIdx(diff)].name;
+      let code; do { code = NS.testCode(l, cols, NS.testSeed(), diff); } while (state.teamCode && code === state.teamCode.code);
+      state.teamCode = { code, lv: l, what: (cols.length === 4 ? 'full test, 80 problems' : `problems ${COLR[cols[0]]}`) + `, ${dn}` };
       $('#teambox').innerHTML = teamBox(); $('#teambox [data-act="copyCode"]').focus({ preventScroll: true });
     },
     teamStart() { const tc = state.teamCode; const spec = tc && NS.readTestCode(tc.code); if (spec && spec.lv === lv()) startTest(spec); },
@@ -5608,7 +5762,7 @@ NS.G({
       const spec = NS.readTestCode(v);
       const say = t => { msg.textContent = t; msg.style.color = 'var(--bad)'; inp.focus(); };
       if (!v) return say('Type the code first. It looks like HF-7K2M.');
-      if (!spec) return say('That code doesn’t look right. Codes are two characters, a dash, then four more, like HF-7K2M.');
+      if (!spec) return say('That code doesn’t look right. Codes are two characters, a dash, then four more, like HF-7K2M. Harder or easier tests add one more letter at the end, like HF-7K2M-H.');
       if (spec.lv !== lv()) return say(`That’s a ${LV[spec.lv].toLowerCase()} test. Switch levels with the button at the top right, then enter it again.`);
       startTest(spec);
     },
@@ -5616,7 +5770,7 @@ NS.G({
     copyCode(d, el) { const code = d.code || (state.test && state.test.code); if (!code) return; const done = () => { el.textContent = 'Copied'; setTimeout(() => { el.textContent = 'Copy'; }, 1600); };
       try { navigator.clipboard.writeText(code).then(done, () => { el.textContent = 'Select the code to copy it'; }); } catch (e) { el.textContent = 'Select the code to copy it'; } },
     testMenu() { state.test = null; viewTests(); },
-    drillMissed() { const T = state.test; const q = T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => ({ g: p.gid, s: p.seed })); const tr = [...new Set(T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => p.trick))]; state.test = null; startSession({ mode: 'practice', tricks: tr, label: 'Test misses', queue: q }); },
+    drillMissed() { const T = state.test; const q = T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => ({ g: p.gid, s: p.seed, d: p.diff, at: p.at })); const tr = [...new Set(T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => p.trick))]; state.test = null; startSession({ mode: 'practice', tricks: tr, label: 'Test misses', queue: q }); },
     showWhy(d) { const T = state.test; const p = T.probs[+d.i]; const box = $('#why' + d.i); if (box.innerHTML) { box.innerHTML = ''; return; } box.innerHTML = `<ol class="steps" style="margin:8px 0 4px">${p.steps.map(x => `<li>${R(x, true)}</li>`).join('')}</ol><button class="btn link small" data-go="t" data-arg="${p.trick}">Lesson: ${NS.rich(trickName(p.trick))} →</button>`; },
     resetAsk() { $('#resetbox').innerHTML = `<div class="confirm"><b>Erase all ${LV[lv()].toLowerCase()} progress on this device? This can’t be undone.</b><button class="btn small" data-act="resetYes">Erase it</button><button class="btn small ghost" data-act="resetNo">Cancel</button></div>`; },
     resetYes() { S.reset(lv()); toast('Progress erased'); viewProgress(); },

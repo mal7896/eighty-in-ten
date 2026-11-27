@@ -63,9 +63,9 @@
   /* ---------- sums of Fibonacci-like sequences ---------- */
   const fibSeq = (a, b, n) => { const t = [a, b]; while (t.length < n) t.push(t[t.length - 1] + t[t.length - 2]); return t; };
   G({
-    id: 'fibSum', trick: 'fibonacciSums', col: { ms: 3, hs: 3 }, w: 0.3,
-    gen(r) {
-      const a = r.int(1, 9), b = r.int(1, 9); const kd = r.pick(['ten', 'ten', 'n', 'find7']);
+    id: 'fibSum', trick: 'fibonacciSums', col: { ms: 4, hs: 3 }, w: 1.4, series: true,
+    gen(r, lv, x = 1) {
+      const a = r.int(1, x >= 2 ? 25 : 9), b = r.int(1, x >= 2 ? 25 : 9); const kd = r.pick(['ten', 'ten', 'n', 'find7']);
       if (kd === 'ten') { const t = fibSeq(a, b, 10); const v = t.reduce((x, y) => x + y);
         return { p: H.cat(t.join(' + '), ' ='), a: A.num(v), params: { kd, a, b }, steps: [`Each term is the sum of the two before it, and there are 10 terms. The sum of 10 such terms is 11 times the 7th term.`, `11 × ${t[6]} = ${hl(fm(v))}`] }; }
       if (kd === 'n') { const n = r.int(7, 12); const t = fibSeq(a, b, n + 2); const v = t.slice(0, n).reduce((x, y) => x + y);
@@ -139,8 +139,13 @@
 
   /* ---------- finite geometric sums ---------- */
   G({
-    id: 'geoFinite', trick: 'geoSeries', col: { ms: 0, hs: 3 },
-    gen(r) {
+    id: 'geoFinite', trick: 'geoSeries', col: { ms: 4, hs: 3 }, series: true,
+    gen(r, lv, x = 1) {
+      // growing sums (5 + 25 + 125 + …) are the middle school favorite; shrinking ones are more high school
+      if (r.chance(lv === 'ms' ? 0.6 : 0.3)) { const R0 = r.pick([2, 3, 4, 5]); const a0 = r.pick([1, 2, 3, 4, 5, 6, 8, 9, 12, 16]); let k = r.int(4, x >= 2 ? 8 : 6); while (k > 4 && a0 * R0 ** (k - 1) > (x >= 2 ? 40000 : 3000)) k--;
+        const t = Array.from({ length: k }, (_, i) => a0 * R0 ** i); const v = t.reduce((s, y) => s + y, 0); const last = t[k - 1];
+        return { p: H.cat(`${t.slice(0, Math.min(4, k - 1)).map(y => fm(y)).join(' + ')} + ${k > 5 ? '… + ' : ''}${fm(last)} =`), a: A.num(v), params: { a: String(a0), rat: String(R0), k },
+          steps: [`Each term is ${R0} times the one before. For a growing geometric sum, ${m('S = \\tfrac{r\\ell - a}{r - 1}')}.`, `(${R0} × ${fm(last)} − ${a0}) ÷ ${R0 - 1} = ${hl(fm(v))}`] }; }
       const rat = r.pick([q(1, 2), q(1, 2), q(1, 3), q(-1, 2)]); const k = r.int(5, 8); const a = Q.from(r.pick([2, 3, 5, 7, 13, 26, 11]) * Number(rat.d) ** (r.int(1, 3)));
       const t = [a]; for (let i = 1; i < k; i++) t.push(t[i - 1].mul(rat)); const last = t[k - 1]; let v = Q.from(0); t.forEach(x => { v = v.add(x); });
       const shw = x => x.terminates() ? H.dec(x).h : H.Qf(x).h;
@@ -267,7 +272,7 @@
 
   /* ---------- directrix and focus of a parabola ---------- */
   G({
-    id: 'directrix', trick: 'conics', col: { ms: 0, hs: 4 },
+    id: 'directrix', trick: 'conics', col: { ms: 0, hs: 3 },
     gen(r) {
       const kd = r.pick(['xy2', 'yx2', 'focus']);
       if (kd === 'xy2' || kd === 'focus') { const a = r.pick([q(1), q(1, 4), q(2), q(1, 8), q(-1), q(1, 2)]); const c = r.int(-4, 4); const p = Q.from(1).div(a.mul(4));
@@ -300,7 +305,7 @@
     ['a queen or a spade', c => c.rk === 'Q' || c.s === 'spades'], ['a red face card', c => c.red && c.face], ['an ace or a club', c => c.rk === 'A' || c.s === 'clubs'], ['a black card or a jack', c => !c.red || c.rk === 'J'],
   ];
   G({
-    id: 'prob2', trick: 'probability', col: { ms: 3, hs: 3 },
+    id: 'prob2', trick: 'probability', col: { ms: 4, hs: 3 },
     gen(r) {
       const kd = r.pick(['cond', 'cards', 'dice', 'coins']);
       if (kd === 'cond') { const a = r.int(3, 10), b = r.int(3, 10); const [ca, cb] = r.pick([['white', 'brown'], ['blue', 'red'], ['black', 'gray']]); const same = r.chance(0.6); const v = same ? q(b - 1, a + b - 1) : q(a, a + b - 1);

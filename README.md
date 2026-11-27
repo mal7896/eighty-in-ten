@@ -30,7 +30,9 @@ node test/verify.js       # checks thousands of generated problems against indep
 node test/latex.js        # every prompt, step and lesson renders
 node test/memo.js
 node test/transfer.js
+node test/difficulty.js   # difficulty levels: ordering, variety, and match to real tests (test/real_profile.json)
 python3 test/e2e.py       # browser run-through (needs Playwright + Chrome)
+python3 test/e2e_difficulty.py
 ```
 
 ## Publishing

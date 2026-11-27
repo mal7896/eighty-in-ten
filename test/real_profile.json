@@ -1,0 +1,106 @@
+{
+ "source": "Computed from 88 TMSCA middle school tests (2015-16 to 2022-23; digit loads from the 21 cleanly extracted ones) and 82 UIL/TMSCA high school tests (2018-2026). Digit load = digits in a problem, over problems with at least 3 digits, stars excluded.",
+ "ms": {
+  "typical": [
+   5.29,
+   5.48,
+   5.94,
+   6.39
+  ],
+  "champ": [
+   5.37,
+   5.6,
+   5.92,
+   7.45
+  ],
+  "n": [
+   [
+    266,
+    262,
+    262,
+    260
+   ],
+   [
+    67,
+    67,
+    65,
+    64
+   ]
+  ],
+  "advTypical": [
+   4.88,
+   61
+  ],
+  "advChamp": [
+   6.69,
+   48
+  ],
+  "se": [
+   [
+    0.104,
+    0.1,
+    0.149,
+    0.168
+   ],
+   [
+    0.219,
+    0.213,
+    0.302,
+    0.46
+   ]
+  ],
+  "advSE": [
+   [
+    0.249,
+    75
+   ],
+   [
+    0.634,
+    13
+   ]
+  ]
+ },
+ "hs": {
+  "typical": [
+   5.8,
+   6.35,
+   6.5,
+   5.88
+  ],
+  "champ": [
+   6.15,
+   6.44,
+   6.36,
+   6.09
+  ],
+  "n": [
+   [
+    854,
+    871,
+    832,
+    770
+   ],
+   [
+    292,
+    294,
+    285,
+    286
+   ]
+  ],
+  "se": [
+   [
+    0.079,
+    0.083,
+    0.12,
+    0.098
+   ],
+   [
+    0.132,
+    0.157,
+    0.186,
+    0.173
+   ]
+  ]
+ },
+ "advPattern": "roots?\\b|vertex|axis of symmetry|geometric series|relatively prime|coefficient|harmonic|geometric mean|integral solutions|first 4|first four|decimal places|clock|log|tetrahedron|sphere|real roots|pentagonal|hexagonal"
+}

@@ -6,7 +6,7 @@
 
   /* ---------- polygons ---------- */
   G({
-    id: 'polygon', trick: 'polygons', col: { ms: 2, hs: 2 },
+    id: 'polygon', trick: 'polygons', col: { ms: 3, hs: 3 },
     gen(r, lv) {
       const kd = r.pick(['interior', 'sum', 'diag', 'sides', 'exterior']);
       const n = r.pick([5, 6, 8, 9, 10, 12, 15, 18, 20, 24, 30, 36]);
@@ -20,7 +20,7 @@
 
   /* ---------- right triangles ---------- */
   G({
-    id: 'rightTri', trick: 'rightTri', col: { ms: 2, hs: 2 },
+    id: 'rightTri', trick: 'rightTri', col: { ms: 2, hs: 3 },
     gen(r, lv) {
       const t = r.pick(lv === 'ms' ? TRIPLES.slice(0, 4) : TRIPLES); const k = r.pick([1, 1, 2, 3, 4]); const [a, b, c] = t.map(x => x * k);
       const kd = lv === 'ms' ? r.pick(['hyp', 'leg', 'area']) : r.pick(['hyp', 'leg', 'alt', 'area']);
@@ -34,7 +34,7 @@
 
   /* ---------- area and perimeter ---------- */
   G({
-    id: 'area', trick: 'area', col: { ms: 2, hs: 2 },
+    id: 'area', trick: 'area', col: { ms: 3, hs: 3 },
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['rectP', 'trap', 'rhombus', 'circle', 'circum', 'triangle', 'sqdiag', 'sqdiag'] : ['trap', 'rhombus', 'circle', 'equi', 'sqdiag', 'circum', 'sector']);
       if (kd === 'rectP') { const w = r.int(3, 20), P = 2 * (w + r.int(w + 1, 30)); const l = P / 2 - w; return { p: H.cat(`A rectangle has perimeter ${P} and width ${w}. Its area is`), a: A.num(l * w), params: { kd, P, w }, steps: [`Length = ${P}/2 − ${w} = ${l}.`, `Area = ${l} × ${w} = ${hl(l * w)}`] }; }
@@ -119,7 +119,7 @@
 (function () {
   const { H, M, ans: A, q, G } = NS; const hl = NS.hl;
   G({
-    id: 'geofacts', trick: 'geoFacts', col: { ms: 2, hs: 2 },
+    id: 'geofacts', trick: 'geoFacts', col: { ms: 3, hs: 2 },
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['third', 'ext', 'comp', 'similar', 'isos'] : ['third', 'ext', 'inscribed', 'similar', 'isos', 'comp']);
       if (kd === 'third') { const a = r.int(25, 95), b = r.int(20, 150 - a); return { p: H.cat(`Two angles of a triangle measure ${a}° and ${b}°. The third angle measures`), suffix: '°', a: A.num(180 - a - b), params: { kd, a, b }, steps: [`Angles in a triangle add to 180°.`, `180 − ${a} − ${b} = ${hl(180 - a - b)}°`] }; }

@@ -7,26 +7,90 @@
   NS.trickCol = (trick, lv) => Math.min(...NS.gensFor(trick, lv).map(g => g.col[lv]));
   NS.TARGET = { 1: 8, 2: 12, 3: 16, 4: 20 };
 
-  NS.makeProblem = function (genId, lv, seed) {
-    const g = GBY[genId]; const r = new NS.Rng(seed);
-    const out = g.gen(r, lv);
-    return { gid: genId, trick: g.trick, lv, seed, est: !!g.est, col: g.col[lv], ...out };
+  /* ---------- difficulty ----------
+     Every problem type can make easier and harder versions of itself. To make one problem at a
+     given difficulty we generate several candidates from the same seed, rank them by how much
+     work they take (size of the numbers, fractions and negatives in the answer), and take one
+     from the band for that difficulty. Every candidate comes from the same checked generator,
+     so the answer key is exactly as reliable at every level. */
+  NS.DIFFS = [
+    { id: 'warmup', code: 'W', name: 'Warm-up', blurb: 'Friendlier numbers and the most common version of each problem. Good for learning a trick.' },
+    { id: 'contest', code: '', name: 'Contest', blurb: 'Matches a typical TMSCA or UIL invitational test.' },
+    { id: 'hard', code: 'H', name: 'Hard', blurb: 'Matches Regional and State tests: bigger numbers, and the harder topics come sooner.' },
+    { id: 'super', code: 'X', name: 'Super-hard', blurb: 'Tougher than any real test. For a real stretch.' },
+  ];
+  NS.diffIdx = id => { const i = NS.DIFFS.findIndex(d => d.id === id); return i < 0 ? 1 : i; };
+  const K = 8;                                  // candidates per problem
+  // ranks (0 = easiest of the 8) that each difficulty draws from, by level and by the problem's column.
+  // Tuned against real tests (see test/real_profile.json and test/difficulty.js): Contest matches typical
+  // invitational and TMSCA tests, Hard matches Regional and State. Middle school Regional/State tests are
+  // no heavier than usual early on; what changes is that harder topics come sooner (see buildTest).
+  const BAND = {
+    ms: [
+      [[0, 1], [0, 2], [0, 2], [0, 2]],   // Warm-up
+      [[0, 4], [1, 5], [2, 7], [3, 7]],   // Contest
+      [[1, 5], [3, 7], [4, 7], [6, 7]],   // Hard
+      [[5, 7], [6, 7], [7, 7], [7, 7]],   // Super-hard
+    ],
+    hs: [
+      [[0, 1], [0, 2], [0, 2], [0, 2]],
+      [[0, 4], [2, 7], [3, 7], [1, 6]],
+      [[2, 6], [4, 7], [5, 7], [4, 7]],
+      [[5, 7], [6, 7], [7, 7], [7, 7]],
+    ],
   };
-  NS.problemForTrick = function (trick, lv, seed, avoidGid) {
+  NS.DIFF_BAND = BAND;
+  // how much work a problem takes: digits in the prompt, digits in the answer, fractions, negatives
+  NS.workScore = function (p) {
+    const l = p.p.h.replace(/\u0001([^\u0002]*)\u0002/g, (m0, x) => ' ' + x + ' ').replace(/<[^>]+>/g, ' ').replace(/\\[a-zA-Z]+/g, ' ').replace(/(\d),(?=\d{3})/g, '$1');
+    const runs = l.match(/\d+(\.\d+)?/g) || [];
+    const pd = runs.reduce((t, x) => t + x.replace('.', '').replace(/^0+(?=\d)/, '').length, 0);
+    let ad = 0, extra = 0; const a = p.a;
+    if (a.type === 'num' && !a.est) {
+      const v = a.v;
+      if ((a.form === 'money' || a.form === 'dec') && v.terminates()) { ad = v.toDecStr().replace(/[-.]/g, '').length; if (!v.isInt()) extra += 0.5; }
+      else { ad = (v.n < 0n ? -v.n : v.n).toString().length + (v.isInt() ? 0 : v.d.toString().length); if (!v.isInt()) extra += v.terminates() ? 1 : 2; }
+      if (v.cmp(0) < 0) extra += 1;
+    } else if (a.type === 'text') ad = String(a.v).replace(/[^0-9A-Za-z]/g, '').length;
+    return pd + 1.2 * ad + 1.5 * extra + 0.4 * Math.max(0, runs.length - 2);
+  };
+  const mix = (a, b) => { let h = (a ^ Math.imul(b + 0x9e3779b9, 0x85ebca6b)) >>> 0; h = Math.imul(h ^ (h >>> 16), 0x7feb352d) >>> 0; h = Math.imul(h ^ (h >>> 15), 0x846ca68b) >>> 0; return (h ^ (h >>> 16)) >>> 0; };
+  // col: the column the problem sits in on a test (a type placed later than usual gets a weightier version)
+  NS.makeProblem = function (genId, lv, seed, diff = 'contest', col) {
+    const g = GBY[genId]; const di = NS.diffIdx(diff);
+    const pick = new NS.Rng(mix(seed, 777));
+    // Super-hard middle school sometimes uses the high school version of the same problem type
+    const glv = di === 3 && lv === 'ms' && g.col.hs && pick.chance(0.5) ? 'hs' : lv;
+    const cands = [];
+    for (let i = 0; i < K; i++) { const out = g.gen(new NS.Rng(mix(seed, i)), glv, di); cands.push({ out, w: NS.workScore(out), i }); }
+    cands.sort((x, y) => x.w - y.w || x.i - y.i);
+    const [lo, hi] = BAND[lv][di][Math.min(4, Math.max(1, col || g.col[lv] || g.col.hs || 1)) - 1]; const c = cands[lo + pick.int(0, hi - lo)];
+    return { gid: genId, trick: g.trick, lv, seed, diff: NS.DIFFS[di].id, ...(col ? { at: col } : {}), est: !!g.est, col: g.col[lv], ...c.out };
+  };
+  NS.problemForTrick = function (trick, lv, seed, avoidGid, diff = 'contest') {
     const gs = NS.gensFor(trick, lv); const r = new NS.Rng(seed ^ 0x9e3779b9);
     let g = r.pick(gs); if (gs.length > 1 && avoidGid && g.id === avoidGid) g = r.pick(gs.filter(x => x.id !== avoidGid));
-    return NS.makeProblem(g.id, lv, seed);
+    return NS.makeProblem(g.id, lv, seed, diff);
   };
 
   /* ---------- contest test: 80 problems, every 10th an estimate ---------- */
-  NS.buildTest = function (lv, seed, cols = [1, 2, 3, 4]) {
+  NS.buildTest = function (lv, seed, cols = [1, 2, 3, 4], diff = 'contest') {
+    const di = NS.diffIdx(diff);
+    // how strongly each column draws on problem types from other columns (d = this column − the type's usual column)
+    // Hard pulls later topics earlier, as Regional and State tests do; Warm-up keeps to earlier ones.
+    // Middle school Regional/State tests also fill problems 61–80 with weightier versions of earlier arithmetic.
+    const W = [{ 0: 3, 1: 2, 2: 0.8 }, { 0: 3, 1: 1.4, 2: 0.5 }, lv === 'ms' ? { 0: 3, 1: 1.4, 2: 1.0, '-1': 0.3 } : { 0: 3, 1: 1.2, 2: 0.4, '-1': 0.5 }, { 0: 3, 1: 1.2, 2: 0.6, '-1': 1.6, '-2': 0.5 }][di];
     const r = new NS.Rng(seed); const probs = [];
     for (const c of cols) {
       const estG = NS.GENS.filter(g => g.est && g.col[lv] === c);
       const pool = [];
       NS.GENS.forEach(g => {
         if (g.est || !g.col[lv]) return; const d = c - g.col[lv];
-        const w = (d === 0 ? 3 : d === 1 ? 1.4 : d === 2 && c >= 3 ? 0.5 : 0) * (g.w || 1);
+        // Middle school Regional and State tests put several long sums (5 + 2 + 7 + 9 + … + 173, 1 − 4 + 9 − …) in 61–80
+        const champ = lv === 'ms' && di >= 2 && c === 4 && g.series ? 2.8 : 1;
+        // …and bring the problems-61–80 topics forward into 41–60 (Regional/State: first one near #48, not #60)
+        const fwd = lv === 'ms' && di === 2 && c === 3 && d === -1 ? 10 : 1;
+        const w = (d === 2 && c < 3 ? 0 : W[d] || 0) * (g.w || 1) * champ * fwd;
         if (w) pool.push({ g, w });
       });
       // weighted sample without replacement
@@ -44,9 +108,9 @@
       let i = 0;
       for (let pos = 1; pos <= 20; pos++) {
         const s = r.int(1, 2 ** 31);
-        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s));
-        else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s));
-        else probs.push(NS.makeProblem(chosen[i++].id, lv, s));
+        if (pos % 10 === 0) probs.push(NS.makeProblem(r.pick(estG).id, lv, s, diff, c));
+        else if (pos <= 2 && leads.length) probs.push(NS.makeProblem(pos === 1 ? leads[0].id : r.pick(leads).id, lv, s, diff, c));
+        else probs.push(NS.makeProblem(chosen[i++].id, lv, s, diff, c));
       }
     }
     probs.forEach((p, i) => { p.n = (cols[0] - 1) * 20 + i + 1; });
@@ -57,17 +121,19 @@
      format: level letter (M/H), F for full or the column number, dash, 4 characters of seed */
   const ALPH = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
   NS.testSeed = () => NS.newSeed() & 0xFFFFF;
-  NS.testCode = function (lv, cols, seed) {
+  NS.testCode = function (lv, cols, seed, diff = 'contest') {
     let s = ''; for (let i = 0; i < 4; i++) s = ALPH[(seed >> (5 * i)) & 31] + s;
-    return (lv === 'ms' ? 'M' : 'H') + (cols.length === 4 ? 'F' : String(cols[0])) + '-' + s;
+    const dc = NS.DIFFS[NS.diffIdx(diff)].code;   // Contest has no suffix, so older codes still read as Contest
+    return (lv === 'ms' ? 'M' : 'H') + (cols.length === 4 ? 'F' : String(cols[0])) + '-' + s + (dc ? '-' + dc : '');
   };
   NS.readTestCode = function (str) {
     const c = String(str || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (c.length !== 6) return null;
+    if (c.length !== 6 && c.length !== 7) return null;
+    let diff = 'contest'; if (c.length === 7) { const d = NS.DIFFS.find(x => x.code && x.code === c[6]); if (!d) return null; diff = d.id; }
     const lv = c[0] === 'M' ? 'ms' : c[0] === 'H' ? 'hs' : null; if (!lv) return null;
     const cols = c[1] === 'F' ? [1, 2, 3, 4] : /[1-4]/.test(c[1]) ? [+c[1]] : null; if (!cols) return null;
-    let seed = 0; for (const ch of c.slice(2)) { const k = ALPH.indexOf(ch); if (k < 0) return null; seed = seed * 32 + k; }
-    return { lv, cols, seed };
+    let seed = 0; for (const ch of c.slice(2, 6)) { const k = ALPH.indexOf(ch); if (k < 0) return null; seed = seed * 32 + k; }
+    return { lv, cols, seed, diff };
   };
 
   /* official-style scoring: through the last attempted problem, +5 right, −4 wrong or skipped */
@@ -97,10 +163,11 @@
     lv() { return this.data.levels[this.data.level]; },
     trick(id) { const L = this.lv(); return L.tricks[id] || (L.tricks[id] = { att: [], n: 0, ok: 0, lesson: false }); },
     record(p, ok, ms) {
-      const t = this.trick(p.trick); t.att.push([ok ? 1 : 0, Math.round(ms)]); if (t.att.length > 30) t.att.shift(); t.n++; if (ok) t.ok++;
-      const L = this.lv(); const day = NS.today(); L.days[day] = (L.days[day] || 0) + 1;
-      if (!ok) { L.misses.push({ g: p.gid, s: p.seed, t: Date.now() }); if (L.misses.length > 60) L.misses.shift(); }
-      else { const k = L.misses.findIndex(m => m.g === p.gid && m.s === p.seed); if (k >= 0) L.misses.splice(k, 1); }
+      // each attempt: [right?, ms, difficulty index]; Contest (1) is left off to keep old records valid
+      const di = NS.diffIdx(p.diff); const t = this.trick(p.trick); t.att.push(di === 1 ? [ok ? 1 : 0, Math.round(ms)] : [ok ? 1 : 0, Math.round(ms), di]); if (t.att.length > 30) t.att.shift(); t.n++; if (ok) t.ok++;
+      const L = this.lv(); const day = NS.today(); L.days[day] = (L.days[day] || 0) + 1; const d = NS.DIFFS[di].id;
+      if (!ok) { L.misses.push({ g: p.gid, s: p.seed, t: Date.now(), ...(di === 1 ? {} : { d }), ...(p.at ? { at: p.at } : {}) }); if (L.misses.length > 60) L.misses.shift(); }
+      else { const k = L.misses.findIndex(m => m.g === p.gid && m.s === p.seed && (m.d || 'contest') === d && (m.at || 0) === (p.at || 0)); if (k >= 0) L.misses.splice(k, 1); }
       this.save();
     },
     reset(level) { this.data.levels[level] = blank(); this.save(); },
@@ -114,7 +181,7 @@
   NS.trimProgress = function (data) {
     const d = JSON.parse(JSON.stringify(data)); const cut = Date.now() - 400 * 864e5;
     for (const lv of ['ms', 'hs']) { const L = d.levels[lv]; if (!L) continue;
-      Object.values(L.tricks || {}).forEach(t => { t.att = (t.att || []).slice(-12).map(([ok, ms]) => [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms]); });
+      Object.values(L.tricks || {}).forEach(t => { t.att = (t.att || []).slice(-12).map(([ok, ms, di]) => di === undefined ? [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms] : [ok, ms > 0 ? Math.ceil(ms / 100) * 100 : ms, di]); });
       Object.keys(L.memo || {}).forEach(k => { L.memo[k] = L.memo[k].slice(-3).map(([ok, ms]) => [ok, Math.ceil(ms / 100) * 100]); });
       const days = {}; Object.keys(L.days || {}).sort().slice(-120).forEach(k => { days[k] = L.days[k]; }); L.days = days;
       L.tests = (L.tests || []).filter(t => t.t > cut || t.kind === 'full').slice(-100);
@@ -132,13 +199,15 @@
     const num = x => (typeof x === 'number' && isFinite(x) ? x : 0); const obj = x => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
     const out = { v: 1, level: d.level === 'ms' || d.level === 'hs' ? d.level : null, settings: {}, levels: {} };
     const st = obj(d.settings); if (['system', 'light', 'dark'].includes(st.theme)) out.settings.theme = st.theme; if (typeof st.names === 'boolean') out.settings.names = st.names;
+    const dids = NS.DIFFS.map(x => x.id); if (st.pdiff === 'auto' || dids.includes(st.pdiff)) out.settings.pdiff = st.pdiff; if (dids.includes(st.tdiff)) out.settings.tdiff = st.tdiff;
     const pair = a => Array.isArray(a) && a.length === 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
+    const att = a => Array.isArray(a) && a.length === 3 && [0, 2, 3].includes(a[2]) ? [a[0] ? 1 : 0, num(a[1]), a[2]] : Array.isArray(a) && a.length >= 2 ? [a[0] ? 1 : 0, num(a[1])] : null;
     for (const lv of ['ms', 'hs']) {
       const L = obj(d.levels[lv]); const tricks = {};
-      for (const [id, t] of Object.entries(obj(L.tricks))) { if (!NS.TRICKS[id]) continue; const tt = obj(t); tricks[id] = { att: (Array.isArray(tt.att) ? tt.att : []).map(pair).filter(Boolean).slice(-30), n: num(tt.n), ok: num(tt.ok), lesson: !!tt.lesson }; }
+      for (const [id, t] of Object.entries(obj(L.tricks))) { if (!NS.TRICKS[id]) continue; const tt = obj(t); tricks[id] = { att: (Array.isArray(tt.att) ? tt.att : []).map(att).filter(Boolean).slice(-30), n: num(tt.n), ok: num(tt.ok), lesson: !!tt.lesson }; }
       const tests = (Array.isArray(L.tests) ? L.tests : []).filter(t => t && typeof t === 'object').map(t => ({ t: num(t.t), kind: t.kind === 'col' ? 'col' : 'full', col: num(t.col) || 1, score: num(t.score), correct: num(t.correct), wrong: num(t.wrong), skipped: num(t.skipped), last: num(t.last), ...(typeof t.code === 'string' && NS.readTestCode(t.code) ? { code: t.code } : {}) })).slice(-200);
       const days = {}; for (const [k, v] of Object.entries(obj(L.days))) if (/^\d{4}-\d\d-\d\d$/.test(k)) days[k] = num(v);
-      const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t) })).slice(-60);
+      const misses = (Array.isArray(L.misses) ? L.misses : []).filter(m => m && NS.GBY[m.g] && typeof m.s === 'number').map(m => ({ g: m.g, s: m.s, t: num(m.t), ...(dids.includes(m.d) && m.d !== 'contest' ? { d: m.d } : {}), ...([1, 2, 3, 4].includes(m.at) ? { at: m.at } : {}) })).slice(-60);
       const memo = {}; for (const [k, v] of Object.entries(obj(L.memo))) if (Array.isArray(v) && /^[a-z]{2}[\w.]*$/.test(k)) memo[k] = v.map(pair).filter(Boolean).slice(-6);
       out.levels[lv] = { tricks, tests, days, misses, memo };
     }
@@ -160,14 +229,18 @@
 
   NS.trickStatus = function (id, lv) {
     const t = NS.store.data.levels[lv].tricks[id]; if (!t || (!t.att.length && !t.lesson)) return { key: 'new', label: 'Not started', acc: null, med: null };
-    const recent = t.att.slice(-12); const acc = recent.length ? recent.reduce((s, a) => s + a[0], 0) / recent.length : null;
+    // only Contest-level work and harder can mark a trick Accurate or Fast; Warm-up is for learning
+    const dOf = a => (a[2] === undefined ? 1 : a[2]);
+    const real = t.att.filter(a => dOf(a) >= 1); const hd = t.att.filter(a => dOf(a) >= 2).slice(-8);
+    const hard = hd.length >= 6 && hd.filter(a => a[0]).length / hd.length >= 0.8;
+    const recent = (real.length >= 3 ? real : t.att).slice(-12); const acc = recent.length ? recent.reduce((s, a) => s + a[0], 0) / recent.length : null;
     const times = recent.filter(a => a[0] && a[1] > 0).map(a => a[1]).sort((a, b) => a - b); const med = times.length ? times[Math.floor(times.length / 2)] / 1000 : null;
     const target = NS.TARGET[Math.min(4, NS.trickCol(id, lv))] + (id === 'estimate' ? 6 : 0);
     if (recent.length >= 8 && acc >= 0.85) {
-      if (med !== null && med <= target) return { key: 'fast', label: 'Fast', acc, med, target };
-      return { key: 'solid', label: 'Accurate', acc, med, target };
+      if (real.length >= 8 && med !== null && med <= target) return { key: 'fast', label: 'Fast', acc, med, target, hard };
+      if (real.length >= 8) return { key: 'solid', label: 'Accurate', acc, med, target, hard };
     }
-    return { key: 'learning', label: 'Learning', acc, med, target };
+    return { key: 'learning', label: 'Learning', acc, med, target, hard };
   };
 
   NS.streak = function (lv) {

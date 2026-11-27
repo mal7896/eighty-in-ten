@@ -173,7 +173,7 @@
 
   /* ---------- consumer problems ---------- */
   G({
-    id: 'consumer', trick: 'consumer', col: { ms: 1, hs: 1 },
+    id: 'consumer', trick: 'consumer', col: { ms: 2, hs: 1 },
     gen(r, lv) {
       const kd = r.pick(['unit', 'unit', 'discount', 'tip', lv === 'hs' ? 'interest' : 'discount']);
       if (kd === 'unit') {
@@ -219,9 +219,9 @@
   /* ---------- mean, median, mode ---------- */
   G({
     id: 'mean', trick: 'meanMedian', col: { ms: 1, hs: 1 },
-    gen(r, lv) {
+    gen(r, lv, x = 1) {
       const kd = r.pick(['mean', 'missing', 'median']);
-      if (kd === 'mean') { const xs = Array.from({ length: r.int(4, 5) }, () => r.int(8, 60)); const s = xs.reduce((x, y) => x + y, 0); const v = q(s, xs.length);
+      if (kd === 'mean') { const xs = Array.from({ length: x >= 2 ? r.int(4, 5) : r.int(3, 4) }, () => r.int(8, 60)); const s = xs.reduce((x, y) => x + y, 0); const v = q(s, xs.length);
         return { p: H.cat(`The mean of ${xs.join(', ')} is`), a: A.num(v), params: { xs }, steps: [`Sum: ${s}. Divide by ${xs.length}.`, `Answer: ${hl(H.Qf(v).h)}`] }; }
       if (kd === 'missing') { const n = r.int(4, 6), m = r.int(10, 40); const xs = Array.from({ length: n - 1 }, () => r.int(m - 9, m + 9)); const last = n * m - xs.reduce((x, y) => x + y, 0);
         if (last <= 0) return this.gen(r, lv);

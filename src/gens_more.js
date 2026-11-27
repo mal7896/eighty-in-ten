@@ -67,8 +67,8 @@
   /* ---------- relatively prime count (Euler's phi) ---------- */
   G({
     id: 'relprime', trick: 'relPrime', col: { ms: 4, hs: 3 }, w: 1.4,
-    gen(r) {
-      const n = r.pick([12, 15, 18, 20, 21, 24, 28, 30, 36, 40, 42, 45, 48, 50, 54, 60, 63, 72, 75, 80, 84, 90, 96, 100]);
+    gen(r, lv, x = 1) {
+      const n = r.pick(x >= 2 ? [84, 90, 96, 100, 105, 120, 126, 135, 140, 150, 168, 180, 210, 225, 240, 252, 300, 315, 360] : [12, 15, 18, 20, 21, 24, 28, 30, 36, 40, 42, 45, 48, 50, 54, 60, 63, 72, 75, 80, 84, 90, 96, 100]);
       const ps = M.factor(n).map(([p]) => p); let phi = n; ps.forEach(p => { phi = phi / p * (p - 1); });
       const wd = r.pick(['less than', 'less than', 'less than or equal to']);
       return { p: H.cat(`How many positive integers ${wd} ${n} are relatively prime to ${n}?`), a: A.num(phi), params: { n },

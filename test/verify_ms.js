@@ -132,6 +132,8 @@ module.exports = function (NS) {
     altSq: p => { const [a, b, c, d] = p.xs.map(QP); return a.mul(a).sub(b.mul(b)).add(c.mul(c)).sub(d.mul(d)); },
     digitsCount: p => { const N = 2n ** BigInt(p.a2) * 5n ** BigInt(p.b) * BigInt(p.extra); const s = N.toString(); return p.ask === 'digits' ? s.length : [...s].reduce((t, ch) => t + Number(ch), 0); },
     abRev: p => { for (let b = 1; b < 40; b++) for (let a = b + 1; a < 60; a++) if (gcd(a, b) === 1 && q(a, b).add(q(b, a)).eq(q(2).add(q(p.dd, p.ab)))) return p.ask === 'larger' ? a : a + b; return 'none'; },
+    divRecip: p => { const rs = k => { let t = q(0); for (let d = 1; d <= k; d++) if (k % d === 0) t = t.add(q(1, d)); return t; }; if (p.kd === 'sum') return rs(p.n); const want = q(p.v[0], p.v[1]); const hits = range(1, 100).filter(k => rs(k).eq(want)); return hits.length === 1 ? hits[0] : 'not unique'; },
+    hiddenK: p => { const prod = p.shown.reduce((a, b) => a * b, 1); return p.N % prod === 0 ? p.N / prod : 'not whole'; },
     consecProd: p => { for (let n = 2; n < 200; n++) { if (p.kd === 'three' && (n - 1) * n * (n + 1) === p.P) return n; if (p.kd === 'two' && n * (n + 1) === p.P) return 2 * n + 1; } return 'none'; },
   };
 

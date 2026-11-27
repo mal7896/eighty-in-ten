@@ -159,10 +159,14 @@ const toVal = x => x instanceof Q ? x : typeof x === 'number' ? (Number.isIntege
 for (const g of NS.GENS) {
   for (const lv of ['ms', 'hs']) {
     if (!g.col[lv]) continue;
-    for (let i = 0; i < N; i++) {
-      const seed = (i * 2654435761 + g.id.length * 97) >>> 0; const r = new NS.Rng(seed); let out;
+    // raw generator output, then every difficulty level through NS.makeProblem (which also hands
+    // the level to the generator, so ranges that widen for Hard and Super-hard get checked too)
+    const ND = Math.max(25, Math.floor(N / 8));
+    for (const [diff, n] of [[null, N], ['warmup', ND], ['contest', ND], ['hard', ND], ['super', ND]])
+    for (let i = 0; i < n; i++) {
+      const seed = (i * 2654435761 + g.id.length * 97 + (diff ? diff.length * 7919 : 0)) >>> 0; const r = new NS.Rng(seed); let out;
       total++; counts[g.id] = (counts[g.id] || 0) + 1;
-      try { out = g.gen(r, lv); if (process.env.MUT && out.a.type === 'num') out.a = { ...out.a, v: out.a.v.add(out.a.est ? out.a.v.mul(NS.q(1, 10)) : 1) }; if (process.env.MUT && out.a.type === 'text') out.a = { ...out.a, v: out.a.v + '1', alts: [] }; } catch (e) { bad(g, lv, seed, 'threw ' + e.stack.split('\n').slice(0, 2).join(' ')); continue; }
+      try { out = diff ? NS.makeProblem(g.id, lv, seed, diff) : g.gen(r, lv); if (process.env.MUT && out.a.type === 'num') out.a = { ...out.a, v: out.a.v.add(out.a.est ? out.a.v.mul(NS.q(1, 10)) : 1) }; if (process.env.MUT && out.a.type === 'text') out.a = { ...out.a, v: out.a.v + '1', alts: [] }; } catch (e) { bad(g, lv, seed, 'threw ' + e.stack.split('\n').slice(0, 2).join(' ')); continue; }
       const all = out.p.h + (out.steps || []).join('|') + (out.suffix || '') + (out.form || '');
       if (/undefined|NaN|null|\[object|Infinity/.test(all)) { bad(g, lv, seed, 'bad text: ' + all.match(/.{0,30}(undefined|NaN|null|\[object|Infinity).{0,20}/)[0], out); continue; }
       if (!out.a || !['num', 'text'].includes(out.a.type)) { bad(g, lv, seed, 'no answer', out); continue; }

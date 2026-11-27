@@ -55,7 +55,12 @@
   }
   const fmtTime = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   const trickName = id => NS.TRICKS[id].title;
-  const pillFor = (st, quiet) => quiet && st.key === 'new' ? '' : `<span class="pill ${st.key}">${st.label}${st.acc !== null && st.key !== 'new' ? ` · ${Math.round(st.acc * 100)}%` : ''}</span>`;
+  const pillFor = (st, quiet) => (quiet && st.key === 'new' ? '' : `<span class="pill ${st.key}">${st.label}${st.acc !== null && st.key !== 'new' ? ` · ${Math.round(st.acc * 100)}%` : ''}</span>`) + (st.hard ? '<span class="pill hardok" title="80% or better on Hard problems">Hard ✓</span>' : '');
+  /* ---------- difficulty ---------- */
+  const DIFF_AUTO = { id: 'auto', name: 'Auto', blurb: 'Starts at Contest and adjusts as you go: four quick right answers in a row move you up a level, misses move you down.' };
+  const diffOf = id => (id === 'auto' ? DIFF_AUTO : NS.DIFFS[NS.diffIdx(id)]);
+  const diffSeg = (act, cur, withAuto) => `<div class="seg diffseg" role="group" aria-label="Difficulty">${(withAuto ? [DIFF_AUTO, ...NS.DIFFS] : NS.DIFFS).map(d => `<button data-act="${act}" data-d="${d.id}" aria-pressed="${cur === d.id}">${d.name}</button>`).join('')}</div><p class="small muted diffnote">${diffOf(cur).blurb}</p>`;
+  const diffChip = (id, extra = '') => `<span class="dchip d-${id}">${diffOf(id).name}${extra}</span>`;
   function newSeed() { return NS.newSeed(); }
 
   /* keypad: extra keys depend on the kind of answer */
@@ -248,9 +253,9 @@
         <div class="stack" style="margin-top:14px;gap:8px"><button class="btn" data-act="drillTrick" data-id="${id}">Practice 20 of these</button>${nextId ? `<button class="btn ghost" data-go="t" data-arg="${nextId}">Next trick: ${NS.rich(trickName(nextId))}</button>` : ''}<button class="btn link" data-act="tryAgain">Try 5 more</button></div>`;
       return;
     }
-    if (!T.p) { T.p = NS.problemForTrick(id, l, T.seed + T.i * 7919, T.lastG); T.lastG = T.p.gid; T.start = performance.now(); T.wrong = false; T.hint = false; }
+    if (!T.p) { T.p = NS.problemForTrick(id, l, T.seed + T.i * 7919, T.lastG, T.i < 2 ? 'warmup' : 'contest'); T.lastG = T.p.gid; T.start = performance.now(); T.wrong = false; T.hint = false; }
     const p = T.p;
-    box.innerHTML = `<div class="row" style="justify-content:space-between"><p class="eyebrow">Try it · ${T.i + 1} of 5</p><span class="tally"><span class="g">✓ ${T.right}</span></span></div>
+    box.innerHTML = `<div class="row" style="justify-content:space-between"><p class="eyebrow">Try it · ${T.i + 1} of 5 · ${T.i < 2 ? 'Warm-up' : 'Contest'}</p><span class="tally"><span class="g">✓ ${T.right}</span></span></div>
       <div class="prob ${isLong(p) ? 'long' : ''}" style="text-align:center;font-size:1.5rem;margin:18px 0 14px">${R(p.p.h, true)}</div>
       <div style="text-align:center;font-size:1.4rem">${blankHtml(p, 'id="tryin"')}</div>
       <div class="preview" id="trypv" style="text-align:center"></div>
@@ -279,7 +284,7 @@
   function viewPractice() {
     if (state.session && !state.session.done) return renderSession();
     if (state.session && state.session.done && state.session.showSummary) return renderSummary();
-    const l = lv(); const sets = practiceSets(l);
+    const l = lv(); const sets = practiceSets(l); if (!state.pickDiff) state.pickDiff = S.data.settings.pdiff || 'auto';
     if (!state.pickSet || !sets.find(s => s.k === state.pickSet)) state.pickSet = sets[0].k;
     const cur = sets.find(s => s.k === state.pickSet);
     const ids = NS.tricksFor(l);
@@ -290,6 +295,8 @@
         <button class="opt" data-act="pmode" data-m="sprint" aria-pressed="${state.pickMode === 'sprint'}"><b>Sprint</b><span>As many as you can before time runs out. Right answers move on by themselves.</span></button>
       </div>
       ${state.pickMode === 'sprint' ? `<div class="seg" style="margin-top:12px" role="group" aria-label="Sprint length">${[[60, '1 min'], [120, '2 min'], [300, '5 min']].map(([s, n]) => `<button data-act="plen" data-s="${s}" aria-pressed="${state.sprintLen === s}">${n}</button>`).join('')}</div>` : ''}
+      <span class="label">Difficulty</span>
+      ${diffSeg('pdiff', state.pickDiff, true)}
       <span class="label">Problems from</span>
       <div class="opts">${sets.map(s => `<button class="opt" data-act="pset" data-k="${s.k}" aria-pressed="${s.k === state.pickSet}"><b>${NS.rich(s.name)}</b><span>${NS.rich(s.d)}</span></button>`).join('')}</div>
       ${state.pickSet === 'custom' ? `<div class="picker" id="picker">${[1, 2, 3, 4].map(c => { const arr = ids.filter(id => NS.trickCol(id, l) === c); return arr.length ? `<h4>Problems ${COLR[c]}</h4>${arr.map(id => `<label><input type="checkbox" data-trick="${id}" ${state.custom.has(id) ? 'checked' : ''}>${NS.rich(trickName(id))}</label>`).join('')}` : ''; }).join('')}</div>` : ''}
@@ -302,7 +309,10 @@
   /* ---------- practice session ---------- */
   function startSession(opts) {
     const l = lv();
-    state.session = { mode: opts.mode, tricks: opts.tricks, label: opts.label, lv: l, total: opts.mode === 'practice' ? 20 : null, dur: opts.dur || 120, results: [], r: new NS.Rng(newSeed()), queue: opts.queue || [], startAt: performance.now(), done: false, state: 'ask', last: null };
+    const dsel = opts.diff || state.pickDiff || 'auto'; const auto = dsel === 'auto';
+    // Auto starts at Contest, or at Warm-up when every trick in the round is still new
+    const startDi = auto ? (opts.tricks.length && opts.tricks.every(id => NS.trickStatus(id, l).key === 'new') ? 0 : 1) : NS.diffIdx(dsel);
+    state.session = { mode: opts.mode, tricks: opts.tricks, label: opts.label, lv: l, total: opts.mode === 'practice' ? 20 : null, dur: opts.dur || 120, results: [], r: new NS.Rng(newSeed()), queue: opts.queue || [], startAt: performance.now(), done: false, state: 'ask', last: null, auto, di: startDi, di0: startDi, diMax: startDi, hist: [], moved: 0 };
     if (location.hash.slice(1) !== 'practice') { state.silent = true; location.hash = 'practice'; }
     setNav('practice'); nextProblem();
   }
@@ -312,9 +322,10 @@
     let p;
     while (s.queue.length && !NS.GBY[s.queue[0].g]) s.queue.shift();
     const due = (s.retry || []).findIndex(x => s.results.length >= x.due);
-    if (!s.queue.length && due >= 0) { const tr = s.retry.splice(due, 1)[0].trick; p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid); }
-    else if (s.queue.length) { const m = s.queue.shift(); p = NS.makeProblem(m.g, s.lv, m.s); }
-    else { const tr = NS.pickTrick(s.tricks, s.lv, s.r, s.last && s.last.trick); p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid); }
+    const dname = NS.DIFFS[s.di].id;
+    if (!s.queue.length && due >= 0) { const tr = s.retry.splice(due, 1)[0].trick; p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
+    else if (s.queue.length) { const m = s.queue.shift(); p = NS.makeProblem(m.g, s.lv, m.s, m.d || 'contest', m.at); }
+    else { const tr = NS.pickTrick(s.tricks, s.lv, s.r, s.last && s.last.trick); p = NS.problemForTrick(tr, s.lv, s.r.int(1, 2 ** 31), s.last && s.last.gid, dname); }
     s.cur = p; s.state = 'ask'; s.t0 = performance.now(); s.last = p;
     renderSession();
   }
@@ -323,7 +334,7 @@
     const right = s.results.filter(x => x.ok).length, wrong = s.results.length - right;
     const pct = s.mode === 'practice' ? s.results.length / s.total * 100 : 0;
     main.innerHTML = `<div class="session">
-      <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>
+      <div class="sbar"><button class="x" data-act="quitSession" aria-label="End session">${IC.x}</button><span class="what">${NS.rich(s.label)}</span>${diffChip(p.diff || 'contest', s.auto ? '<span class="dauto"> · auto</span>' : '')}
         <span class="tally"><span class="g">✓ ${right}</span><span class="r">✗ ${wrong}</span></span>${s.mode === 'sprint' ? `<span class="clock" id="clock">${fmtTime(s.dur)}</span>` : `<span class="faint mono small">${s.results.length + 1}/${s.total}</span>`}</div>
       <div class="prog"><span id="progbar" style="width:${pct}%"></span></div>
       <div class="stage" id="stage">
@@ -341,7 +352,8 @@
     inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (s.state === 'ask') ACT.sSubmit(); else if (s.state === 'shown') nextProblem(); } });
     inp.addEventListener('input', () => { $('#spv').innerHTML = previewOf(inp.value); if (s.mode === 'sprint' && s.state === 'ask' && NS.check(p.a, inp.value).ok) ACT.sSubmit(); });
     if (!touch) inp.focus({ preventScroll: true }); else activeInput = inp;
-    if (s.mode === 'sprint' && s.flash != null) {
+    if (s.moved) { const fb = $('#sfb'); fb.className = 'feedback lvl fadeout'; fb.textContent = s.moved > 0 ? `Nice run. Moving up to ${NS.DIFFS[s.di].name}.` : `Stepping back to ${NS.DIFFS[s.di].name} for a few.`; s.moved = 0; }
+    else if (s.mode === 'sprint' && s.flash != null) {
       // the last answer was right: say so on the new problem, where it stays readable, then fade
       const fb = $('#sfb'); fb.className = 'feedback ok fadeout'; fb.textContent = `✓ Right · ${(s.flash / 1000).toFixed(1)}s`;
       $('#stage').classList.add('pulse'); $('.tally .g').classList.add('bump'); s.flash = null;
@@ -358,6 +370,16 @@
   function showShortcut(p, container, given, note) {
     container.innerHTML = `<div class="shortcut"><p class="eyebrow">The answer</p><div class="key">${R(NS.keyHtml(p.a), true)}${p.suffix ? ` <span class="suffix">${esc(p.suffix)}</span>` : ''}</div>${note ? `<p class="small" style="color:var(--bad);margin-bottom:8px">${esc(note)}</p>` : ''}<p class="eyebrow" style="margin-bottom:8px">How to get it fast</p><ol class="steps">${p.steps.map(x => `<li>${R(x, true)}</li>`).join('')}</ol></div>`;
   }
+  // Auto difficulty: four quick right answers in a row move up a level; two misses in the last three move down
+  function autoAdjust(s, ok, ms, p) {
+    if (!s.auto) return;
+    const tgt = NS.TARGET[p.col] + (p.est ? 6 : 0);
+    s.hist.push(ok ? (ms / 1000 <= tgt * 1.25 ? 2 : 1) : 0); if (s.hist.length > 6) s.hist.shift();
+    const last4 = s.hist.slice(-4), last3 = s.hist.slice(-3);
+    if (last4.length === 4 && last4.every(x => x === 2) && s.di < 3) { s.di++; s.moved = 1; s.hist = []; }
+    else if (last3.filter(x => x === 0).length >= 2 && s.di > 0) { s.di--; s.moved = -1; s.hist = []; }
+    s.diMax = Math.max(s.diMax, s.di);
+  }
   function finishSession() {
     const s = state.session; if (!s || s.done) return; s.done = true; s.showSummary = true; clearInterval(state.sprintTimer);
     if (!s.results.length) { state.session = null; return viewPractice(); }
@@ -371,10 +393,11 @@
     const by = {}; s.results.forEach(x => { const k = x.p.trick; by[k] = by[k] || { n: 0, ok: 0 }; by[k].n++; if (x.ok) by[k].ok++; });
     const misses = s.results.filter(x => !x.ok);
     const headline = s.mode === 'sprint' ? `${right} right in ${fmtTime(s.dur)}` : `${right} of ${n} right`;
+    const dline = s.auto ? (s.diMax > s.di0 ? `Auto difficulty: started at ${NS.DIFFS[s.di0].name}, reached ${NS.DIFFS[s.diMax].name}.` : `Auto difficulty: stayed at ${NS.DIFFS[s.di0].name}${s.di < s.di0 ? ` and stepped back to ${NS.DIFFS[s.di].name}` : ''}.`) : `Difficulty: ${NS.DIFFS[s.di].name}.`;
     const msg = acc === 1 ? 'Every one right.' : acc >= 0.85 ? 'Accurate. Next round, push the pace a little.' : acc >= 0.6 ? 'Read through the misses below, then run it again.' : 'Go back over the lesson, then try another round.';
     main.innerHTML = `<div class="session stack">
       <div class="card"><p class="eyebrow">${NS.rich(s.label)}</p><div class="res-top" style="margin-top:8px"><div class="big">${Math.round(acc * 100)}%</div>
-        <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div></div></div></div>
+        <div class="stack" style="gap:8px"><h2>${headline}</h2><p class="muted">${msg}</p><p class="small faint">${dline}</p><div class="kv"><div><b>${right}</b><span>right</span></div><div><b>${n - right}</b><span>missed</span></div><div><b>${med ? med.toFixed(1) + 's' : '—'}</b><span>typical time</span></div></div></div></div>
         <div class="row" style="margin-top:20px"><button class="btn hi" data-act="again">Go again <span class="kbd">Enter</span></button>${misses.length ? '<button class="btn ghost" data-act="redoMissed">Redo the misses</button>' : ''}<button class="btn ghost" data-act="newSetup">Change settings</button></div></div>
       ${Object.keys(by).length > 1 ? `<div class="card"><h3 style="margin-bottom:6px">By trick</h3><div class="tablewrap"><table class="t"><thead><tr><th>Trick</th><th style="text-align:right">Right</th><th></th></tr></thead><tbody>${Object.entries(by).sort((a, b) => a[1].ok / a[1].n - b[1].ok / b[1].n).map(([k, v]) => `<tr><td>${NS.rich(trickName(k))}</td><td class="n">${v.ok}/${v.n}</td><td style="text-align:right"><button class="btn link small" data-go="t" data-arg="${k}">Lesson</button></td></tr>`).join('')}</tbody></table></div></div>` : ''}
       ${misses.length ? `<div class="card"><h3>Misses, with the shortcut</h3><div class="stack" style="margin-top:10px;gap:0">${misses.map((x, i) => `<details style="border-top:1px solid var(--line);padding:10px 0" ${i === 0 ? 'open' : ''}><summary style="cursor:pointer"><span class="m">${R(x.p.p.h)}</span> <span class="faint small">you wrote</span> <span class="m" style="color:var(--bad)">${x.given ? esc(x.given) : '—'}</span> <span class="faint small">· answer</span> <span class="m">${R(NS.keyHtml(x.p.a), true)}</span></summary><ol class="steps" style="margin-top:10px">${x.p.steps.map(t => `<li>${R(t, true)}</li>`).join('')}</ol></details>`).join('')}</div></div>` : ''}
@@ -495,7 +518,8 @@
   function viewTests() {
     if (state.test && !state.test.done) return renderTest();
     if (state.test && state.test.done) return renderResults();
-    const l = lv(); const hist = L().tests.slice().reverse().slice(0, 8);
+    const l = lv(); const hist = L().tests.slice().reverse().slice(0, 8); if (!state.testDiff) state.testDiff = S.data.settings.tdiff || 'contest';
+    const codeDiff = c => { const sp = c && NS.readTestCode(c); return sp && sp.diff !== 'contest' ? ` · ${NS.DIFFS[NS.diffIdx(sp.diff)].name}` : ''; };
     main.innerHTML = `<div class="setup"><p class="eyebrow">${LV[l]}</p><h1>Practice tests</h1>
       <p class="muted" style="margin-top:8px;max-width:62ch">Same layout and scoring as a contest test. Your graded sheet shows the shortcut for anything you miss.</p>
       <span class="label">Test</span>
@@ -504,6 +528,8 @@
         <button class="opt" data-act="tkind" data-k="col" aria-pressed="${state.testKind === 'col'}"><b>One column</b><span>20 problems · 2:30</span></button>
       </div>
       ${state.testKind === 'col' ? `<div class="seg" style="margin-top:12px" role="group" aria-label="Column">${[1, 2, 3, 4].map(c => `<button data-act="tcol" data-c="${c}" aria-pressed="${state.testCol === c}">${COLR[c]}</button>`).join('')}</div>` : ''}
+      <span class="label">Difficulty</span>
+      ${diffSeg('tdiff', state.testDiff, false)}
       <div class="row" style="margin-top:22px"><button class="btn hi" data-act="startTest">Start the clock</button><span class="faint small">Tip: press Enter to move to the next blank. Don’t stop on a hard one for long; a skip costs the same as a miss.</span></div>
       <div class="codes">
         <div class="codebox"><label for="tcode"><b>Got a test code?</b> <span class="muted">Everyone who enters the same code gets the same test, so a team can take one together and compare.</span></label>
@@ -516,13 +542,13 @@
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept anything within 5% of the exact answer.</li></ul>
           <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Every right answer is +5 and every wrong or skipped one is −4, so a skip is never free.</li><li>Stop when the clock stops. Answers you haven’t reached don’t count against you.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
         </div></details>
-      <div class="sect"><h2>Recent tests</h2>${hist.length ? `<div class="card tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm; columns in between.</div>'}</div>
+      <div class="sect"><h2>Recent tests</h2>${hist.length ? `<div class="card tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. A full test once a week is a good rhythm; columns in between.</div>'}</div>
     </div>${footer()}`;
     const tc = $('#tcode'); if (tc) tc.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ACT.codeStart(); } });
   }
   // a fresh code for whatever test is selected above, without starting it
   function teamBox() {
-    const l = lv(); const what = state.testKind === 'full' ? 'the full test (80 problems)' : `problems ${COLR[state.testCol]}`;
+    const l = lv(); const dn = NS.DIFFS[NS.diffIdx(state.testDiff)].name; const what = (state.testKind === 'full' ? 'the full test (80 problems)' : `problems ${COLR[state.testCol]}`) + `, ${dn}`;
     const tc = state.teamCode;
     if (!tc) return `<b>Giving your team a test?</b> <span class="muted">Make a code for ${what} without starting it. Share the code, and everyone enters it in the box ${matchMedia('(max-width: 720px)').matches ? 'above' : 'beside this one'}.</span>
       <div class="row" style="margin-top:10px"><button class="btn" data-act="teamCode">Make a team code</button></div>`;
@@ -533,16 +559,16 @@
   }
   function startTest(spec) {
     const l = lv(); const cols = spec ? spec.cols : state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol];
-    const seed = spec ? spec.seed : NS.testSeed();
+    const seed = spec ? spec.seed : NS.testSeed(); const diff = spec ? spec.diff : (state.testDiff || S.data.settings.tdiff || 'contest');
     if (spec) { state.testKind = cols.length === 4 ? 'full' : 'col'; if (cols.length === 1) state.testCol = cols[0]; }
-    const probs = NS.buildTest(l, seed, cols);
-    state.test = { lv: l, cols, kind: state.testKind, col: state.testCol, probs, code: NS.testCode(l, cols, seed), answers: probs.map(() => ''), dur: cols.length === 4 ? 600 : 150, start: Date.now(), done: false, cur: 0 };
+    const probs = NS.buildTest(l, seed, cols, diff);
+    state.test = { lv: l, cols, diff, kind: state.testKind, col: state.testCol, probs, code: NS.testCode(l, cols, seed, diff), answers: probs.map(() => ''), dur: cols.length === 4 ? 600 : 150, start: Date.now(), done: false, cur: 0 };
     if (location.hash.slice(1) !== 'test') { location.hash = 'test'; } else renderTest();
   }
   function stopTest() { clearInterval(state.testTimer); state.test = null; $('.dock') && $('.dock').remove(); document.body.classList.remove('in-session'); }
   function renderTest() {
     const T = state.test; setNav('test');
-    main.innerHTML = `<div class="sheet-top"><span class="clock" id="tclock">${fmtTime(T.dur)}</span><span class="muted small" id="tdone">0 answered</span><span style="flex:1"></span><span class="faint small mono tcode" title="Test code">${T.code}</span><button class="btn small ghost" data-act="finishTest">Finish and grade</button></div>
+    main.innerHTML = `<div class="sheet-top"><span class="clock" id="tclock">${fmtTime(T.dur)}</span><span class="muted small" id="tdone">0 answered</span><span style="flex:1"></span>${T.diff !== 'contest' ? diffChip(T.diff) : ''}<span class="faint small mono tcode" title="Test code">${T.code}</span><button class="btn small ghost" data-act="finishTest">Finish and grade</button></div>
       <div id="sheet">${pages(T.probs, (p, i) => `<div class="q" data-i="${i}" id="q${i}"><span class="qn">${p.est ? '<span class="s">*</span>' : ''}(${p.n})</span><div class="qb"><span class="t ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</span>${blankHtml(p, `data-i="${i}" id="a${i}"`)}</div></div>`)}</div>
       <p class="faint small" style="margin-top:12px">${touch ? '' : 'Enter or ↓ moves to the next blank; ↑ goes back.'}</p>`;
     if (touch) { const d = document.createElement('div'); d.className = 'dock'; d.innerHTML = keypadHtml(T.probs[0], true); document.body.appendChild(d); main.style.paddingBottom = '330px'; }
@@ -573,7 +599,8 @@
     const d = $('.dock'); if (d) d.remove(); main.style.paddingBottom = '';
     T.res = NS.scoreTest(T.probs, T.answers);
     // record per-trick results (untimed) for everything up to the last attempted
-    T.probs.forEach((p, i) => { const m = T.res.marks[i]; if (m === 'ok' || m === 'bad') { const t = S.trick(p.trick); t.att.push([m === 'ok' ? 1 : 0, -1]); if (t.att.length > 30) t.att.shift(); t.n++; if (m === 'ok') t.ok++; if (m === 'bad') { L().misses.push({ g: p.gid, s: p.seed, t: Date.now() }); if (L().misses.length > 60) L().misses.shift(); } } });
+    const tdi = NS.diffIdx(T.diff);
+    T.probs.forEach((p, i) => { const m = T.res.marks[i]; if (m === 'ok' || m === 'bad') { const t = S.trick(p.trick); t.att.push(tdi === 1 ? [m === 'ok' ? 1 : 0, -1] : [m === 'ok' ? 1 : 0, -1, tdi]); if (t.att.length > 30) t.att.shift(); t.n++; if (m === 'ok') t.ok++; if (m === 'bad') { L().misses.push({ g: p.gid, s: p.seed, t: Date.now(), ...(tdi === 1 ? {} : { d: T.diff }), at: p.at }); if (L().misses.length > 60) L().misses.shift(); } } });
     L().tests.push({ t: Date.now(), kind: T.cols.length === 4 ? 'full' : 'col', col: T.cols[0], code: T.code, score: T.res.score, correct: T.res.correct, wrong: T.res.wrong, skipped: T.res.skipped, last: T.res.last });
     const day = NS.today(); L().days[day] = (L().days[day] || 0) + 1; S.save();
     window.scrollTo(0, 0); renderResults();
@@ -584,11 +611,15 @@
     const byCol = T.cols.map((c, k) => { const idx = T.probs.map((_, i) => i).filter(i => i >= k * 20 && i < k * 20 + 20); return { c, ok: idx.filter(i => r.marks[i] === 'ok').length, tried: idx.filter(i => r.marks[i] !== 'after').length }; });
     const missTricks = [...new Set(T.probs.filter((p, i) => r.marks[i] === 'bad' || r.marks[i] === 'skip').map(p => p.trick))].slice(0, 6);
     const prev = L().tests.filter(t => t.kind === (full ? 'full' : 'col') && (full || t.col === T.cols[0])); const pb = prev.length > 1 && r.score >= Math.max(...prev.slice(0, -1).map(t => t.score));
+    // a nudge to the next level when this one went well (90% right through at least 3/4 of the test), or back when it didn't
+    const tdi = NS.diffIdx(T.diff); const reach = r.last / T.probs.length; const acc = r.correct / Math.max(1, r.correct + r.wrong + r.skipped);
+    const nextUp = tdi < 3 && reach >= 0.75 && acc >= 0.9 ? `Strong test. Try the next one at ${NS.DIFFS[tdi + 1].name}.` : tdi > 1 && acc < 0.6 ? `That one was rough. A ${NS.DIFFS[1].name} test is the real-contest level, and a good place to build back up.` : '';
     main.innerHTML = `<div class="stack">
-      <div class="card"><p class="eyebrow">${full ? 'Full test' : `Problems ${COLR[T.cols[0]]}`} · ${T.timeUp ? 'time' : `finished at ${fmtTime(T.used)}`}</p>
+      <div class="card"><p class="eyebrow">${full ? 'Full test' : `Problems ${COLR[T.cols[0]]}`} · ${NS.DIFFS[NS.diffIdx(T.diff)].name} · ${T.timeUp ? 'time' : `finished at ${fmtTime(T.used)}`}</p>
         <div class="res-top" style="margin-top:10px"><div><div class="big">${r.score}</div><p class="faint small">out of ${max}${pb ? ' · <b style="color:var(--ok)">personal best</b>' : ''}</p></div>
           <div class="stack" style="gap:10px"><div class="kv"><div><b>${r.correct}</b><span>right (+${5 * r.correct})</span></div><div><b>${r.wrong}</b><span>wrong (−${4 * r.wrong})</span></div><div><b>${r.skipped}</b><span>skipped (−${4 * r.skipped})</span></div><div><b>${r.last}</b><span>last problem tried</span></div></div>
           ${full ? `<div class="cols4">${byCol.map(b => `<div><span class="faint small">${COLR[b.c]}</span><br><b>${b.ok}</b><span class="faint small">/${b.tried || 0} tried</span></div>`).join('')}</div>` : ''}</div></div>
+        ${nextUp ? `<p class="small" style="margin-top:14px"><b>${nextUp}</b></p>` : ''}
         ${r.skipped ? `<p class="small" style="margin-top:14px">Skips cost as much as wrong answers. ${r.skipped} skip${r.skipped > 1 ? 's' : ''} took ${4 * r.skipped} points. If you can’t do one, an honest guess beats a blank.</p>` : ''}
         <p class="small muted" style="margin-top:14px">Test code <b class="mono" style="color:var(--ink)">${T.code}</b>. Share it and teammates get this same test. <button class="btn link small" data-act="copyCode">Copy</button></p>
         <div class="row" style="margin-top:12px"><button class="btn hi" data-act="testAgain">New test</button><button class="btn ghost" data-act="testMenu">Test options</button>${missTricks.length ? `<button class="btn ghost" data-act="drillMissed">Drill what I missed</button>` : ''}</div></div>
@@ -664,11 +695,13 @@
     pset(d) { state.pickSet = d.k; state.keepScroll = true; viewPractice(); },
     startPractice() { const sets = practiceSets(lv()); const cur = sets.find(s => s.k === state.pickSet); if (!cur || !cur.tricks.length) return;
       startSession({ mode: state.pickMode, dur: state.sprintLen, tricks: cur.tricks, label: (state.pickMode === 'sprint' ? 'Sprint · ' : '') + cur.name.replace(/\s*\(\d+\)$/, '').replace(/^Up next: /, ''), queue: cur.misses ? L().misses.slice(-20) : [] }); },
+    pdiff(d) { state.pickDiff = d.d; S.data.settings.pdiff = d.d; S.save(); state.keepScroll = true; viewPractice(); },
+    tdiff(d) { state.testDiff = d.d; S.data.settings.tdiff = d.d; S.save(); state.teamCode = null; state.keepScroll = true; viewTests(); },
     sSubmit() {
       const s = state.session; if (!s || s.state !== 'ask') return; const inp = $('#sin'); const p = s.cur;
       if (!inp.value.trim()) { inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake'); return; }
       const res = NS.check(p.a, inp.value); const ms = performance.now() - s.t0;
-      s.results.push({ p, ok: res.ok, ms, given: inp.value }); S.record(p, res.ok, ms);
+      s.results.push({ p, ok: res.ok, ms, given: inp.value }); S.record(p, res.ok, ms); autoAdjust(s, res.ok, ms, p);
       const fb = $('#sfb'); inp.disabled = true; const stk = $('#stk'); if (stk) stk.innerHTML = NS.rich(trickName(p.trick), true);
       if (res.ok && s.mode === 'sprint') { s.flash = ms; return nextProblem(); }
       if (res.ok) {
@@ -683,21 +716,22 @@
         inp.disabled = false; inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true });
       }
     },
-    sGiveUp() { const s = state.session; if (!s || s.state !== 'ask') return; const p = s.cur; const ms = performance.now() - s.t0; s.results.push({ p, ok: false, ms, given: '' }); S.record(p, false, ms);
+    sGiveUp() { const s = state.session; if (!s || s.state !== 'ask') return; const p = s.cur; const ms = performance.now() - s.t0; s.results.push({ p, ok: false, ms, given: '' }); S.record(p, false, ms); autoAdjust(s, false, ms, p);
       s.state = 'shown'; if (s.mode === 'practice') (s.retry = s.retry || []).push({ trick: p.trick, due: s.results.length + 3 }); { const stk = $('#stk'); if (stk) stk.innerHTML = NS.rich(trickName(p.trick), true); } $('#sfb').className = 'feedback'; $('#sfb').textContent = ''; showShortcut(p, $('#sshort')); const kp = $('#stage .keypad'); if (kp) kp.remove();
       $('.tally .r').textContent = `✗ ${s.results.filter(x => !x.ok).length}`;
       $('#sunder').innerHTML = `<button class="btn" data-act="sNext">Next <span class="kbd">Enter</span></button>`; const inp = $('#sin'); inp.readOnly = true; if (!touch) inp.focus({ preventScroll: true }); },
     sNext() { nextProblem(); },
     quitSession() { const s = state.session; if (!s) return; if (s.results.length) finishSession(); else { endSession(true); viewPractice(); setNav('practice'); } },
-    again() { const s = state.session; state.session = null; startSession({ mode: s.mode, dur: s.dur, tricks: s.tricks, label: s.label }); },
-    redoMissed() { const s = state.session; const q = s.results.filter(x => !x.ok).map(x => ({ g: x.p.gid, s: x.p.seed })); state.session = null; startSession({ mode: 'practice', tricks: s.tricks, label: s.label.replace(/^Sprint · /, ''), queue: q }); },
+    again() { const s = state.session; state.session = null; startSession({ mode: s.mode, dur: s.dur, tricks: s.tricks, label: s.label, diff: s.auto ? 'auto' : NS.DIFFS[s.di].id }); },
+    redoMissed() { const s = state.session; const q = s.results.filter(x => !x.ok).map(x => ({ g: x.p.gid, s: x.p.seed, d: x.p.diff, at: x.p.at })); state.session = null; startSession({ mode: 'practice', tricks: s.tricks, label: s.label.replace(/^Sprint · /, ''), queue: q, diff: s.auto ? 'auto' : NS.DIFFS[s.di].id }); },
     newSetup() { state.session = null; viewPractice(); },
     tkind(d) { state.testKind = d.k; state.teamCode = null; state.keepScroll = true; viewTests(); },
     tcol(d) { state.testCol = +d.c; state.teamCode = null; state.keepScroll = true; viewTests(); },
     teamCode() {
       const l = lv(); const cols = state.testKind === 'full' ? [1, 2, 3, 4] : [state.testCol];
-      let code; do { code = NS.testCode(l, cols, NS.testSeed()); } while (state.teamCode && code === state.teamCode.code);
-      state.teamCode = { code, lv: l, what: cols.length === 4 ? 'full test, 80 problems' : `problems ${COLR[cols[0]]}` };
+      const diff = state.testDiff || 'contest'; const dn = NS.DIFFS[NS.diffIdx(diff)].name;
+      let code; do { code = NS.testCode(l, cols, NS.testSeed(), diff); } while (state.teamCode && code === state.teamCode.code);
+      state.teamCode = { code, lv: l, what: (cols.length === 4 ? 'full test, 80 problems' : `problems ${COLR[cols[0]]}`) + `, ${dn}` };
       $('#teambox').innerHTML = teamBox(); $('#teambox [data-act="copyCode"]').focus({ preventScroll: true });
     },
     teamStart() { const tc = state.teamCode; const spec = tc && NS.readTestCode(tc.code); if (spec && spec.lv === lv()) startTest(spec); },
@@ -756,7 +790,7 @@
       const spec = NS.readTestCode(v);
       const say = t => { msg.textContent = t; msg.style.color = 'var(--bad)'; inp.focus(); };
       if (!v) return say('Type the code first. It looks like HF-7K2M.');
-      if (!spec) return say('That code doesn’t look right. Codes are two characters, a dash, then four more, like HF-7K2M.');
+      if (!spec) return say('That code doesn’t look right. Codes are two characters, a dash, then four more, like HF-7K2M. Harder or easier tests add one more letter at the end, like HF-7K2M-H.');
       if (spec.lv !== lv()) return say(`That’s a ${LV[spec.lv].toLowerCase()} test. Switch levels with the button at the top right, then enter it again.`);
       startTest(spec);
     },
@@ -764,7 +798,7 @@
     copyCode(d, el) { const code = d.code || (state.test && state.test.code); if (!code) return; const done = () => { el.textContent = 'Copied'; setTimeout(() => { el.textContent = 'Copy'; }, 1600); };
       try { navigator.clipboard.writeText(code).then(done, () => { el.textContent = 'Select the code to copy it'; }); } catch (e) { el.textContent = 'Select the code to copy it'; } },
     testMenu() { state.test = null; viewTests(); },
-    drillMissed() { const T = state.test; const q = T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => ({ g: p.gid, s: p.seed })); const tr = [...new Set(T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => p.trick))]; state.test = null; startSession({ mode: 'practice', tricks: tr, label: 'Test misses', queue: q }); },
+    drillMissed() { const T = state.test; const q = T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => ({ g: p.gid, s: p.seed, d: p.diff, at: p.at })); const tr = [...new Set(T.probs.filter((p, i) => T.res.marks[i] === 'bad' || T.res.marks[i] === 'skip').map(p => p.trick))]; state.test = null; startSession({ mode: 'practice', tricks: tr, label: 'Test misses', queue: q }); },
     showWhy(d) { const T = state.test; const p = T.probs[+d.i]; const box = $('#why' + d.i); if (box.innerHTML) { box.innerHTML = ''; return; } box.innerHTML = `<ol class="steps" style="margin:8px 0 4px">${p.steps.map(x => `<li>${R(x, true)}</li>`).join('')}</ol><button class="btn link small" data-go="t" data-arg="${p.trick}">Lesson: ${NS.rich(trickName(p.trick))} →</button>`; },
     resetAsk() { $('#resetbox').innerHTML = `<div class="confirm"><b>Erase all ${LV[lv()].toLowerCase()} progress on this device? This can’t be undone.</b><button class="btn small" data-act="resetYes">Erase it</button><button class="btn small ghost" data-act="resetNo">Cancel</button></div>`; },
     resetYes() { S.reset(lv()); toast('Progress erased'); viewProgress(); },

@@ -26,8 +26,8 @@
   NS.decExpand = expand;
   G({
     id: 'decDigits', trick: 'decimalDigits', col: { ms: 4, hs: 0 }, w: 1.6,
-    gen(r) {
-      const d = r.pick([7, 11, 12, 13, 15, 18, 22, 27, 33, 36, 37, 44, 45, 55, 66, 74, 90, 99, 111, 135, 165, 198]);
+    gen(r, lv, x = 1) {
+      const d = r.pick(x >= 2 ? [27, 37, 54, 74, 111, 135, 148, 165, 185, 198, 222, 270, 297, 333, 370, 495, 555, 999] : [7, 11, 12, 13, 15, 18, 22, 27, 33, 36, 37, 44, 45, 55, 66, 74, 90, 99, 111, 135, 165, 198]);
       let a, rd; do { a = r.int(1, d - 1); rd = d / M.gcd(a, d); let t = rd; while (t % 2 === 0) t /= 2; while (t % 5 === 0) t /= 5; if (t > 1) break; } while (true);
       const g = M.gcd(a, d), rn = a / g; const digits = String(Math.floor(a * 10000 / d)).padStart(4, '0');
       const { pre, rep } = expand(rn, rd); let shown = pre; while (shown.length < 7) shown += rep;
@@ -97,7 +97,8 @@
   /* ---------- absolute value inequalities ---------- */
   G({
     id: 'absIneq', trick: 'absSolutions', col: { ms: 4, hs: 0 }, w: 1.4,
-    gen(r) {
+    gen(r, lv, x = 1) {
+      const big = x >= 2;
       const kd = r.pick(['sumH', 'sumH', 'sumGen', 'count', 'chain']); const strict = r.chance(0.3); const rel = strict ? '<' : '\\le';
       let a, b, c, lo, hi, p, setup;
       if (kd === 'chain') {
@@ -106,8 +107,8 @@
         p = H.cat('If ', H.L(`${L} ${rel} ${lin(a, b)} ${rel} ${U}`), ', how many integers x make it true?');
         return { p, a: A.num(xs.length), params: { kd, a, b, L, U, strict }, steps: [`Take ${fm(b)} from each part and divide by ${a}: x runs from ${Qs(q(L - b, a))} to ${Qs(q(U - b, a))}${strict ? ', ends not included' : ''}.`, `Integers ${fm(lo)} through ${fm(hi)}: ${hl(xs.length)}`] };
       }
-      if (kd === 'sumH') { a = 1; b = -r.int(-12, 15) || 7; c = r.int(2, 12); }
-      else { a = r.int(2, 5); do { b = r.int(-12, 12); } while (!b || b % a === 0); c = r.int(a + 1, 30); }
+      if (kd === 'sumH') { a = 1; b = -r.int(-12, big ? 45 : 15) || 7; c = r.int(2, big ? 30 : 12); }
+      else { a = r.int(2, big ? 9 : 5); do { b = r.int(big ? -40 : -12, big ? 40 : 12); } while (!b || b % a === 0); c = r.int(a + 1, big ? 75 : 30); }
       const xs = []; for (let x = -100; x <= 100; x++) { const y = Math.abs(a * x + b); if (strict ? y < c : y <= c) xs.push(x); }
       lo = xs[0]; hi = xs[xs.length - 1]; const n = xs.length, sum = xs.reduce((s, x) => s + x, 0);
       const ineq = H.L(`\\left|${lin(a, b)}\\right| ${rel} ${c}`);
@@ -356,10 +357,11 @@
   /* ---------- sum and product of roots, more ways ---------- */
   G({
     id: 'rootsMore', trick: 'roots', col: { ms: 4, hs: 0 }, w: 1.5,
-    gen(r) {
+    gen(r, lv, x = 1) {
+      const B = x >= 2 ? 45 : 20;
       const kd = r.pick(['sum', 'prod', 'sumsq', 'plus1', 'pqpq', 'mean', 'mix', 'harm', 'findB', 'findA', 'cubicSum', 'cubicCombo', 'sqRoot', 'pq', 'shiftProd']);
       const nz = (lo, hi) => { let x; do { x = r.int(lo, hi); } while (!x); return x; };
-      if (kd === 'cubicSum' || kd === 'cubicCombo') { const a = r.int(1, 9), b = nz(-20, 20), c = r.int(-20, 20), d = nz(-20, 20); const S = q(-b, a), Pr = q(-d, a); const v = kd === 'cubicSum' ? S : S.add(Pr);
+      if (kd === 'cubicSum' || kd === 'cubicCombo') { const a = r.int(1, x >= 2 ? 15 : 9), b = nz(-B, B), c = r.int(-B, B), d = nz(-B, B); const S = q(-b, a), Pr = q(-d, a); const v = kd === 'cubicSum' ? S : S.add(Pr);
         return { p: H.cat('If P, Q and R are the roots of ', H.L(`${NS.poly([a, b, c, d]).l} = 0`), ', then ', H.L(kd === 'cubicSum' ? 'P + Q + R' : 'PQR + P + Q + R'), ' ='), a: A.num(v), params: { kd, a, b, d },
           steps: [`For ${m('ax^3 + bx^2 + cx + d')}: ${m('P + Q + R = -\\frac ba')} = ${Qs(S)}${kd === 'cubicCombo' ? `, ${m('PQR = -\\frac da')} = ${Qs(Pr)}` : ''}.`, kd === 'cubicSum' ? `${hl(Qs(v))}` : `${Qs(Pr)} + ${Qp(S)} = ${hl(Qs(v))}`] }; }
       if (kd === 'sqRoot') { const a = r.pick([1, 4, 9, 2, 3]), s = r.int(1, 9), b = r.int(1, 6); let c; do { c = r.int(-9, 9); } while (!c); const d = a * s * s; const big = r.chance(0.5);
@@ -375,7 +377,7 @@
         return { p: H.cat('If P and Q are the roots of ', H.L(`${a === 1 ? '' : a}x^2 + bx ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0`), ' and ', H.L(`P + Q = ${s}`), ', then ', H.L('b'), ' ='), a: A.num(v), params: { kd, a, s }, steps: [`${m('P + Q = -\\frac ba')}, so b = −${a} × ${s < 0 ? `(${s})` : s}.`, `b = ${hl(fm(v))}`] }; }
       if (kd === 'findA') { let a0, c, Pr; do { a0 = nz(-9, 9); Pr = nz(-9, 9); c = a0 * Pr; } while (Math.abs(c) < 4 || Math.abs(c) > 60); const b = nz(-15, 15);
         return { p: H.cat('If the product of the roots of ', H.L(`ax^2${term(b, 'x')} ${c < 0 ? '-' : '+'} ${Math.abs(c)} = 0`), ` is ${fm(Pr)}, then `, H.L('a'), ' ='), a: A.num(a0), params: { kd, c, Pr }, steps: [`Product of roots = ${m('\\frac ca')}, so ${m(`\\frac{${c}}{a} = ${Pr}`)}.`, `a = ${c} ÷ ${Pr < 0 ? `(${Pr})` : Pr} = ${hl(fm(a0))}`] }; }
-      const a = r.int(1, 9), b = nz(-20, 20), c = nz(-20, 20); const S = q(-b, a), Pr = q(c, a); const eq = H.L(`${NS.poly([a, b, c]).l} = 0`);
+      const a = r.int(1, x >= 2 ? 15 : 9), b = nz(-B, B), c = nz(-B, B); const S = q(-b, a), Pr = q(c, a); const eq = H.L(`${NS.poly([a, b, c]).l} = 0`);
       const base = `${m('P + Q = -\\frac ba')} = ${Qs(S)} and ${m('PQ = \\frac ca')} = ${Qs(Pr)}.`;
       if (kd === 'mix') { const k = r.pick([2, 3, 4, 5, 7]); const v = S.mul(S).add(Pr.mul(k - 2));
         return { p: H.cat('If P and Q are the roots of ', eq, ', then ', H.L(`P^2 + ${k}PQ + Q^2`), ' ='), a: A.num(v), params: { kd, a, b, c, k }, steps: [base, `${m(`P^2 + ${k}PQ + Q^2 = (P + Q)^2 + ${k - 2 === 1 ? '' : k - 2}PQ`)} = ${Qs(S.mul(S))} + ${k - 2} × ${Qp(Pr)} = ${hl(Qs(v))}`] }; }
@@ -389,8 +391,8 @@
   /* ---------- x(x − k) < N ---------- */
   G({
     id: 'quadIneq', trick: 'inequalities', col: { ms: 4, hs: 0 },
-    gen(r) {
-      const kd = r.pick(['largest', 'largest', 'smallest', 'countPos']); const k = r.int(-6, 6), N = r.int(30, 220); const f = x => x * (x - k);
+    gen(r, lv, xd = 1) {
+      const kd = r.pick(['largest', 'largest', 'smallest', 'countPos']); const k = r.int(xd >= 2 ? -15 : -6, xd >= 2 ? 15 : 6), N = r.int(30, xd >= 2 ? 900 : 220); const f = x => x * (x - k);
       const expr = k === 0 ? 'x^2' : `x(x ${k > 0 ? '-' : '+'} ${Math.abs(k)})`; const rt = Math.sqrt(N);
       if (kd === 'smallest') { let x = 1; while (f(x) <= N) x++; return { p: H.cat('The smallest positive integer x with ', H.L(`${expr} > ${N}`), ' is'), a: A.num(x), params: { kd, k, N }, steps: [`${k ? `${m(expr)} is about ${m('x^2')}, so start` : 'Start'} near √${N} ≈ ${rt.toFixed(1)}.`, `${x - 1}: ${f(x - 1)} (not more than ${N}); ${x}: ${f(x)}. Answer ${hl(x)}`] }; }
       let x = 300; while (f(x) >= N) x--;
@@ -403,12 +405,12 @@
   /* ---------- whole-number solutions ---------- */
   G({
     id: 'intPairs', trick: 'integerPairs', col: { ms: 4, hs: 0 },
-    gen(r) {
+    gen(r, lv, xd = 1) {
       if (r.chance(0.5)) { // x² + y² = N with a single answer
-        for (;;) { const x = r.int(3, 14), y = r.int(1, x - 1); const N = x * x + y * y; const reps = []; for (let a = 1; a * a < N; a++) { const b2 = N - a * a; const b = Math.round(Math.sqrt(b2)); if (b * b === b2 && a > b) reps.push([a, b]); } if (reps.length !== 1) continue;
+        for (;;) { const x = r.int(3, xd >= 2 ? 30 : 14), y = r.int(1, x - 1); const N = x * x + y * y; const reps = []; for (let a = 1; a * a < N; a++) { const b2 = N - a * a; const b = Math.round(Math.sqrt(b2)); if (b * b === b2 && a > b) reps.push([a, b]); } if (reps.length !== 1) continue;
           return { p: H.cat(`If ${m('x')} and ${m('y')} are positive integers with `, H.L(`x^2 + y^2 = ${N}`), ' and ', H.L('x > y'), ', then ', H.L('x + y'), ' ='), a: A.num(x + y), params: { kd: 'sq', N },
             steps: [`Take squares below ${N} and look for a partner square: ${N} − ${x * x} = ${y * y}.`, `${m(`x = ${x}`)}, ${m(`y = ${y}`)}: ${hl(x + y)}`] }; } }
-      let a, b; do { a = r.int(2, 9); b = r.int(2, 11); } while (M.gcd(a, b) !== 1 || a >= b); const N = a * b * r.int(1, 5) + r.int(0, a * b - 1);
+      let a, b; do { a = r.int(2, 9); b = r.int(2, xd >= 2 ? 17 : 11); } while (M.gcd(a, b) !== 1 || a >= b); const N = a * b * r.int(1, xd >= 2 ? 9 : 5) + r.int(0, a * b - 1);
       let cnt = 0, first = null, last = null; for (let y = 0; b * y <= N; y++) if ((N - b * y) % a === 0) { cnt++; if (first === null) first = y; last = y; }
       if (cnt < 2) return this.gen(r);
       return { p: H.cat('How many ordered pairs of nonnegative integers (x, y) solve ', H.L(`${a}x + ${b}y = ${N}`), '?'), a: A.num(cnt), params: { kd: 'lin', a, b, N },
@@ -482,7 +484,7 @@
 
   /* ---------- alternating sums of squares ---------- */
   G({
-    id: 'altSq', trick: 'diffsq', col: { ms: 2, hs: 0 }, eval: true,
+    id: 'altSq', trick: 'diffsq', col: { ms: 2, hs: 0 }, eval: true, series: true,
     gen(r) {
       const half = r.chance(0.35); const d = half ? 1 : r.int(1, 4); const a0 = r.int(Math.max(8, 3 * d + 2), 30) + (half ? 0.5 : 0); const xs = [0, 1, 2, 3].map(i => a0 - i * d);
       const pieces = []; xs.forEach((x, i) => { if (i) pieces.push(i % 2 ? ' − ' : ' + '); pieces.push(H.pow(String(x), 2)); });
@@ -519,8 +521,8 @@
   /* ---------- consecutive integers from a product ---------- */
   G({
     id: 'consecProd', trick: 'consecutive', col: { ms: 4, hs: 0 },
-    gen(r) {
-      const n = r.int(12, 80);
+    gen(r, lv, x = 1) {
+      const n = x >= 2 ? r.int(40, 160) : r.int(12, 80);
       if (r.chance(0.5)) { const P = (n - 1) * n * (n + 1); return { p: H.cat(`Three consecutive integers have a product of ${fm(P)}. The middle integer is`), a: A.num(n), params: { kd: 'three', P }, steps: [`The product is close to the middle number cubed: ${m(`\\sqrt[3]{${P}}`)} is just under ${n}.`, `Check: ${n - 1} × ${n} × ${n + 1} = ${fm(P)}. Middle: ${hl(n)}`] }; }
       const P = n * (n + 1); return { p: H.cat(`Two consecutive positive integers have a product of ${fm(P)}. Their sum is`), a: A.num(2 * n + 1), params: { kd: 'two', P }, steps: [`√${fm(P)} is just over ${n}, so try ${n} × ${n + 1} = ${fm(P)}.`, `${n} + ${n + 1} = ${hl(2 * n + 1)}`] };
     },
@@ -561,6 +563,31 @@
       else if (kd === 'interest') { const x = r.pick([2000, 3000, 5000, 7500, 12000]), y = r.int(3, 9), z = r.int(5, 30); pr.xs = [x, y, z]; v = x * y * z / 100; p = `The simple interest on $${fm(x)} at ${y}% a year for ${z} years is`; why = `${fm(x)} × ${y}% × ${z}.`; }
       else { const x = r.pick([1.5, 2.5, 3.5, 4.5, 6, 7.5]); pr.x = x; v = 186000 * x; p = `Light travels 186,000 miles per second. In ${x} seconds it travels`; pr.suf = 'miles'; why = `186,000 × ${x}.`; }
       return { p: H.cat(p), ...(pr.suf ? { suffix: pr.suf } : {}), ...(kd === 'interest' ? { pre: '$' } : {}), a: A.est(ap(v)), params: pr, steps: [why, `≈ ${fm(Math.round(v))}`] };
+    },
+  });
+
+  /* ---------- sum of the reciprocals of the divisors (UIL high school, columns 3–4) ---------- */
+  G({
+    id: 'divRecip', trick: 'divisors', col: { ms: 0, hs: 3 },
+    gen(r) {
+      const sig = n => M.divisors(n).reduce((s, d) => s + d, 0);
+      if (r.chance(0.7)) { const n = r.pick([6, 8, 10, 12, 14, 15, 18, 20, 21, 24, 28, 30, 35, 36, 40, 45, 48, 50, 60]); const ds = M.divisors(n); const v = q(sig(n), n);
+        return { p: H.cat(`The sum of the reciprocals of all the positive divisors of ${n} is`), a: A.num(v), params: { kd: 'sum', n }, steps: [`Over a common denominator of ${n}, the reciprocals of the divisors become the divisors themselves: ${m(`\\frac{${ds.slice().reverse().join(' + ')}}{${n}}`)}.`, `So it's (sum of divisors) ÷ ${n} = ${m(`\\frac{${sig(n)}}{${n}}`)} = ${hl(Qs(v))}`] }; }
+      // reverse: the value is given, find the number (only values that pick out one number up to 100)
+      for (;;) { const n = r.int(4, 60); const v = q(sig(n), n); const hits = []; for (let k = 2; k <= 100; k++) if (q(sig(k), k).eq(v)) hits.push(k); if (hits.length !== 1) continue;
+        return { p: H.cat('The sum of the reciprocals of all the positive divisors of ', H.L('R'), ' is ', H.Qi(v), '. ', H.L('R'), ' ='), a: A.num(n), params: { kd: 'rev', v: [Number(v.n), Number(v.d)] }, steps: [`The sum of the reciprocals is (sum of the divisors of R) ÷ R. Try R = ${v.d} or a multiple of it.`, `${m(`\\frac{${sig(n)}}{${n}} = ${H.Qi(v).l}`)}, so R = ${hl(n)}`] }; }
+    },
+  });
+
+  /* ---------- (3)(7)(13)(k) = 40404: hidden 10101, 1001, 111 and 1111 (middle school, problems 61–80) ---------- */
+  G({
+    id: 'hiddenK', trick: 'special', col: { ms: 4, hs: 0 },
+    gen(r) {
+      const [B, fs] = r.pick([[10101, [3, 7, 13, 37]], [10101, [3, 7, 13, 37]], [1001, [7, 11, 13]], [111, [3, 37]], [1111, [11, 101]]]);
+      const dd = r.int(2, 9); const N = dd * B; const hide = r.int(0, fs.length - 1); const shown = fs.filter((_, i) => i !== hide);
+      const k = N / shown.reduce((a, b) => a * b, 1);
+      return { p: H.cat('If ', H.L(`${shown.map(f => `(${f})`).join('')}(k) = ${N}`), ', then ', H.L('k'), ' ='), a: A.num(k), params: { shown, N },
+        steps: [`${N} = ${dd} × ${B}, and ${B} = ${fs.join(' × ')}.`, `The missing factor is ${fs[hide]}, so k = ${dd} × ${fs[hide]} = ${hl(k)}`] };
     },
   });
 })();

@@ -79,7 +79,7 @@
 
   /* ---------- quadratic roots: sum, product, discriminant ---------- */
   G({
-    id: 'roots', trick: 'roots', col: { ms: 4, hs: 3 },
+    id: 'roots', trick: 'roots', col: { ms: 4, hs: 2 },
     gen(r, lv) {
       if (lv === 'ms' || r.chance(0.3)) { // factorable, larger root
         const p1 = r.int(-9, 9), p2 = r.int(-9, 12); if (p1 === p2) return this.gen(r, lv);
@@ -99,7 +99,7 @@
 
   /* ---------- vertex of a parabola ---------- */
   G({
-    id: 'vertex', trick: 'vertex', col: { ms: 4, hs: 3 },
+    id: 'vertex', trick: 'vertex', col: { ms: 4, hs: 4 },
     gen(r) {
       const a = r.int(1, 4) * r.sign(), h = r.int(-6, 6), k = r.int(-15, 15);
       const b = -2 * a * h, c = a * h * h + k; const kd = r.pick(['h', 'k', 'ext']);
@@ -207,7 +207,7 @@
 
   /* ---------- functions: composite & inverse ---------- */
   G({
-    id: 'functions', trick: 'functions', col: { ms: 0, hs: 4 },
+    id: 'functions', trick: 'functions', col: { ms: 4, hs: 4 }, w: 0.6,
     gen(r) {
       const a = r.int(2, 6), b = r.int(-9, 9), c = r.int(1, 3), d = r.int(-5, 5); const x = r.int(-3, 4);
       const f = H.L(`f(x) = ${a}x ${b < 0 ? '-' : '+'} ${Math.abs(b)}`);

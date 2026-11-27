@@ -33,7 +33,7 @@
 
   /* ---------- remainder of an expression ---------- */
   G({
-    id: 'remExpr', trick: 'remExpr', col: { ms: 2, hs: 2 },
+    id: 'remExpr', trick: 'remExpr', col: { ms: 3, hs: 2 },
     gen(r, lv) {
       const m = r.pick([4, 5, 6, 7, 8, 9]);
       if (lv === 'hs' && r.chance(0.4)) { // power
@@ -54,7 +54,7 @@
 
   /* ---------- GCD and LCM ---------- */
   G({
-    id: 'gcdLcm', trick: 'gcdLcm', col: { ms: 1, hs: 1 },
+    id: 'gcdLcm', trick: 'gcdLcm', col: { ms: 2, hs: 1 },
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['g', 'l', 'l3'] : ['g', 'l', 'l3', 'gl']);
       const g = r.pick([2, 3, 4, 5, 6, 7, 8, 9, 12, 14, 15, 18]);
@@ -71,7 +71,7 @@
 
   /* ---------- divisors ---------- */
   G({
-    id: 'divisors', trick: 'divisors', col: { ms: 2, hs: 1 },
+    id: 'divisors', trick: 'divisors', col: { ms: 4, hs: 1 },
     gen(r, lv) {
       const n = r.pick([24, 36, 48, 60, 72, 84, 90, 96, 100, 108, 120, 144, 180, 200, 210, 225, 240, 252, 360, 400, 500]);
       const f = M.factor(n); const fs = NS.m(f.map(([p, e]) => e > 1 ? `${p}^{${e}}` : `${p}`).join(' \\cdot '));
@@ -102,7 +102,7 @@
 
   /* ---------- units digit of a power ---------- */
   G({
-    id: 'unitsDigit', trick: 'unitsDigit', col: { ms: 3, hs: 2 },
+    id: 'unitsDigit', trick: 'unitsDigit', col: { ms: 3, hs: 3 },
     gen(r) {
       const b = r.pick([2, 3, 7, 8, 12, 13, 17, 23, 27, 4, 9, 14]); const e = r.int(11, 99);
       const u = Number(BigInt(b) ** BigInt(e) % 10n);
@@ -129,7 +129,7 @@
 
   /* ---------- sums of series ---------- */
   G({
-    id: 'sums', trick: 'sums', col: { ms: 1, hs: 1 },
+    id: 'sums', trick: 'sums', col: { ms: 2, hs: 1 }, series: true,
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['n', 'odd', 'even', 'arith', 'sq', 'cube'] : ['n', 'odd', 'even', 'arith', 'sq', 'cube', 'alt']);
       if (kd === 'n') { const n = r.int(12, 40); return { p: H.cat(`1 + 2 + 3 + … + ${n} =`), a: A.num(n * (n + 1) / 2), params: { kd, n }, steps: [`n(n + 1)/2 = ${n} × ${n + 1} / 2.`, `= ${hl(n * (n + 1) / 2)}`] }; }
@@ -173,7 +173,7 @@
 
   /* ---------- telescoping 1/(n(n+1)) ---------- */
   G({
-    id: 'telescope', trick: 'telescope', col: { ms: 3, hs: 2 }, eval: true,
+    id: 'telescope', trick: 'telescope', col: { ms: 3, hs: 2 }, eval: true, series: true,
     gen(r, lv) {
       const s = r.int(1, lv === 'ms' ? 5 : 8), k = r.int(3, 5); const top = r.pick([1, 1, 2, 3]);
       let v = q(0); const parts = [];
@@ -186,7 +186,7 @@
 
   /* ---------- consecutive integers ---------- */
   G({
-    id: 'consec', trick: 'consecutive', col: { ms: 2, hs: 2 },
+    id: 'consec', trick: 'consecutive', col: { ms: 3, hs: 2 },
     gen(r) {
       const kd = r.pick(['odd3', 'even4', 'int5']);
       if (kd === 'odd3') { const m = 2 * r.int(5, 60) + 1; const s = 3 * m; return { p: H.cat(`The sum of three consecutive odd integers is ${s}. The largest is`), a: A.num(m + 2), params: { m }, steps: [`Middle = ${s} ÷ 3 = ${m}.`, `Largest = ${m} + 2 = ${hl(m + 2)}`] }; }

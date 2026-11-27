@@ -447,3 +447,17 @@ h1 .katex, h2 .katex, h3 .katex { font-size: 1em; }
 @media (max-width: 720px) { .codes { grid-template-columns: 1fr; } }
 .teamcode { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 12px 0 8px; }
 .teamcode .mono { font-size: 1.9rem; font-weight: 700; letter-spacing: .08em; color: var(--ink); user-select: all; }
+
+/* ---------- difficulty ---------- */
+.diffnote { margin: 8px 0 0; max-width: 62ch; min-height: 1.5em; }
+.dchip { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); background: var(--surface); white-space: nowrap; flex: none; }
+.dchip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); }
+.dchip.d-warmup::before { background: var(--ok); }
+.dchip.d-contest::before { background: var(--blue); }
+.dchip.d-hard::before { background: var(--hi); box-shadow: 0 0 0 1px var(--hi-ink); }
+.dchip.d-super { border-color: var(--bad); color: var(--bad); }
+.dchip.d-super::before { background: var(--bad); }
+.pill.hardok { margin-left: 6px; background: var(--hi-soft); color: var(--hi-ink); border-color: var(--hi); }
+.pill.hardok::before { display: none; }
+.feedback.lvl { color: var(--blue); }
+@media (max-width: 520px) { .sbar .dchip { font-size: .72rem; padding: 2px 7px; } .sbar .dauto { display: none; } .sbar { gap: 8px; } }

@@ -4,6 +4,15 @@ const NS = load();
 const { Q, q } = NS;
 const N = +(process.argv[2] || 2000);
 
+// UIL 2026 District #10 has an inclusive integer key of 6,802 through 7,518.
+const assert = require('node:assert/strict');
+for (const sign of [1, -1]) {
+  const star = NS.ans.est(sign * 7160);
+  for (const n of [6802, 7160, 7518]) assert.ok(NS.check(star, String(sign * n)).ok);
+  for (const n of [6801, 7519, 7160.5]) assert.ok(!NS.check(star, String(sign * n)).ok);
+  assert.ok(!NS.check(star, (sign * 14321) + '/2').ok);
+}
+
 /* ---------- exact expression evaluator for prompt text ---------- */
 function evalExpr(src) {
   const s = src.replace(/=\s*$/, '').trim(); let i = 0;

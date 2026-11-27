@@ -9,7 +9,7 @@
     gen(r, lv) {
       const kd = r.pick(['mul', 'mul', 'add', 'div']);
       if (kd === 'mul') { const a = r.int(lv === 'ms' ? 112 : 211, 989), b = r.int(lv === 'ms' ? 31 : 112, lv === 'ms' ? 98 : 989); const v = a * b;
-        return { p: H.cat(H.n(a), ' × ', H.n(b), ' ='), a: A.est(v), params: { a, b }, steps: [`Round one number, keep the other: ${a} × ${round2(b)} ≈ ${fm(a * round2(b))}.`, `Anything within 5% of ${fm(v)} counts.`] }; }
+        return { p: H.cat(H.n(a), ' × ', H.n(b), ' ='), a: A.est(v), params: { a, b }, steps: [`Round one number, keep the other: ${a} × ${round2(b)} ≈ ${fm(a * round2(b))}.`, `Any integer within 5% of ${fm(v)} counts.`] }; }
       if (kd === 'add') { const xs = [r.int(1000, 9999), r.int(1000, 9999), r.int(100, 9999)]; const v = xs[0] + xs[1] - xs[2];
         return { p: H.cat(H.n(xs[0]), ' + ', H.n(xs[1]), ' − ', H.n(xs[2]), ' ='), a: A.est(v), params: { xs }, steps: [`Round to hundreds: ${Math.round(xs[0] / 100) * 100} + ${Math.round(xs[1] / 100) * 100} − ${Math.round(xs[2] / 100) * 100}.`, `≈ ${fm(Math.round(xs[0] / 100) * 100 + Math.round(xs[1] / 100) * 100 - Math.round(xs[2] / 100) * 100)} (exact ${fm(v)})`] }; }
       const b = r.int(12, 98), qq = r.int(lv === 'ms' ? 21 : 120, lv === 'ms' ? 300 : 999); const a = b * qq + r.int(0, b - 1); const v = q(a, b);
@@ -39,7 +39,7 @@
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['sqrt', 'chain', 'conv', 'sevenths'] : ['sqrt', 'chain', 'sevenths', 'sqprod']);
       if (kd === 'sqrt') { const n = r.int(1000, 99999); const v = approxQ(Math.sqrt(n)); const s = Math.floor(Math.sqrt(n));
-        return { p: H.cat(H.sqrt(H.n(n)), ' ='), a: A.est(v), params: { n }, steps: [`${s}² = ${fm(s * s)} and ${s + 1}² = ${fm((s + 1) ** 2)}.`, `So it's about ${s} (any answer from ${Math.ceil(v.num() * 0.95)} to ${Math.floor(v.num() * 1.05)} counts).`] }; }
+        return { p: H.cat(H.sqrt(H.n(n)), ' ='), a: A.est(v), params: { n }, steps: [`${s}² = ${fm(s * s)} and ${s + 1}² = ${fm((s + 1) ** 2)}.`, `So it's about ${s} (any integer from ${Math.ceil(v.num() * 0.95)} to ${Math.floor(v.num() * 1.05)} counts).`] }; }
       if (kd === 'chain') { const a = r.int(101, 999), b = r.int(11, 99), c = r.int(11, 99); const v = q(a * b, c);
         return { p: H.cat(H.n(a), ' × ', H.n(b), ' ÷ ', H.n(c), ' ='), a: A.est(v), params: { a, b, c }, steps: [`Look for cancelling first: ${b}/${c} ≈ ${(b / c).toFixed(2)}.`, `${a} × ${(b / c).toFixed(2)} ≈ ${fm(Math.round(v.num()))}`] }; }
       if (kd === 'conv') { const n = r.int(100, 999); const v = Q.parseNum('2.54').mul(n);

@@ -254,6 +254,8 @@ sup, sub { font-size: .62em; line-height: 0; }
 .welcome h1 { font-size: clamp(1.7rem, 1.3rem + 1.4vw, 2.3rem); }
 .welcome .lede { font-size: 1.08rem; }
 .pick { text-align: left; display: flex; flex-direction: column; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; transition: border-color .12s; }
+.skip-link { position: fixed; top: 8px; left: 8px; z-index: 100; padding: 8px 14px; background: var(--surface); color: var(--ink); }
+.skip-link:not(:focus) { clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; padding: 0; }
 .pick:hover { border-color: var(--ink-2); }
 .pick h2 { font-size: 1.4rem; }
 .lvtag { font-size: .8rem; color: var(--ink-3); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
@@ -1100,6 +1102,7 @@ NS.check = function (spec, raw) {
   if (p.kind !== 'num') return { ok: false, note: p.kind === 'bad' ? "That isn't a number this site can read." : null };
   const v = spec.v;
   if (spec.est) {
+    if (p.form !== 'int') return { ok: false, note: 'Write your estimate as an integer.' };
     let lo = v.mul(q(95, 100)), hi = v.mul(q(105, 100));
     if (lo.cmp(hi) > 0) [lo, hi] = [hi, lo];
     const ok = p.v.cmp(lo) >= 0 && p.v.cmp(hi) <= 0;
@@ -2668,7 +2671,7 @@ NS.G({
     gen(r, lv) {
       const kd = r.pick(['mul', 'mul', 'add', 'div']);
       if (kd === 'mul') { const a = r.int(lv === 'ms' ? 112 : 211, 989), b = r.int(lv === 'ms' ? 31 : 112, lv === 'ms' ? 98 : 989); const v = a * b;
-        return { p: H.cat(H.n(a), ' × ', H.n(b), ' ='), a: A.est(v), params: { a, b }, steps: [`Round one number, keep the other: ${a} × ${round2(b)} ≈ ${fm(a * round2(b))}.`, `Anything within 5% of ${fm(v)} counts.`] }; }
+        return { p: H.cat(H.n(a), ' × ', H.n(b), ' ='), a: A.est(v), params: { a, b }, steps: [`Round one number, keep the other: ${a} × ${round2(b)} ≈ ${fm(a * round2(b))}.`, `Any integer within 5% of ${fm(v)} counts.`] }; }
       if (kd === 'add') { const xs = [r.int(1000, 9999), r.int(1000, 9999), r.int(100, 9999)]; const v = xs[0] + xs[1] - xs[2];
         return { p: H.cat(H.n(xs[0]), ' + ', H.n(xs[1]), ' − ', H.n(xs[2]), ' ='), a: A.est(v), params: { xs }, steps: [`Round to hundreds: ${Math.round(xs[0] / 100) * 100} + ${Math.round(xs[1] / 100) * 100} − ${Math.round(xs[2] / 100) * 100}.`, `≈ ${fm(Math.round(xs[0] / 100) * 100 + Math.round(xs[1] / 100) * 100 - Math.round(xs[2] / 100) * 100)} (exact ${fm(v)})`] }; }
       const b = r.int(12, 98), qq = r.int(lv === 'ms' ? 21 : 120, lv === 'ms' ? 300 : 999); const a = b * qq + r.int(0, b - 1); const v = q(a, b);
@@ -2698,7 +2701,7 @@ NS.G({
     gen(r, lv) {
       const kd = r.pick(lv === 'ms' ? ['sqrt', 'chain', 'conv', 'sevenths'] : ['sqrt', 'chain', 'sevenths', 'sqprod']);
       if (kd === 'sqrt') { const n = r.int(1000, 99999); const v = approxQ(Math.sqrt(n)); const s = Math.floor(Math.sqrt(n));
-        return { p: H.cat(H.sqrt(H.n(n)), ' ='), a: A.est(v), params: { n }, steps: [`${s}² = ${fm(s * s)} and ${s + 1}² = ${fm((s + 1) ** 2)}.`, `So it's about ${s} (any answer from ${Math.ceil(v.num() * 0.95)} to ${Math.floor(v.num() * 1.05)} counts).`] }; }
+        return { p: H.cat(H.sqrt(H.n(n)), ' ='), a: A.est(v), params: { n }, steps: [`${s}² = ${fm(s * s)} and ${s + 1}² = ${fm((s + 1) ** 2)}.`, `So it's about ${s} (any integer from ${Math.ceil(v.num() * 0.95)} to ${Math.floor(v.num() * 1.05)} counts).`] }; }
       if (kd === 'chain') { const a = r.int(101, 999), b = r.int(11, 99), c = r.int(11, 99); const v = q(a * b, c);
         return { p: H.cat(H.n(a), ' × ', H.n(b), ' ÷ ', H.n(c), ' ='), a: A.est(v), params: { a, b, c }, steps: [`Look for cancelling first: ${b}/${c} ≈ ${(b / c).toFixed(2)}.`, `${a} × ${(b / c).toFixed(2)} ≈ ${fm(Math.round(v.num()))}`] }; }
       if (kd === 'conv') { const n = r.int(100, 999); const v = Q.parseNum('2.54').mul(n);
@@ -4112,7 +4115,7 @@ NS.G({
         return { p: H.cat('If ', H.L(`f(x) = ${f}`), ', then ', H.L(`f(${mm}) - f(${n})`), ' ='), a: A.num(v), params: { kd, a, b, mm, n },
           steps: [kd === 'lin' ? `The ${fm(b)} cancels: f(${mm}) − f(${n}) = ${a} × (${mm} − ${n < 0 ? `(${n})` : n}).` : `The ${fm(b)} cancels: ${a}(${mm}² − ${n < 0 ? `(${n})` : n}²) = ${a} × (${mm - n}) × (${mm + n}).`, `= ${hl(fm(v))}`] }; }
       if (kd === 'comp') { const c = r.int(1, 9), s = r.int(2, 9), a = nz(-9, 9), b = r.int(-15, 15); const t = s * s + c;
-        return { p: H.cat('If ', H.L(`f(x^2 + ${c}) = ${NS.poly([a, b]).l}`), ', the sum of the possible values of ', H.L(`f(${t})`), ' is'), a: A.num(2 * b), params: { kd, c, s, a, b }, steps: [`${m(`x^2 + ${c} = ${t}`)} means x = ${s} or −${s}.`, `(${a * s + b}) + (${-a * s + b}) = ${hl(fm(2 * b))}`] }; }
+        return { p: H.cat('If ', H.L(`f(x) = ${NS.poly([a, b]).l}`), ' and ', H.L(`x^2 + ${c} = ${t}`), ', the sum of the two possible values of ', H.L('f(x)'), ' is'), a: A.num(2 * b), params: { kd, c, s, a, b }, steps: [`${m(`x^2 + ${c} = ${t}`)} means x = ${s} or −${s}.`, `(${a * s + b}) + (${-a * s + b}) = ${hl(fm(2 * b))}`] }; }
       if (kd === 'ints') { const a = nz(-9, 9), b = nz(-20, 20); const v = q(-b, a).add(b); return { p: H.cat('If ', H.L(`f(x) = ${NS.poly([a, b]).l}`), ` has x-intercept ${m('(a, 0)')} and y-intercept ${m('(0, b)')}, then `, H.L('a + b'), ' ='), a: A.num(v), params: { kd, a, b }, steps: [`${m('a')} = ${Qs(q(-b, a))} (where f(x) = 0); ${m('b')} = f(0) = ${fm(b)}.`, `${hl(Qs(v))}`] }; }
       let a, c; do { a = r.int(2, 9); c = r.int(5, 60); } while (c % a === 0); const z = Math.floor(c / a); const v = 2 * z + 1;
       return { p: H.cat('The zero of ', H.L(`f(x) = ${c} - ${a}x`), ` lies between consecutive integers ${m('p')} and ${m('q')}. `, H.L('p + q'), ' ='), a: A.num(v), params: { kd, a, c }, steps: [`f(x) = 0 at x = ${c}/${a} = ${Qs(q(c, a))}, between ${z} and ${z + 1}.`, `${z} + ${z + 1} = ${hl(v)}`] };
@@ -4725,7 +4728,7 @@ NS.G({
 
     /* ---- Algebra ---- */
     substitution: { unit: 'alg', title: 'Substitution', s: R`"If $x = 4$, then $3x^2 - 5x + 2 = $ ___".`,
-      how: [R`Square first, then multiply, then add.`, R`Keep negatives in parentheses: $(-3)^2 = 9$.`, R`$f(m) - f(n)$ for $f(x) = ax + b$ is $a(m - n)$: the $b$ cancels. For $ax^2 + b$ it's $a(m - n)(m + n)$.`, R`$f(x^2 + c) = ax + b$, find $f(t)$: $x = \pm\sqrt{t - c}$, and the two values add to $2b$.`],
+      how: [R`Square first, then multiply, then add.`, R`Keep negatives in parentheses: $(-3)^2 = 9$.`, R`$f(m) - f(n)$ for $f(x) = ax + b$ is $a(m - n)$: the $b$ cancels. For $ax^2 + b$ it's $a(m - n)(m + n)$.`, R`For $f(x) = ax + b$, opposite inputs give $f(s) + f(-s) = 2b$. The terms $as$ and $-as$ cancel.`],
       why: R`Order of operations still rules.`,
       watch: R`$-x^2$ with $x = -3$ is $-9$.` },
     equations: { unit: 'alg', title: 'Simple equations', s: R`One-variable linear equations.`,
@@ -4867,13 +4870,13 @@ NS.G({
       why: R`The slope changes sign at a turning point.`,
       watch: R`They may ask for the $x$-value or the $y$-value.` },
     asymptotes: { unit: 'calc', title: 'Asymptotes', s: R`Horizontal and vertical asymptotes of a rational function.`,
-      how: [R`Vertical: where the bottom is 0 (and the top isn't).`, R`Horizontal, equal degrees: the ratio of leading coefficients.`],
+      how: [R`Cancel common factors first. Each real zero of the remaining denominator gives a vertical asymptote.`, R`Horizontal, equal degrees: the ratio of leading coefficients.`],
       why: R`The function blows up where you'd divide by zero.`,
-      watch: R`If the top is 0 there too, it's a hole, not an asymptote.` },
+      watch: R`An excluded input gives a hole if the simplified denominator is nonzero there.` },
 
     /* ---- Estimation ---- */
-    estimate: { unit: 'est', title: 'Starred estimation problems', s: R`Every 10th problem has a star. Anything within 5% of the exact answer counts.`,
-      how: [R`Round one number and keep the other exact, so the errors don't stack.`, R`Spot fractions of powers of 10: $8333 \approx \tfrac56 \cdot 10000$, $142.857 \approx \tfrac17 \cdot 1000$, $87.5\% = \tfrac78$.`, R`Get the size right. 249 for an answer near 249,000 is wrong.`, R`Geometry stars: $\pi \approx 3.1416$, $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$. Gallons to cubic inches: × 231. Square miles to acres: × 640. 60 mph = 88 ft/s.`, R`Fourth roots: find the fourth powers on either side. $7^4 = 2401$ and $8^4 = 4096$, so $\sqrt[4]{3000} \approx 7.4$.`],
+    estimate: { unit: 'est', title: 'Starred estimation problems', s: R`Every 10th problem has a star. Write an integer within 5% of the exact answer.`,
+      how: [R`Round one number and keep the other exact, so the errors don't stack.`, R`Spot fractions of powers of 10: $8333 \approx \tfrac56 \cdot 10000$, $142.857 \approx \tfrac17 \cdot 1000$, $87.5\% = \tfrac78$.`, R`Get the size right. 249 for an answer near 249,000 is wrong.`, R`Geometry stars: $\pi \approx 3.1416$, $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$. Gallons to cubic inches: × 231. Square miles to acres: × 640. 60 mph = 88 ft/s.`, R`Fourth roots: find the fourth powers on either side. $7^4 = 2401$ and $8^4 = 4096$, so $\sqrt[4]{2500} \approx 7.07$, so write 7.`],
       why: R`5% is a lot of room. Two good significant digits almost always land inside it.`,
       watch: R`Count the digits of your answer before you write it.` },
     /* ---- added from recent UIL and TMSCA tests ---- */
@@ -4946,7 +4949,7 @@ NS.G({
       why: R`Every $k$th number is a multiple of $k$.`,
       watch: R`"Between" leaves out both ends. "From 1 to $n$" and "less than or equal to $n$" include $n$; "less than $n$" doesn't.` },
     absSolutions: { unit: 'alg', title: 'Absolute value equations and inequalities', s: R`Sums of solutions of $|ax + b| = c$, and sums or counts of integer solutions of $|ax + b| \le c$.`,
-      how: [R`$|ax + b| = c$: the two solutions sit evenly around $-\tfrac ba$, so they add to $-\tfrac{2b}a$. The right side doesn't matter.`, R`For one solution, solve $ax + b = c$ and $ax + b = -c$ separately. The gap between them is $\tfrac{2c}a$.`, R`$|x - h| \le k$: the integers from $h - k$ to $h + k$. There are $2k + 1$ of them and they add to $(2k + 1)h$.`, R`$|ax + b| \le c$: solve $-c \le ax + b \le c$, find the integer ends, then sum = count × average of the ends.`, R`Given the solutions of $|x - c| = d$: $c$ is their midpoint and $d$ is half their distance.`],
+      how: [R`For $a \ne 0$ and $c > 0$, the two solutions of $|ax + b| = c$ sit evenly around $-\tfrac ba$, so they add to $-\tfrac{2b}a$. When $c = 0$ the only solution is $-b/a$. When $c < 0$ there are no real solutions.`, R`To find each solution, solve $ax + b = c$ and $ax + b = -c$ separately. The gap is $2c/|a|$.`, R`For integer $h$ and nonnegative integer $k$, $|x - h| \le k$ includes the integers from $h - k$ to $h + k$. There are $2k + 1$ of them and they add to $(2k + 1)h$.`, R`$|ax + b| \le c$: solve $-c \le ax + b \le c$, find the integer ends, then sum = count × average of the ends.`, R`Given the solutions of $|x - c| = d$: $c$ is their midpoint and $d$ is half their distance.`],
       why: R`$|x - h|$ is the distance from $x$ to $h$, so the solutions are balanced around $h$.`,
       watch: R`With $<$ the ends drop out. When $-\tfrac ba$ isn't a whole number, the integer solutions aren't centered on it, so list the ends.` },
     means: { unit: 'every', title: 'Geometric and harmonic means', s: R`"The harmonic mean of 2 and 3 is ___", "The geometric mean of 4, 6, and 9 is ___".`,
@@ -4958,7 +4961,7 @@ NS.G({
       why: R`Half an equilateral triangle is a 30°–60°–90° triangle with sides $\tfrac s2$, $\tfrac s2\sqrt3$ and $s$.`,
       watch: R`Odd sides give fractions: side 7 → $k = \tfrac{49}4 = 12\tfrac14$.` },
     integerPairs: { unit: 'alg', title: 'Whole-number solutions', s: R`"$x^2 + y^2 = 85$ with $x > y > 2$…" and "How many nonnegative pairs solve $3x + 5y = 90$?"`,
-      how: [R`Sum of two squares: go down the squares below $N$ and check whether what's left is a square. $85 - 49 = 36$, so 7 and 6.`, R`$ax + by = N$: find the first $y$ that makes $N - by$ a multiple of $a$, then step $y$ up by $a$ until $by$ passes $N$.`, R`$3x + 5y = 90$: $y$ must be a multiple of 3 from 0 to 18, so 7 pairs.`],
+      how: [R`Sum of two squares: go down the squares below $N$ and check whether what's left is a square. $85 - 49 = 36$, so 7 and 6.`, R`For positive integer coefficients in $ax + by = N$, divide through by $\gcd(a,b)$ first. If it does not divide $N$, there are no integer solutions. With the reduced coefficients, find the first $y$ that makes $N - by$ a multiple of $a$, then step $y$ up by $a$ until $by$ passes $N$.`, R`$3x + 5y = 90$: $y$ must be a multiple of 3 from 0 to 18, so 7 pairs.`],
       why: R`Once you have one solution, adding $a$ to $y$ and taking $b$ from $x$ keeps the total the same.`,
       watch: R`Read the conditions. "Positive" leaves out 0; "nonnegative" lets it in.` },
     roundRoots: { unit: 'squares', title: 'Rounding square roots', s: R`"Round $(\sqrt5 + \sqrt3)$ to the nearest tenth", "Round $\sqrt7$ to the nearest hundredth", "Round $100\sqrt2$ to the nearest whole number".`,
@@ -5580,7 +5583,7 @@ NS.G({
 
   /* ---------- shell ---------- */
   document.body.insertAdjacentHTML('afterbegin', `
-    <header class="top"><div class="top-in">
+    <header class="top"><a class="skip-link" href="#main">Skip to content</a><div class="top-in">
       <button class="brand" data-go="home" aria-label="Eighty in Ten, home"><b>eighty<i>in</i>ten</b></button>
       <nav class="nav" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}${l}</button>`).join('')}</nav>
       <button class="aa" data-go="display" aria-label="Display and reading settings" title="Display and reading">${IC.aa}</button>
@@ -5589,6 +5592,10 @@ NS.G({
     <main id="main" tabindex="-1"></main>
     <nav class="tabbar" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}<span>${l}</span></button>`).join('')}</nav>`);
   const main = $('#main');
+  $('.skip-link').addEventListener('click', event => {
+    event.preventDefault();
+    main.focus();
+  });
 
   const state = { view: null, session: null, test: null, lessonTry: null, pending: null, pickMode: 'practice', pickSet: null, custom: new Set(), sprintLen: 120, testKind: 'full', testCol: 1, exSeed: 1, exShown: 1 };
 
@@ -5702,13 +5709,13 @@ NS.G({
     setNav(''); document.body.classList.remove('in-session');
     const ms = NS.makeProblem('sameFront', 'ms', 31), hs = NS.makeProblem('logs', 'hs', 12);
     main.innerHTML = `<section class="welcome">
-      <h1>Which test are you practicing for?</h1>
-      <p class="lede">Free lessons, drills and full practice tests for UIL and TMSCA Number Sense, built from real contest tests.</p>
+      <h1>Choose your practice level</h1>
+      <p class="lede">Practice UIL and TMSCA Number Sense with lessons, timed drills and full tests.</p>
       <div class="grid2" style="margin-top:22px">
         <button class="pick" data-act="setLevel" data-lv="ms"><span class="lvtag">Grades 6–8</span><h2>Middle school</h2><span class="muted">TMSCA middle school and UIL A+ junior high.</span><span class="sample">${R(ms.p.h, true)} <span class="sample-a">${R(NS.keyHtml(ms.a), true)}</span></span></button>
         <button class="pick" data-act="setLevel" data-lv="hs"><span class="lvtag">Grades 9–12</span><h2>High school</h2><span class="muted">UIL and TMSCA high school, through calculus.</span><span class="sample">${R(hs.p.h, true)} <span class="sample-a">${R(NS.keyHtml(hs.a), true)}</span></span></button>
       </div>
-      <p class="faint small" style="margin-top:16px">You can switch later from the top bar. Progress is saved in this browser, and the Progress page can move it to another device.</p>
+      <p class="faint small" style="margin-top:16px">Switch levels at any time. Your progress is saved in this browser.</p>
       ${SITE ? '<p class="small" style="margin-top:10px"><a href="tricks/">Browse every trick</a> · <a href="practice-tests/">Printable practice tests</a></p>' : ''}
     </section>`;
   }
@@ -5737,7 +5744,7 @@ NS.G({
         <div class="list">
           <button class="li" data-act="quickSprint"><span><b>Two-minute sprint</b><span class="muted">Problems 1–20 against the clock. Right answers move on by themselves.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickArith"><span><b>Arithmetic warm-up</b><span class="muted">Two minutes of addition, subtraction, multiplication and division.</span></span><span class="arr">→</span></button>
-          <button class="li" data-act="quickEst"><span><b>Estimation drill</b><span class="muted">Ten starred problems. Anything within 5% counts.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickEst"><span><b>Estimation drill</b><span class="muted">Ten starred problems. Enter an integer within 5%.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickWeak"><span><b>${weak.length ? 'Weak spots' : misses ? 'Problems you missed' : 'Weak spots'}</b><span class="muted">${weak.length ? `${weak.length} trick${weak.length > 1 ? 's' : ''} under 85%, starting with ${NS.rich(trickName(weak[0]))}.` : misses ? `${misses} problem${misses > 1 ? 's' : ''} waiting to be redone.` : 'Nothing yet. Tricks you miss will be listed here.'}</span></span><span class="arr">→</span></button>
           <button class="li" data-act="memoMix"><span><b>Facts drill</b><span class="muted">Twenty quick cards: squares, cubes, fractions, triples and more.</span></span><span class="arr">→</span></button>
           <button class="li" data-go="test"><span><b>Full practice test</b><span class="muted">80 problems, 10 minutes, scored like a contest.</span></span><span class="arr">→</span></button>
@@ -5842,7 +5849,7 @@ NS.G({
     if (L().misses.length) sets.push({ k: 'misses', name: `Redo my misses (${L().misses.length})`, d: 'The exact problems you got wrong, then more like them.', tricks: [...new Set(L().misses.map(m => NS.GBY[m.g] && NS.GBY[m.g].trick).filter(Boolean))], misses: true });
     if (learned.length >= 2) sets.push({ k: 'learned', name: 'Everything I’ve started', d: `${learned.length} tricks, mixed.`, tricks: learned });
     [1, 2, 3, 4].forEach(c => { let arr = ids.filter(id => NS.trickCol(id, l) === c); if (arr.length < 4) arr = ids.filter(id => NS.trickCol(id, l) >= c - 1 && NS.trickCol(id, l) <= c); if (arr.length) sets.push({ k: 'c' + c, name: `Problems ${COLR[c]}`, d: `${arr.length} tricks from this part of the test.`, tricks: arr }); });
-    sets.push({ k: 'est', name: 'Starred estimation', d: 'Only the * problems. Anything within 5% counts.', tricks: ['estimate'] });
+    sets.push({ k: 'est', name: 'Starred estimation', d: 'Only the * problems. Enter an integer within 5%.', tricks: ['estimate'] });
     sets.push({ k: 'custom', name: 'Choose tricks…', d: state.custom.size ? `${state.custom.size} selected.` : 'Pick exactly what to drill.', tricks: [...state.custom] });
     return sets;
   }
@@ -5962,7 +5969,7 @@ NS.G({
       <div class="prog"><span id="progbar" style="width:${pct}%"></span></div>
       <div class="lstats" aria-label="Live stats"><span>Average <b id="lavg">${avgTime(s)}</b></span>${timed(s) ? `<span>Pace <b id="lpace">—</b></span>` : `<span>Time <b id="ltime">${fmtTime((performance.now() - s.startAt) / 1000)}</b></span>`}${s.beh === 'hardcore' && hcBest ? `<span>Best streak <b>${hcBest}</b></span>` : ''}</div>
       <div class="stage" id="stage">
-        <span class="tk" id="stk">${!showName ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : timed(s) ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* within 5%</span>' : ''}
+        <span class="tk" id="stk">${!showName ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : timed(s) ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* integer within 5%</span>' : ''}
         <div class="prob ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</div>
         <div>${blankHtml(p, 'id="sin"')}</div>
         <div class="preview" id="spv"></div>
@@ -6176,8 +6183,8 @@ NS.G({
       </div>
       <details class="rules"><summary>Scoring and a few reminders</summary>
         <div class="grid2" style="margin-top:14px">
-          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept anything within 5% of the exact answer.</li></ul>
-          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Every right answer is +5 and every wrong or skipped one is −4, so a skip is never free.</li><li>Stop when the clock stops. Answers you haven’t reached don’t count against you.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
+          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept integers within 5% of the exact answer.</li></ul>
+          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Earn 5 points for a correct answer. Lose 4 for a wrong answer or a blank before your last answer.</li><li>Blanks after your last answer score zero.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
         </div></details>
       <div class="sect"><div class="sect-h"><h2>Recent tests</h2></div>${hist.length ? `<div class="tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. Try one full test a week, with single columns in between.</div>'}</div>
     </div>${footer()}`;

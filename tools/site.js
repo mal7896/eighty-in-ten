@@ -61,9 +61,9 @@ function probHtml(p, showAns) {
   let h = p.p.h; let blank = true;
   if (h.includes(LB)) { const t = h.trimEnd(); if (t.endsWith(LB)) h = t.slice(0, -LB.length); else { blank = false; h = h.split(LB).join('\u0001\\underline{\\phantom{00000000}}\u0002'); } }
   const tail = `${p.pre ? esc(p.pre) : ''}${blank ? '<span class="blank"></span>' : ''}${p.suffix ? ' ' + esc(p.suffix) : ''}`;
-  return `<div class="prob">${p.est ? '* ' : ''}${R(h)} ${tail}</div>${showAns ? `<p class="small" style="margin:6px 0 0">Answer: <span class="ans">${R(NS.keyHtml(p.a))}</span>${p.est ? ' <span class="faint">(within 5% counts)</span>' : ''}</p>` : ''}`;
+  return `<div class="prob">${p.est ? '* ' : ''}${R(h)} ${tail}</div>${showAns ? `<p class="small" style="margin:6px 0 0">Answer: <span class="ans">${R(NS.keyHtml(p.a))}</span>${p.est ? ' <span class="faint">(integers in this range count)</span>' : ''}</p>` : ''}`;
 }
-const answerDetails = p => `<details><summary>Show the answer</summary><p class="small" style="margin:6px 0 0"><span class="ans">${R(NS.keyHtml(p.a))}</span>${p.est ? ' <span class="faint">(within 5% counts)</span>' : ''}</p>${p.steps && p.steps.length ? `<ol class="steps">${p.steps.map(s => `<li>${R(s)}</li>`).join('')}</ol>` : ''}</details>`;
+const answerDetails = p => `<details><summary>Show the answer</summary><p class="small" style="margin:6px 0 0"><span class="ans">${R(NS.keyHtml(p.a))}</span>${p.est ? ' <span class="faint">(integers in this range count)</span>' : ''}</p>${p.steps && p.steps.length ? `<ol class="steps">${p.steps.map(s => `<li>${R(s)}</li>`).join('')}</ol>` : ''}</details>`;
 
 /* ---------- one page per trick ---------- */
 const urls = [{ loc: '', pri: '1.0' }];

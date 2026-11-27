@@ -382,6 +382,7 @@ NS.check = function (spec, raw) {
   if (p.kind !== 'num') return { ok: false, note: p.kind === 'bad' ? "That isn't a number this site can read." : null };
   const v = spec.v;
   if (spec.est) {
+    if (p.form !== 'int') return { ok: false, note: 'Write your estimate as an integer.' };
     let lo = v.mul(q(95, 100)), hi = v.mul(q(105, 100));
     if (lo.cmp(hi) > 0) [lo, hi] = [hi, lo];
     const ok = p.v.cmp(lo) >= 0 && p.v.cmp(hi) <= 0;

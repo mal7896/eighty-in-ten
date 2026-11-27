@@ -27,7 +27,7 @@
 
   /* ---------- shell ---------- */
   document.body.insertAdjacentHTML('afterbegin', `
-    <header class="top"><div class="top-in">
+    <header class="top"><a class="skip-link" href="#main">Skip to content</a><div class="top-in">
       <button class="brand" data-go="home" aria-label="Eighty in Ten, home"><b>eighty<i>in</i>ten</b></button>
       <nav class="nav" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}${l}</button>`).join('')}</nav>
       <button class="aa" data-go="display" aria-label="Display and reading settings" title="Display and reading">${IC.aa}</button>
@@ -36,6 +36,10 @@
     <main id="main" tabindex="-1"></main>
     <nav class="tabbar" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}<span>${l}</span></button>`).join('')}</nav>`);
   const main = $('#main');
+  $('.skip-link').addEventListener('click', event => {
+    event.preventDefault();
+    main.focus();
+  });
 
   const state = { view: null, session: null, test: null, lessonTry: null, pending: null, pickMode: 'practice', pickSet: null, custom: new Set(), sprintLen: 120, testKind: 'full', testCol: 1, exSeed: 1, exShown: 1 };
 
@@ -149,13 +153,13 @@
     setNav(''); document.body.classList.remove('in-session');
     const ms = NS.makeProblem('sameFront', 'ms', 31), hs = NS.makeProblem('logs', 'hs', 12);
     main.innerHTML = `<section class="welcome">
-      <h1>Which test are you practicing for?</h1>
-      <p class="lede">Free lessons, drills and full practice tests for UIL and TMSCA Number Sense, built from real contest tests.</p>
+      <h1>Choose your practice level</h1>
+      <p class="lede">Practice UIL and TMSCA Number Sense with lessons, timed drills and full tests.</p>
       <div class="grid2" style="margin-top:22px">
         <button class="pick" data-act="setLevel" data-lv="ms"><span class="lvtag">Grades 6–8</span><h2>Middle school</h2><span class="muted">TMSCA middle school and UIL A+ junior high.</span><span class="sample">${R(ms.p.h, true)} <span class="sample-a">${R(NS.keyHtml(ms.a), true)}</span></span></button>
         <button class="pick" data-act="setLevel" data-lv="hs"><span class="lvtag">Grades 9–12</span><h2>High school</h2><span class="muted">UIL and TMSCA high school, through calculus.</span><span class="sample">${R(hs.p.h, true)} <span class="sample-a">${R(NS.keyHtml(hs.a), true)}</span></span></button>
       </div>
-      <p class="faint small" style="margin-top:16px">You can switch later from the top bar. Progress is saved in this browser, and the Progress page can move it to another device.</p>
+      <p class="faint small" style="margin-top:16px">Switch levels at any time. Your progress is saved in this browser.</p>
       ${SITE ? '<p class="small" style="margin-top:10px"><a href="tricks/">Browse every trick</a> · <a href="practice-tests/">Printable practice tests</a></p>' : ''}
     </section>`;
   }
@@ -184,7 +188,7 @@
         <div class="list">
           <button class="li" data-act="quickSprint"><span><b>Two-minute sprint</b><span class="muted">Problems 1–20 against the clock. Right answers move on by themselves.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickArith"><span><b>Arithmetic warm-up</b><span class="muted">Two minutes of addition, subtraction, multiplication and division.</span></span><span class="arr">→</span></button>
-          <button class="li" data-act="quickEst"><span><b>Estimation drill</b><span class="muted">Ten starred problems. Anything within 5% counts.</span></span><span class="arr">→</span></button>
+          <button class="li" data-act="quickEst"><span><b>Estimation drill</b><span class="muted">Ten starred problems. Enter an integer within 5%.</span></span><span class="arr">→</span></button>
           <button class="li" data-act="quickWeak"><span><b>${weak.length ? 'Weak spots' : misses ? 'Problems you missed' : 'Weak spots'}</b><span class="muted">${weak.length ? `${weak.length} trick${weak.length > 1 ? 's' : ''} under 85%, starting with ${NS.rich(trickName(weak[0]))}.` : misses ? `${misses} problem${misses > 1 ? 's' : ''} waiting to be redone.` : 'Nothing yet. Tricks you miss will be listed here.'}</span></span><span class="arr">→</span></button>
           <button class="li" data-act="memoMix"><span><b>Facts drill</b><span class="muted">Twenty quick cards: squares, cubes, fractions, triples and more.</span></span><span class="arr">→</span></button>
           <button class="li" data-go="test"><span><b>Full practice test</b><span class="muted">80 problems, 10 minutes, scored like a contest.</span></span><span class="arr">→</span></button>
@@ -289,7 +293,7 @@
     if (L().misses.length) sets.push({ k: 'misses', name: `Redo my misses (${L().misses.length})`, d: 'The exact problems you got wrong, then more like them.', tricks: [...new Set(L().misses.map(m => NS.GBY[m.g] && NS.GBY[m.g].trick).filter(Boolean))], misses: true });
     if (learned.length >= 2) sets.push({ k: 'learned', name: 'Everything I’ve started', d: `${learned.length} tricks, mixed.`, tricks: learned });
     [1, 2, 3, 4].forEach(c => { let arr = ids.filter(id => NS.trickCol(id, l) === c); if (arr.length < 4) arr = ids.filter(id => NS.trickCol(id, l) >= c - 1 && NS.trickCol(id, l) <= c); if (arr.length) sets.push({ k: 'c' + c, name: `Problems ${COLR[c]}`, d: `${arr.length} tricks from this part of the test.`, tricks: arr }); });
-    sets.push({ k: 'est', name: 'Starred estimation', d: 'Only the * problems. Anything within 5% counts.', tricks: ['estimate'] });
+    sets.push({ k: 'est', name: 'Starred estimation', d: 'Only the * problems. Enter an integer within 5%.', tricks: ['estimate'] });
     sets.push({ k: 'custom', name: 'Choose tricks…', d: state.custom.size ? `${state.custom.size} selected.` : 'Pick exactly what to drill.', tricks: [...state.custom] });
     return sets;
   }
@@ -409,7 +413,7 @@
       <div class="prog"><span id="progbar" style="width:${pct}%"></span></div>
       <div class="lstats" aria-label="Live stats"><span>Average <b id="lavg">${avgTime(s)}</b></span>${timed(s) ? `<span>Pace <b id="lpace">—</b></span>` : `<span>Time <b id="ltime">${fmtTime((performance.now() - s.startAt) / 1000)}</b></span>`}${s.beh === 'hardcore' && hcBest ? `<span>Best streak <b>${hcBest}</b></span>` : ''}</div>
       <div class="stage" id="stage">
-        <span class="tk" id="stk">${!showName ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : timed(s) ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* within 5%</span>' : ''}
+        <span class="tk" id="stk">${!showName ? '' : S.data.settings.names ? NS.rich(trickName(p.trick), true) : timed(s) ? '' : 'Which trick fits?'}</span>${p.est ? '<span class="star">* integer within 5%</span>' : ''}
         <div class="prob ${isLong(p) ? 'long' : ''}">${R(p.p.h, true)}</div>
         <div>${blankHtml(p, 'id="sin"')}</div>
         <div class="preview" id="spv"></div>
@@ -623,8 +627,8 @@
       </div>
       <details class="rules"><summary>Scoring and a few reminders</summary>
         <div class="grid2" style="margin-top:14px">
-          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept anything within 5% of the exact answer.</li></ul>
-          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Every right answer is +5 and every wrong or skipped one is −4, so a skip is never free.</li><li>Stop when the clock stops. Answers you haven’t reached don’t count against you.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
+          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Work in order. A skipped problem before your last answer counts as wrong.</li><li>No scratch paper, no calculators. Write only the final answer.</li><li>At a real contest, an erased or written-over answer can be marked wrong. Write it once.</li><li>Fractions in lowest terms. Mixed numbers or improper fractions are both fine unless the problem names one.</li><li>A repeating value like 2/3 must be a fraction, not .67.</li><li>Starred (*) problems accept integers within 5% of the exact answer.</li></ul>
+          <ul class="stack small" style="padding-left:18px;margin:0;gap:6px"><li>Earn 5 points for a correct answer. Lose 4 for a wrong answer or a blank before your last answer.</li><li>Blanks after your last answer score zero.</li><li>On a star problem, don’t compute exactly. Round and write it down.</li><li>Losing time on a hard problem costs you easy ones later. Give it a few seconds, guess if you must, and move on.</li></ul>
         </div></details>
       <div class="sect"><div class="sect-h"><h2>Recent tests</h2></div>${hist.length ? `<div class="tablewrap"><table class="t"><thead><tr><th>When</th><th>Test</th><th style="text-align:right">Score</th><th style="text-align:right">Right</th><th style="text-align:right">Last tried</th><th>Code</th></tr></thead><tbody>${hist.map(t => `<tr><td>${new Date(t.t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</td><td>${t.kind === 'full' ? 'Full' : `Problems ${COLR[t.col]}`}${codeDiff(t.code)}</td><td class="n"><b>${t.score}</b></td><td class="n">${t.correct}</td><td class="n">${t.last}</td><td>${t.code ? `<button class="btn link small mono" data-act="retake" data-code="${t.code}" title="Take this test again">${t.code}</button>` : '<span class="faint">—</span>'}</td></tr>`).join('')}</tbody></table></div>` : '<div class="empty">No tests yet. Try one full test a week, with single columns in between.</div>'}</div>
     </div>${footer()}`;

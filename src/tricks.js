@@ -243,7 +243,7 @@
 
     /* ---- Algebra ---- */
     substitution: { unit: 'alg', title: 'Substitution', s: R`"If $x = 4$, then $3x^2 - 5x + 2 = $ ___".`,
-      how: [R`Square first, then multiply, then add.`, R`Keep negatives in parentheses: $(-3)^2 = 9$.`, R`$f(m) - f(n)$ for $f(x) = ax + b$ is $a(m - n)$: the $b$ cancels. For $ax^2 + b$ it's $a(m - n)(m + n)$.`, R`$f(x^2 + c) = ax + b$, find $f(t)$: $x = \pm\sqrt{t - c}$, and the two values add to $2b$.`],
+      how: [R`Square first, then multiply, then add.`, R`Keep negatives in parentheses: $(-3)^2 = 9$.`, R`$f(m) - f(n)$ for $f(x) = ax + b$ is $a(m - n)$: the $b$ cancels. For $ax^2 + b$ it's $a(m - n)(m + n)$.`, R`For $f(x) = ax + b$, opposite inputs give $f(s) + f(-s) = 2b$. The terms $as$ and $-as$ cancel.`],
       why: R`Order of operations still rules.`,
       watch: R`$-x^2$ with $x = -3$ is $-9$.` },
     equations: { unit: 'alg', title: 'Simple equations', s: R`One-variable linear equations.`,
@@ -385,13 +385,13 @@
       why: R`The slope changes sign at a turning point.`,
       watch: R`They may ask for the $x$-value or the $y$-value.` },
     asymptotes: { unit: 'calc', title: 'Asymptotes', s: R`Horizontal and vertical asymptotes of a rational function.`,
-      how: [R`Vertical: where the bottom is 0 (and the top isn't).`, R`Horizontal, equal degrees: the ratio of leading coefficients.`],
+      how: [R`Cancel common factors first. Each real zero of the remaining denominator gives a vertical asymptote.`, R`Horizontal, equal degrees: the ratio of leading coefficients.`],
       why: R`The function blows up where you'd divide by zero.`,
-      watch: R`If the top is 0 there too, it's a hole, not an asymptote.` },
+      watch: R`An excluded input gives a hole if the simplified denominator is nonzero there.` },
 
     /* ---- Estimation ---- */
-    estimate: { unit: 'est', title: 'Starred estimation problems', s: R`Every 10th problem has a star. Anything within 5% of the exact answer counts.`,
-      how: [R`Round one number and keep the other exact, so the errors don't stack.`, R`Spot fractions of powers of 10: $8333 \approx \tfrac56 \cdot 10000$, $142.857 \approx \tfrac17 \cdot 1000$, $87.5\% = \tfrac78$.`, R`Get the size right. 249 for an answer near 249,000 is wrong.`, R`Geometry stars: $\pi \approx 3.1416$, $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$. Gallons to cubic inches: × 231. Square miles to acres: × 640. 60 mph = 88 ft/s.`, R`Fourth roots: find the fourth powers on either side. $7^4 = 2401$ and $8^4 = 4096$, so $\sqrt[4]{3000} \approx 7.4$.`],
+    estimate: { unit: 'est', title: 'Starred estimation problems', s: R`Every 10th problem has a star. Write an integer within 5% of the exact answer.`,
+      how: [R`Round one number and keep the other exact, so the errors don't stack.`, R`Spot fractions of powers of 10: $8333 \approx \tfrac56 \cdot 10000$, $142.857 \approx \tfrac17 \cdot 1000$, $87.5\% = \tfrac78$.`, R`Get the size right. 249 for an answer near 249,000 is wrong.`, R`Geometry stars: $\pi \approx 3.1416$, $\sqrt2 \approx 1.414$, $\sqrt3 \approx 1.732$. Gallons to cubic inches: × 231. Square miles to acres: × 640. 60 mph = 88 ft/s.`, R`Fourth roots: find the fourth powers on either side. $7^4 = 2401$ and $8^4 = 4096$, so $\sqrt[4]{2500} \approx 7.07$, so write 7.`],
       why: R`5% is a lot of room. Two good significant digits almost always land inside it.`,
       watch: R`Count the digits of your answer before you write it.` },
     /* ---- added from recent UIL and TMSCA tests ---- */
@@ -464,7 +464,7 @@
       why: R`Every $k$th number is a multiple of $k$.`,
       watch: R`"Between" leaves out both ends. "From 1 to $n$" and "less than or equal to $n$" include $n$; "less than $n$" doesn't.` },
     absSolutions: { unit: 'alg', title: 'Absolute value equations and inequalities', s: R`Sums of solutions of $|ax + b| = c$, and sums or counts of integer solutions of $|ax + b| \le c$.`,
-      how: [R`$|ax + b| = c$: the two solutions sit evenly around $-\tfrac ba$, so they add to $-\tfrac{2b}a$. The right side doesn't matter.`, R`For one solution, solve $ax + b = c$ and $ax + b = -c$ separately. The gap between them is $\tfrac{2c}a$.`, R`$|x - h| \le k$: the integers from $h - k$ to $h + k$. There are $2k + 1$ of them and they add to $(2k + 1)h$.`, R`$|ax + b| \le c$: solve $-c \le ax + b \le c$, find the integer ends, then sum = count × average of the ends.`, R`Given the solutions of $|x - c| = d$: $c$ is their midpoint and $d$ is half their distance.`],
+      how: [R`For $a \ne 0$ and $c > 0$, the two solutions of $|ax + b| = c$ sit evenly around $-\tfrac ba$, so they add to $-\tfrac{2b}a$. When $c = 0$ the only solution is $-b/a$. When $c < 0$ there are no real solutions.`, R`To find each solution, solve $ax + b = c$ and $ax + b = -c$ separately. The gap is $2c/|a|$.`, R`For integer $h$ and nonnegative integer $k$, $|x - h| \le k$ includes the integers from $h - k$ to $h + k$. There are $2k + 1$ of them and they add to $(2k + 1)h$.`, R`$|ax + b| \le c$: solve $-c \le ax + b \le c$, find the integer ends, then sum = count × average of the ends.`, R`Given the solutions of $|x - c| = d$: $c$ is their midpoint and $d$ is half their distance.`],
       why: R`$|x - h|$ is the distance from $x$ to $h$, so the solutions are balanced around $h$.`,
       watch: R`With $<$ the ends drop out. When $-\tfrac ba$ isn't a whole number, the integer solutions aren't centered on it, so list the ends.` },
     means: { unit: 'every', title: 'Geometric and harmonic means', s: R`"The harmonic mean of 2 and 3 is ___", "The geometric mean of 4, 6, and 9 is ___".`,
@@ -476,7 +476,7 @@
       why: R`Half an equilateral triangle is a 30°–60°–90° triangle with sides $\tfrac s2$, $\tfrac s2\sqrt3$ and $s$.`,
       watch: R`Odd sides give fractions: side 7 → $k = \tfrac{49}4 = 12\tfrac14$.` },
     integerPairs: { unit: 'alg', title: 'Whole-number solutions', s: R`"$x^2 + y^2 = 85$ with $x > y > 2$…" and "How many nonnegative pairs solve $3x + 5y = 90$?"`,
-      how: [R`Sum of two squares: go down the squares below $N$ and check whether what's left is a square. $85 - 49 = 36$, so 7 and 6.`, R`$ax + by = N$: find the first $y$ that makes $N - by$ a multiple of $a$, then step $y$ up by $a$ until $by$ passes $N$.`, R`$3x + 5y = 90$: $y$ must be a multiple of 3 from 0 to 18, so 7 pairs.`],
+      how: [R`Sum of two squares: go down the squares below $N$ and check whether what's left is a square. $85 - 49 = 36$, so 7 and 6.`, R`For positive integer coefficients in $ax + by = N$, divide through by $\gcd(a,b)$ first. If it does not divide $N$, there are no integer solutions. With the reduced coefficients, find the first $y$ that makes $N - by$ a multiple of $a$, then step $y$ up by $a$ until $by$ passes $N$.`, R`$3x + 5y = 90$: $y$ must be a multiple of 3 from 0 to 18, so 7 pairs.`],
       why: R`Once you have one solution, adding $a$ to $y$ and taking $b$ from $x$ keeps the total the same.`,
       watch: R`Read the conditions. "Positive" leaves out 0; "nonnegative" lets it in.` },
     roundRoots: { unit: 'squares', title: 'Rounding square roots', s: R`"Round $(\sqrt5 + \sqrt3)$ to the nearest tenth", "Round $\sqrt7$ to the nearest hundredth", "Round $100\sqrt2$ to the nearest whole number".`,

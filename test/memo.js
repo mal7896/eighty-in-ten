@@ -45,6 +45,8 @@ for (const lv of ['ms', 'hs']) {
     // set-specific independent checks
     if (set.id === 'squares') { const N = lv === 'ms' ? 30 : 50; if (cells.length !== N) bad('squares count'); cells.forEach((c, i) => { if (plainNum(c.b) !== (i + 1) ** 2) bad('square', c.b); }); }
     if (set.id === 'cubes') { const N = lv === 'ms' ? 12 : 20; if (cells.length !== N) bad('cubes count'); cells.forEach((c, i) => { if (plainNum(c.b) !== (i + 1) ** 3) bad('cube', c.b); }); }
+    if (set.id === 'squares2') { const lo = lv === 'ms' ? 31 : 51; if (cells.length !== 126 - lo) bad('squares2 count', cells.length); cells.forEach((c, i) => { if (plainNum(c.b) !== (lo + i) ** 2) bad('square2', c.b); }); }
+    if (set.id === 'cubes2') { const lo = lv === 'ms' ? 13 : 21; if (cells.length !== 51 - lo) bad('cubes2 count', cells.length); cells.forEach((c, i) => { if (plainNum(c.b) !== (lo + i) ** 3) bad('cube2', c.b); }); }
     if (set.id === 'powers') cells.forEach(c => { const [, B, E] = /pw(\d+)_(\d+)/.exec(c.k); let v = 1; for (let i = 0; i < +E; i++) v *= +B; if (plainNum(c.b) !== v) bad('power', c.k, c.b); });
     if (set.id === 'factorials') cells.forEach((c, n) => { let f = 1; for (let i = 2; i <= n; i++) f *= i; if (plainNum(c.b) !== f) bad('factorial', n, c.b); });
     if (set.id === 'fractions') {

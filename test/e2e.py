@@ -72,7 +72,8 @@ async def main():
         # switch level and theme
         await pg.click('#lvlbtn'); await pg.click('[data-lv="hs"]'); await pg.wait_for_timeout(150)
         assert 'High school' in await pg.inner_text('#lvlname')
-        await pg.click('[data-act="theme"]'); assert await pg.evaluate("document.documentElement.dataset.theme") == 'light'
+        await pg.click('.foot [data-go="display"]'); await pg.wait_for_timeout(150)
+        await pg.click('[data-act="dset"][data-k="theme"][data-v="light"]'); assert await pg.evaluate("document.documentElement.dataset.theme") == 'light'
         print('errors', errs); print('E2E OK')
         await b.close()
 asyncio.run(main())

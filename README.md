@@ -1,6 +1,6 @@
 # Eighty in Ten
 
-A study site for TMSCA and UIL Number Sense, middle school and high school: lessons for each shortcut, practice rounds (Normal, No Enter, Hardcore or Test answering; 10 to 80 problems), sprints, an arithmetic warm-up, an estimation drill, full 80-problem tests with shareable test codes, printable tests with an answer key, a Memorize section, and progress tracking.
+A study site for TMSCA and UIL Number Sense, middle school and high school: lessons for each shortcut, practice rounds (Normal, No Enter, Hardcore or Test answering; 10 to 80 problems), sprints, an arithmetic warm-up, an estimation drill, full 80-problem tests with shareable test codes, printable tests in the UIL layout with an answer key, a Memorize section (with harder sets: squares to 125, cubes to 50), progress tracking, and Display and reading settings (text size, high contrast, a low-vision font, reduced motion, an always-on number pad).
 
 **Use it:** Open the website directly linked here: https://mal7896.github.io/eighty-in-ten/. Or, open the site from GitHub Pages (see below). Everything runs in the browser; progress is saved in each student's own browser. To move progress to another device or browser, use **Progress → Use another device**.
 
@@ -34,6 +34,7 @@ node test/difficulty.js   # difficulty levels: ordering, variety, and match to r
 python3 test/e2e.py       # browser run-through (needs Playwright + Chrome)
 python3 test/e2e_difficulty.py
 python3 test/e2e_features.py   # answering modes, round length, warm-up, estimation, picker, printing
+python3 test/e2e_display.py    # Display and reading: text size, contrast, font, motion, number pad
 ```
 
 ## Publishing

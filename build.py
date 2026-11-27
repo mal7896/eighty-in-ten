@@ -15,7 +15,7 @@ def face(m):
     return re.sub(r'src:[^}]+', 'src:url(data:font/woff2;base64,' + data + ') format("woff2")', block).replace('font-display:block', 'font-display:swap')
 kcss = re.sub(r'@font-face\{[^}]+\}', face, kcss)
 kjs_local = (kdir/'katex.min.js').read_text()
-fonts = ['family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700', 'family=Source+Sans+3:wght@400;600;700', 'family=Atkinson+Hyperlegible+Mono:wght@400;600', 'family=Tinos:wght@400;700']
+fonts = ['family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700', 'family=Source+Sans+3:wght@400;600;700', 'family=Atkinson+Hyperlegible+Mono:wght@400;600', 'family=Tinos:wght@400;700', 'family=Atkinson+Hyperlegible:wght@400;700']
 links = '\n'.join(f'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?{f}&display=swap">' for f in fonts)
 html = f'''<title>Eighty in Ten</title>
 <meta name="claude:viewport-fit-sides" content="cover">

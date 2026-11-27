@@ -19,6 +19,7 @@
     x: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     left: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
     target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>',
+    aa: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19l5-13 5 13M4.8 14.5h6.4"/><path d="M15 12.5a3 3 0 1 1 6 0V19M21 16.5c0 1.6-1.4 2.7-3 2.7s-3-.7-3-2.2c0-1.6 1.5-2.3 3-2.3h3"/></svg>',
     redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg>',
   };
   const TABS = [['home', 'Home'], ['tricks', 'Tricks'], ['memorize', 'Memorize'], ['practice', 'Practice'], ['test', 'Tests'], ['progress', 'Progress']];
@@ -28,6 +29,7 @@
     <header class="top"><div class="top-in">
       <button class="brand" data-go="home" aria-label="Eighty in Ten, home"><b>eighty<i>in</i>ten</b></button>
       <nav class="nav" aria-label="Main">${TABS.map(([k, l]) => `<button data-go="${k}">${IC[k]}${l}</button>`).join('')}</nav>
+      <button class="aa" data-go="display" aria-label="Display and reading settings" title="Display and reading">${IC.aa}</button>
       <button class="lvl" data-act="level" id="lvlbtn" title="Switch level"><span id="lvlname"></span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     </div></header>
     <main id="main" tabindex="-1"></main>
@@ -134,9 +136,10 @@
     if (state.session && !state.session.done && v !== 'practice' && v !== 't') endSession(true);
     state.view = v;
     if (state.memo && v !== 'memorize') state.memo = null;
-    const views = { home: viewHome, tricks: viewTricks, t: () => viewLesson(arg), memorize: () => viewMemorize(arg), practice: viewPractice, test: viewTests, progress: viewProgress, print: () => viewPrint(arg) };
+    const views = { home: viewHome, tricks: viewTricks, t: () => viewLesson(arg), memorize: () => viewMemorize(arg), practice: viewPractice, test: viewTests, progress: viewProgress, print: () => viewPrint(arg), display: viewDisplay };
     (views[v] || viewHome)();
     setNav(v === 't' ? 'tricks' : v === 'print' ? 'test' : v);
+    { const aa = $('.aa'); if (aa) aa.setAttribute('aria-current', v === 'display' ? 'page' : 'false'); }
     if (!state.keepScroll) window.scrollTo(0, 0); state.keepScroll = false;
   }
 
@@ -199,9 +202,8 @@
       <p class="faint small" style="margin-top:10px">Accurate means 85% or better on your last 12 tries at Contest level. Fast means accurate and quick enough for a real test.</p>`;
   }
   function footer() {
-    const theme = S.data.settings.theme || 'system';
     return `<footer class="foot"><span>Tricks drawn from <a href="https://bryantheath.com/files/2018/04/Heath_NSTricks_revA.pdf" target="_blank" rel="noopener">Bryant Heath’s Number Sense Tricks</a> and <a href="https://www.math-magic.org" target="_blank" rel="noopener">Math Magic</a>. Problem order follows the <a href="https://www.uiltexas.org/academics/stem/number-sense" target="_blank" rel="noopener">UIL sequence chart</a>. Problems here are generated fresh; for real past tests, see <a href="https://www.uiltexas.org/academics/page/high-school-academic-study-materials" target="_blank" rel="noopener">UIL’s study materials</a>.</span>
-      <span class="row" style="gap:14px"><button data-act="theme">Theme: ${theme}</button><button data-act="level">Switch level</button></span></footer>`;
+      <span class="row" style="gap:14px"><button data-go="display">Display and reading</button><button data-act="level">Switch level</button></span></footer>`;
   }
 
   /* ---------- tricks list ---------- */
@@ -493,13 +495,17 @@
     const l = lv();
     if (arg && memoSet(arg)) return viewMemoSet(arg);
     state.memoSetId = null;
-    const tot = NS.MEMO.reduce((a, s) => { const c = NS.memoCount(l, s.id); a.k += c.known; a.t += c.total; return a; }, { k: 0, t: 0 });
+    const tot = NS.MEMO_CORE.reduce((a, s) => { const c = NS.memoCount(l, s.id); a.k += c.known; a.t += c.total; return a; }, { k: 0, t: 0 });
     main.innerHTML = `<header class="pagehead" style="margin-bottom:0"><p class="eyebrow">${LV[l]}</p><h1>Memorize</h1>
       <p class="lede">Some answers are faster to know by heart than to work out. Study a table, then drill it until you can answer every card right away.</p></header>
       <div class="row" style="margin-top:20px"><button class="btn" data-act="memoMix">Drill a mix</button><span class="faint small">20 cards from every set, mostly ones you don’t know yet. ${tot.k} of ${tot.t} facts known.</span></div>
-      <div class="msets">${NS.MEMO.map(s => { const c = NS.memoCount(l, s.id); return `<button class="mset" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.title, true)}</b><span class="muted small">${NS.rich(s.blurb[l], true)}</span><span class="mprog">${memoBar(c)}</span></button>`; }).join('')}</div>
+      <div class="msets">${NS.MEMO_CORE.map(msetCard).join('')}</div>
+      <h2 class="label">Harder sets</h2>
+      <p class="muted small" style="margin:-4px 0 12px;max-width:62ch">For students who know the tables above. These sets aren’t part of the mixed drill.</p>
+      <div class="msets">${NS.MEMO.filter(s => s.extra).map(msetCard).join('')}</div>
       ${footer()}`;
   }
+  function msetCard(s) { const l = lv(); const c = NS.memoCount(l, s.id); return `<button class="mset" data-go="memorize" data-arg="${s.id}"><b>${NS.rich(s.title, true)}</b><span class="muted small">${NS.rich(s.blurb[l], true)}</span><span class="mprog">${memoBar(c)}</span></button>`; }
   function viewMemoSet(id) {
     const l = lv(); const set = memoSet(id); const b = NS.memoBuild(id, l); const c = NS.memoCount(l, id);
     state.memoSetId = id;
@@ -511,7 +517,7 @@
       <div class="row" style="margin-top:16px;align-items:center"><button class="btn hi" data-act="memoDrill" data-id="${id}">Drill these <span class="kbd">Enter</span></button>${hasAns ? `<button class="switch inline" role="switch" aria-checked="${cover}" data-act="memoCover"><span class="sw" aria-hidden="true"></span><span class="swt"><b>Cover the answers</b></span></button>` : ''}</div>
       <p class="note why" style="margin-top:18px;max-width:72ch">${NS.rich(set.note)}</p>
       ${cover ? '<p class="faint small" style="margin-top:14px">Say each answer to yourself, then tap the card to check.</p>' : ''}
-      <div class="mtable${cover ? ' covered' : ''}" id="mtable">${b.groups.map(g => `${g.name ? `<p class="eyebrow mgh">${esc(g.name)}</p>` : ''}<div class="mgrid${hasAns ? '' : ' tight'}${id === 'fractions' ? ' wide' : ''}${id === 'measures' ? ' wide words' : ''}">${g.cells.map(cellHtml).join('')}</div>`).join('')}</div>
+      <div class="mtable${cover ? ' covered' : ''}" id="mtable">${b.groups.map(g => `${g.name ? `<p class="eyebrow mgh">${esc(g.name)}</p>` : ''}<div class="mgrid${hasAns ? '' : ' tight'}${['squares', 'cubes', 'squares2', 'cubes2'].includes(id) ? ' dec' : ''}${id === 'fractions' ? ' wide' : ''}${id === 'measures' ? ' wide words' : ''}">${g.cells.map(cellHtml).join('')}</div>`).join('')}</div>
       ${hasKey ? '<p class="faint small mlegend"><span><i class="dot known"></i>known</span><span><i class="dot seen"></i>getting there</span><span><i class="dot missed"></i>missed last time</span></p>' : `<p class="faint small mlegend">The drill gives you a number and asks for its smallest prime factor, so you learn the numbers that only look prime.</p>`}
       ${footer()}`;
   }
@@ -668,7 +674,7 @@
   function focusQ(i, noScroll) {
     const T = state.test; if (!T || i < 0 || i >= T.probs.length) return; const inp = $('#a' + i); if (!inp) return;
     inp.focus({ preventScroll: true }); activeInput = inp;
-    if (!noScroll) { const r = inp.closest('.q').getBoundingClientRect(); const topSafe = 140, botSafe = touch ? 340 : 40; if (r.top < topSafe || r.bottom > innerHeight - botSafe) window.scrollBy({ top: r.top - Math.max(topSafe, (innerHeight - botSafe) / 2 - 40), behavior: 'smooth' }); }
+    if (!noScroll) { const r = inp.closest('.q').getBoundingClientRect(); const topSafe = 140, botSafe = touch ? 340 : 40; if (r.top < topSafe || r.bottom > innerHeight - botSafe) window.scrollBy({ top: r.top - Math.max(topSafe, (innerHeight - botSafe) / 2 - 40), behavior: NS.reduceMotion() ? 'auto' : 'smooth' }); }
   }
   function gradeTest(timeUp) {
     const T = state.test; if (!T || T.done) return; clearInterval(state.testTimer); T.done = true; T.timeUp = timeUp; T.used = Math.min(T.dur, (Date.now() - T.start) / 1000);
@@ -802,6 +808,35 @@
   }
   window.addEventListener('resize', () => { if ($('#paper')) scalePaper(); });
 
+  /* ---------- display and reading settings ---------- */
+  const DISPLAY = [
+    ['theme', 'Theme', [['system', 'Match device'], ['light', 'Light'], ['dark', 'Dark']], { system: 'Follows your device’s light or dark setting.', light: 'Dark text on a light background.', dark: 'Light text on a dark background. Easier on the eyes at night.' }],
+    ['tsize', 'Text size', [['m', 'Standard'], ['l', 'Large'], ['xl', 'Extra large']], { m: 'The usual size.', l: 'About 15% larger: text, problems and answer boxes.', xl: 'About 30% larger. On a narrow screen the menu moves to the bottom bar.' }],
+    ['contrast', 'Contrast', [['std', 'Standard'], ['high', 'High']], { std: 'Soft grey for secondary text and lines.', high: 'Black and white with darker lines, underlined links and a thicker focus outline.' }],
+    ['font', 'Font', [['std', 'Standard'], ['hyper', 'Atkinson Hyperlegible']], { std: 'Source Sans for text and Source Serif for headings.', hyper: 'A typeface made for readers with low vision. Letters and numbers that look alike, such as 1, l and I or 0 and O, have clearly different shapes.' }],
+    ['motion', 'Motion', [['auto', 'Match device'], ['reduce', 'Reduce']], { auto: 'Small animations play unless your device asks for less motion.', reduce: 'No shaking, fading or sliding, and no smooth scrolling.' }],
+    ['pad', 'Number pad', [['auto', 'Touch screens only'], ['always', 'Always show']], { auto: 'The on-screen keypad shows on phones and tablets.', always: 'Shows the keypad in practice, lessons and Memorize on every device, for anyone who would rather click than type.' }],
+  ];
+  const DISPLAY_DEF = { theme: 'system', tsize: 'm', contrast: 'std', font: 'std', motion: 'auto', pad: 'auto' };
+  const dset = k => S.data.settings[k] || DISPLAY_DEF[k];
+  function viewDisplay() {
+    const ex = NS.makeProblem('sameFront', lv() || 'ms', 31); const changed = DISPLAY.some(([k]) => dset(k) !== DISPLAY_DEF[k]);
+    main.innerHTML = `<div class="setup"><header class="pagehead"><h1>Display and reading</h1>
+      <p class="lede">Make the site easier to read and use. These settings are saved in this browser and move with your progress code.</p></header>
+      <div class="cfg">${DISPLAY.map(([k, label, opts, notes]) => `<div class="cfg-row"><span class="cfg-l" id="dl-${k}">${label}</span><div class="cfg-v"><div class="seg" role="group" aria-labelledby="dl-${k}">${opts.map(([v, n]) => `<button data-act="dset" data-k="${k}" data-v="${v}" aria-pressed="${dset(k) === v}">${n}</button>`).join('')}</div><p class="note-s">${notes[dset(k)]}</p></div></div>`).join('')}</div>
+      <h2 class="label">Preview</h2>
+      <div class="card dprev" aria-label="Preview">
+        <p class="eyebrow">Problems 1–20 · Contest</p>
+        <div class="prob" style="margin:10px 0 6px">${R(ex.p.h, true)}</div>
+        <div class="row" style="gap:12px;align-items:baseline"><span class="ans ok dprev-a" aria-hidden="true">${esc(NS.keyText(ex.a))}</span><span class="feedback ok" style="margin:0">Right · 3.1s</span></div>
+        <ol class="steps" style="margin-top:14px">${ex.steps.slice(-2).map(x => `<li>${R(x, true)}</li>`).join('')}</ol>
+        <p class="faint small" style="margin-top:10px">Secondary text looks like this. <a href="#display" onclick="return false">Links look like this.</a></p>
+        ${dset('pad') === 'always' || touch ? keypadHtml(ex).replace('class="keypad"', 'class="keypad" aria-hidden="true" inert') : ''}
+      </div>
+      ${changed ? '<p style="margin-top:18px"><button class="btn ghost" data-act="dreset">Back to the standard settings</button></p>' : ''}
+    </div>${footer()}`;
+  }
+
   /* ---------- progress ---------- */
   function chartSvg(vals, max) {
     const W = 640, Hh = 180, pl = 36, pr = 12, pt = 12, pb = 24; const n = vals.length;
@@ -852,9 +887,11 @@
   const ACT = {
     setLevel(d) { S.data.level = d.lv; S.save(); state.session = null; state.test = null; state.teamCode = null; state.lessonTry = null; state.pickSet = null; state.custom = new Set(); location.hash = 'home'; route(); },
     level() { guard(() => { state.session = null; location.hash = 'level'; }); },
+    dset(d) { S.data.settings[d.k] = d.v; if (d.v === DISPLAY_DEF[d.k]) delete S.data.settings[d.k]; S.save(); applyTheme(); state.keepScroll = true; viewDisplay(); const b = $(`[data-act="dset"][data-k="${d.k}"][data-v="${d.v}"]`); if (b) b.focus({ preventScroll: true }); },
+    dreset() { Object.keys(DISPLAY_DEF).forEach(k => delete S.data.settings[k]); S.save(); applyTheme(); state.keepScroll = true; viewDisplay(); toast('Standard settings restored'); },
     theme() { const order = ['system', 'light', 'dark']; const cur = S.data.settings.theme || 'system'; const nx = order[(order.indexOf(cur) + 1) % 3]; S.data.settings.theme = nx; S.save(); applyTheme(); state.keepScroll = true; route(); },
     tfilter(d) { state.trickFilter = d.f; state.keepScroll = true; viewTricks(); },
-    jumpTry() { const b = $('#tryit'); if (b) { b.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }); const i = $('#tryin'); if (i && !touch) setTimeout(() => i.focus({ preventScroll: true }), 300); } },
+    jumpTry() { const b = $('#tryit'); if (b) { b.scrollIntoView({ behavior: NS.reduceMotion() ? 'auto' : 'smooth', block: 'start' }); const i = $('#tryin'); if (i && !touch) setTimeout(() => i.focus({ preventScroll: true }), 300); } },
     exStep() { state.exShown++; renderExample(state.lessonId); },
     exAll() { state.exShown = 99; renderExample(state.lessonId); },
     exNew() { state.exSeed++; state.exShown = 0; renderExample(state.lessonId); },
@@ -937,7 +974,7 @@
     leaveTest() { guard(() => go('test')); },
     testAgain() { state.test = null; startTest(); },
     memoDrill(d) { startMemo([d.id], memoSet(d.id).title); },
-    memoMix() { guard(() => startMemo(NS.MEMO.map(s => s.id), 'Mixed facts')); },
+    memoMix() { guard(() => startMemo(NS.MEMO_CORE.map(s => s.id), 'Mixed facts')); },
     memoCover() { state.memoCover = !state.memoCover; state.keepScroll = true; viewMemoSet(state.memoSetId); },
     memoPeek(d, el) { const t = $('#mtable'); if (t && t.classList.contains('covered')) el.classList.toggle('open'); },
     mSubmit() {
@@ -1014,7 +1051,14 @@
     else if (state.view === 'memorize' && !state.memo && state.memoSetId) { e.preventDefault(); ACT.memoDrill({ id: state.memoSetId }); }
   });
 
-  function applyTheme() { const t = S.data.settings.theme || 'system'; if (t === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t); }
+  function applyTheme() {
+    const st = S.data.settings, root = document.documentElement; const t = st.theme || 'system';
+    if (t === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', t);
+    for (const k of ['tsize', 'contrast', 'font', 'motion']) { if (st[k] && st[k] !== DISPLAY_DEF[k]) root.setAttribute('data-' + k, st[k]); else root.removeAttribute('data-' + k); }
+    document.body.classList.toggle('showpad', st.pad === 'always');
+  }
+  // smooth scrolling only when motion is welcome
+  NS.reduceMotion = () => S.data.settings.motion === 'reduce' || matchMedia('(prefers-reduced-motion: reduce)').matches;
   applyTheme();
   // practice hash changes made by startSession should not reset the session
   const _route = route;

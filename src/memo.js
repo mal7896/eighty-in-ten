@@ -59,6 +59,35 @@
     },
   });
 
+  /* ---------- harder: squares to 125, cubes to 50 (kept out of the mixed drill) ---------- */
+  const decades = (lo, hi, cellOf) => { const groups = []; for (let a = lo; a <= hi; a = Math.floor(a / 10) * 10 + 11) { const b = Math.min(hi, Math.floor((a - 1) / 10) * 10 + 10); const cells = []; for (let n = a; n <= b; n++) cells.push(cellOf(n)); groups.push({ name: `${a} to ${b}`, cells }); } return groups; };
+  def({
+    id: 'squares2', title: 'Squares to 125', short: 'Squares to 125', extra: true, fast: 5000,
+    blurb: { ms: R`$31^2$ to $125^2$, and square roots back. Picks up where Squares stops.`, hs: R`$51^2$ to $125^2$, and square roots back. Picks up where Squares stops.` },
+    note: R`Near 50: $(50 + d)^2 = 2500 + 100d + d^2$, so $57^2 = 2500 + 700 + 49 = 3249$. Near 100: $(100 - d)^2 = 100(100 - 2d) + d^2$, so $97^2 = 9409$, and above 100 it’s $112^2 = 12544$. Ending in 5: the front times the next number, then 25, so $85^2 = 7225$. For the rest, start from the nearest square you know: $68^2 = 70^2 - 2 \cdot 70 \cdot 2 + 2^2 = 4624$.`,
+    build(lv) {
+      const lo = lv === 'ms' ? 31 : 51;
+      const groups = decades(lo, 125, n => ({ k: `sq${n}`, t: H.pow(n, 2).h, b: fm(n * n), n }));
+      const items = groups.flatMap(g => g.cells).filter(c => c.n % 10).map(c => ({ k: c.k, ask: r => r.chance(0.3)
+        ? { q: H.cat(H.sqrt(c.n * c.n), ' =').h, a: A.num(c.n), show: H.cat(H.sqrt(c.n * c.n), ' = ', H.n(c.n)).h }
+        : { q: H.cat(H.pow(c.n, 2), ' =').h, a: A.num(c.n * c.n), show: H.cat(H.pow(c.n, 2), ' = ', H.n(c.n * c.n)).h } }));
+      return { groups, items };
+    },
+  });
+  def({
+    id: 'cubes2', title: 'Cubes to 50', short: 'Cubes to 50', extra: true, fast: 7000,
+    blurb: { ms: R`$13^3$ to $50^3$, and cube roots back. Picks up where Cubes stops.`, hs: R`$21^3$ to $50^3$, and cube roots back. Picks up where Cubes stops.` },
+    note: R`Build a cube from its square: $23^3 = 529 \times 23 = 12167$. Near a round number, expand: $31^3 = 27000 + 3 \cdot 900 + 3 \cdot 30 + 1 = 29791$. For a cube root, the last digit gives the root’s last digit (2 and 8 swap, 3 and 7 swap, the rest stay), and the thousands give the tens digit: $\sqrt[3]{39304}$ has 39 thousands, between $3^3 = 27$ and $4^3 = 64$, and ends in 4, so the root is 34.`,
+    build(lv) {
+      const lo = lv === 'ms' ? 13 : 21;
+      const groups = decades(lo, 50, n => ({ k: `cu${n}`, t: H.pow(n, 3).h, b: fm(n ** 3), n }));
+      const items = groups.flatMap(g => g.cells).filter(c => c.n % 10).map(c => ({ k: c.k, ask: r => r.chance(0.35)
+        ? { q: H.cat(H.cbrt(c.n ** 3), ' =').h, a: A.num(c.n), show: H.cat(H.cbrt(c.n ** 3), ' = ', H.n(c.n)).h }
+        : { q: H.cat(H.pow(c.n, 3), ' =').h, a: A.num(c.n ** 3), show: H.cat(H.pow(c.n, 3), ' = ', H.n(c.n ** 3)).h } }));
+      return { groups, items };
+    },
+  });
+
   /* ---------- powers ---------- */
   def({
     id: 'powers', title: 'Powers', blurb: { ms: R`Powers of 2, 3 and 5.`, hs: R`Powers of 2, 3, 5 and 11.` },
@@ -202,6 +231,7 @@
   });
 
   NS.MEMO = SETS;
+  NS.MEMO_CORE = SETS.filter(x => !x.extra);
   const cache = {};
   NS.memoBuild = (id, lv) => cache[id + lv] || (cache[id + lv] = SETS.find(s => s.id === id).build(lv));
   NS.memoFast = id => SETS.find(s => s.id === id).fast || 4000;

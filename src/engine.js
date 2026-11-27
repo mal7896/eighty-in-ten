@@ -223,6 +223,7 @@
     const out = { v: 1, level: d.level === 'ms' || d.level === 'hs' ? d.level : null, settings: {}, levels: {} };
     const st = obj(d.settings); if (['system', 'light', 'dark'].includes(st.theme)) out.settings.theme = st.theme; if (typeof st.names === 'boolean') out.settings.names = st.names;
     const dids = NS.DIFFS.map(x => x.id); if (st.pdiff === 'auto' || dids.includes(st.pdiff)) out.settings.pdiff = st.pdiff; if (dids.includes(st.tdiff)) out.settings.tdiff = st.tdiff;
+    const DS = { tsize: ['l', 'xl'], contrast: ['high'], font: ['hyper'], motion: ['reduce'], pad: ['always'] }; for (const [k, ok] of Object.entries(DS)) if (ok.includes(st[k])) out.settings[k] = st[k];
     if (NS.BEHAVIORS.includes(st.pbeh)) out.settings.pbeh = st.pbeh; if ([10, 20, 40, 80].includes(st.plen)) out.settings.plen = st.plen;
     { const a = NS.arithClean(st.arith); if (a) out.settings.arith = a; }
     const pair = a => Array.isArray(a) && a.length === 2 ? [a[0] ? 1 : 0, num(a[1])] : null;

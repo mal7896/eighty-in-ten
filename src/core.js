@@ -389,7 +389,16 @@ NS.check = function (spec, raw) {
     return { ok };
   }
   if (!p.v.eq(v)) return { ok: false };
-  // value is right; now the contest form rules
+  // value is right; now the contest form rules (UIL Number Sense handbook, scoring rules b–e)
+  const t = String(raw).trim().replace(/^\$/, '').replace(/\s+/g, ' ');
+  if (t.includes(',') && !/^-?\d{1,3}(,\d{3})+(\.\d+)?$/.test(t)) return { ok: false, note: 'Right value, but a comma is out of place. Commas are optional; if you use them, they must be in the right places.' };
+  if (spec.form === 'money') {
+    if (!/^-?(\d{1,3}(,\d{3})*|\d+)?\.\d{2}$/.test(t)) return { ok: false, note: `Right value, but money answers are written to the cent: ${NS.money(v)}.` };
+    if (/^-?0\./.test(t)) return { ok: false, note: `Right value, but leave off the leading zero: ${NS.money(v)}.` };
+    return { ok: true };
+  }
+  if (/^-?0(\.\d|\d)/.test(t)) return { ok: false, note: 'Right value, but leave off the leading zero: write .5, not 0.5.' };
+  if (/\.\d*0$|\.$/.test(t)) return { ok: false, note: 'Right value, but extra zeros at the end count as wrong: write 16, not 16.0.' };
   if (p.form === 'frac' && !p.reduced) return { ok: false, note: 'Right value, but fractions have to be in lowest terms.' };
   if (p.form === 'mixed' && (!p.proper || !p.reduced)) return { ok: false, note: 'Right value, but the fraction part has to be proper and in lowest terms.' };
   const f = spec.form || 'any';
@@ -399,6 +408,12 @@ NS.check = function (spec, raw) {
   return { ok: true };
 };
 
+// dollars and cents as UIL keys write them: 23.00, .16, 1,234.50
+NS.money = function (v) {
+  const c = v.mul(q(100, 1)); const n = c.n / c.d; const neg = n < 0n; const a = neg ? -n : n;
+  const whole = a / 100n, cents = String(a % 100n).padStart(2, '0');
+  return `${neg ? '−' : ''}${whole ? M.fmt(whole.toString()) : ''}.${cents}`;
+};
 /* ---------- display the key ---------- */
 NS.keyHtml = function (spec) {
   if (spec.show) return spec.show;
@@ -411,9 +426,9 @@ NS.keyHtml = function (spec) {
     const floor = x => { const n = x.n / x.d; return (x.n % x.d === 0n || x.n > 0n) ? n : n - 1n; };
     return `${M.fmt(ceil(lo).toString())} to ${M.fmt(floor(hi).toString())}`.replace(/-(?=\d)/g, '−');
   }
-  if (v.isInt()) return H.n(v.n.toString()).h;
   const f = spec.form || 'any';
-  if (f === 'money') return v.isInt() ? v.n.toString() : v.num().toFixed(2);
+  if (f === 'money') return NS.money(v);
+  if (v.isInt()) return H.n(v.n.toString()).h;
   if (f === 'dec') return H.dec(v).h;
   if (f === 'frac') return H.Qi(v).h;
   const parts = [];

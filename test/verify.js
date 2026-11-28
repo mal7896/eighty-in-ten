@@ -185,8 +185,9 @@ for (const g of NS.GENS) {
       const a = out.a;
       if (a.type === 'num') {
         const forms = [];
-        if (a.v.isInt()) forms.push(a.v.n.toString());
-        else { if (a.form !== 'frac' && a.form !== 'dec') forms.push(a.v.toMixedStr()); if (a.form !== 'mixed' && a.form !== 'dec') forms.push(a.v.toFracStr()); if (a.form === 'dec' || (a.form === 'any' && a.v.terminates())) forms.push(a.v.toDecStr()); }
+        if (a.form === 'money') forms.push(NS.money(a.v).replace('−', '-')); // UIL writes money to the cent: 23.00, .16
+        else if (a.v.isInt()) forms.push(a.v.n.toString());
+        else { if (a.form !== 'frac' && a.form !== 'dec') forms.push(a.v.toMixedStr()); if (a.form !== 'mixed' && a.form !== 'dec') forms.push(a.v.toFracStr()); if (a.form === 'dec' || (a.form === 'any' && a.v.terminates())) forms.push(a.v.toDecStr().replace(/^(-?)0\./, '$1.')); }
         if (a.form === 'dec' && !a.v.terminates()) { bad(g, lv, seed, 'decimal requested for non-terminating value', out); continue; }
         for (const f of forms) if (f !== null && !a.est && !NS.check(a, f).ok) bad(g, lv, seed, `key form "${f}" rejected: ${JSON.stringify(NS.check(a, f))}`, out);
         if (a.est) { const s = String(Math.round(a.v.num())); if (!NS.check(a, s).ok) bad(g, lv, seed, 'rounded estimate rejected', out); if (a.v.num() === 0) bad(g, lv, seed, 'zero estimate', out); }

@@ -3381,7 +3381,8 @@ NS.G({
     id: 'radicals', trick: 'radicals', col: { ms: 4, hs: 3 }, w: 0.5,
     gen(r) {
       const kd = r.pick(['sum', 'sum', 'simpA', 'simpB', 'pow']); const s = r.pick(SQF);
-      if (kd === 'sum') { const k1 = r.int(2, 12), k2 = r.int(1, 9); const minus = r.chance(0.5) && k1 !== k2; const kk = minus ? k1 - k2 : k1 + k2; const v = kk * kk * s;
+      if (kd === 'sum') { let k1 = r.int(2, 12), k2 = r.int(1, 9); const minus = r.chance(0.5) && k1 !== k2;
+        if (minus && k1 < k2) [k1, k2] = [k2, k1]; /* a difference of roots must stay positive to equal √x */ const kk = minus ? k1 - k2 : k1 + k2; const v = kk * kk * s;
         return { p: H.cat('If ', H.sqrt(k1 * k1 * s), minus ? ' − ' : ' + ', H.sqrt(k2 * k2 * s), ' = ', H.sqrt('x'), ', then x ='), a: A.num(v), params: { kd, k1, k2, s, minus },
           steps: [`Simplify each: √${k1 * k1 * s} = ${k1}√${s} and √${k2 * k2 * s} = ${k2}√${s}.`, `${k1}√${s} ${minus ? '−' : '+'} ${k2}√${s} = ${kk}√${s} = √(${kk}² × ${s}), so x = ${hl(fm(v))}`] }; }
       const a = r.int(2, 9); const n = a * a * s;

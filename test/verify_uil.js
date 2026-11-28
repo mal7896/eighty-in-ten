@@ -107,7 +107,7 @@ module.exports = function (NS) {
     },
     fibSum: p => { const t = [p.a, p.b]; while (t.length < 20) t.push(t[t.length - 1] + t[t.length - 2]); if (p.kd === 'ten') return t.slice(0, 10).reduce((x, y) => x + y); if (p.kd === 'n') return t.slice(0, p.n).reduce((x, y) => x + y); return t[6]; },
     radicals: p => {
-      if (p.kd === 'sum') { const v = Math.sqrt(p.k1 * p.k1 * p.s) + (p.minus ? -1 : 1) * Math.sqrt(p.k2 * p.k2 * p.s); return Math.round(v * v); }
+      if (p.kd === 'sum') { const v = Math.sqrt(p.k1 * p.k1 * p.s) + (p.minus ? -1 : 1) * Math.sqrt(p.k2 * p.k2 * p.s); return v > 0 ? Math.round(v * v) : NaN; }
       let best = 1; for (let a = 1; a * a <= p.n; a++) if (p.n % (a * a) === 0) best = a; return p.kd === 'simpA' ? best : p.n / (best * best);
     },
     countDigits: p => {

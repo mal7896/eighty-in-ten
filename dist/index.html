@@ -707,7 +707,7 @@ body.nolevel main { padding-bottom: 48px; }
 table.t td .mono, table.t td button.mono { white-space: nowrap; }
 
 /* a highlighted stacked fraction gets the whole highlight, not a band through its middle */
-mark:has(.mfrac) { background: var(--hi); border-radius: 2px; padding: 1px 4px; }
+mark:has(.mfrac) { display: inline-block; background: var(--hi); border-radius: 3px; padding: 3px 5px; line-height: 1; }
 /* the bottom bar's six labels must fit a phone at any text size */
 nav.tabbar button { font-size: clamp(10px, .68rem, 12px) !important; }
 
@@ -1169,7 +1169,13 @@ NS.GENS = [];
 NS.fixMinus = s => String(s).replace(/(^|[\s(=:,×+·\/≈\[|])-(?=[\d.(i]|x\b)/g, '$1−');
 NS.G = function (def) {
   const raw = def.gen;
-  def.gen = function (r, lv, x) { const o = raw.call(this, r, lv, x); o.steps = o.steps.map(NS.fixMinus); return o; };
+  def.gen = function (r, lv, x) {
+    const o = raw.call(this, r, lv, x); o.steps = o.steps.map(NS.fixMinus);
+    // money answers end in dollars and cents in the steps too (33.60, not 33 3/5), as the key writes them
+    if (o.a && o.a.form === 'money' && o.steps.length) { const k = o.steps.length - 1; const i = o.steps[k].lastIndexOf('<mark>');
+      if (i >= 0) o.steps[k] = o.steps[k].slice(0, i) + `<mark>${NS.money(o.a.v)}</mark>` + o.steps[k].slice(o.steps[k].indexOf('</mark>', i) + 7); }
+    return o;
+  };
   NS.GENS.push(def);
 };
 const { H: _H, M: _M, ans: _A, q: _q, Q: _Q } = NS;

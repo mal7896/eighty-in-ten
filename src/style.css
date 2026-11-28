@@ -693,6 +693,6 @@ body.nolevel main { padding-bottom: 48px; }
 table.t td .mono, table.t td button.mono { white-space: nowrap; }
 
 /* a highlighted stacked fraction gets the whole highlight, not a band through its middle */
-mark:has(.mfrac) { background: var(--hi); border-radius: 2px; padding: 1px 4px; }
+mark:has(.mfrac) { display: inline-block; background: var(--hi); border-radius: 3px; padding: 3px 5px; line-height: 1; }
 /* the bottom bar's six labels must fit a phone at any text size */
 nav.tabbar button { font-size: clamp(10px, .68rem, 12px) !important; }
